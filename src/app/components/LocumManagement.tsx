@@ -1,0 +1,1511 @@
+import { Search, SlidersHorizontal, Download, Plus, Eye, MapPin, Phone, Mail, X, Grid3x3, List, Star, ChevronRight, Clock, CheckCircle, FileText, Calendar, UserPlus, Filter, ChevronLeft, Info, Pencil, Archive, User, Briefcase, CreditCard, ArrowRight, UserCheck, ArrowDown, ChevronDown } from 'lucide-react';
+import { useState, useRef, useEffect } from 'react';
+import { useUserRole } from '../contexts/UserRoleContext';
+import { toast } from 'sonner';
+import { ShiftSlotStatus, ShiftType, ShiftSlot, DaySchedule, LocumWeekSchedule, Locum, Applicant } from '../types';
+import { locumService } from '../services/locumService';
+
+const stageConfig: Record<string, { color: string; bg: string; border: string }> = {
+    new: { color: '#3B82F6', bg: '#DBEAFE', border: '#BFDBFE' },
+    interview: { color: '#D97706', bg: '#FEF3C7', border: '#FDE68A' },
+    verification: { color: '#8B5CF6', bg: '#EDE9FE', border: '#DDD6FE' },
+    onboarding: { color: '#10B981', bg: '#D1FAE5', border: '#A7F3D0' },
+};
+
+// ============ Multi-Shift Availability Types ============
+
+const shiftTypeLabels: Record<ShiftType, { label: string; abbr: string; time: string }> = {
+    morning: { label: 'Morning', abbr: 'AM', time: '07:00 - 15:00' },
+    afternoon: { label: 'Afternoon', abbr: 'PM', time: '15:00 - 23:00' },
+    night: { label: 'Night', abbr: 'NT', time: '23:00 - 07:00' },
+};
+
+const shiftStatusConfig: Record<ShiftSlotStatus, { label: string; color: string; bg: string; border: string }> = {
+    available: { label: 'Available', color: '#065F46', bg: '#D1FAE5', border: '#A7F3D0' },
+    booked: { label: 'Booked', color: '#1E40AF', bg: '#DBEAFE', border: '#BFDBFE' },
+    leave: { label: 'Leave', color: '#92400E', bg: '#FEF3C7', border: '#FDE68A' },
+    blocked: { label: 'Blocked', color: '#6B7280', bg: '#F3F4F6', border: '#E5E7EB' },
+    off: { label: 'Off', color: '#9CA3AF', bg: 'transparent', border: 'transparent' },
+};
+
+// Rich multi-shift schedule data showing locums with 1, 2, or 3 shifts per day
+const weekSchedules: LocumWeekSchedule[] = [
+    {
+        locumId: '#GS234FS', // Dr. Sarah Mitchell - General Surgery, very busy
+        days: [
+            { shifts: [{ type: 'morning', status: 'booked', facility: "St. James's Hospital, Dublin", shiftId: 'SH-2041', time: '07:00 - 15:00' }, { type: 'afternoon', status: 'booked', facility: "Mater Misericordiae, Dublin", shiftId: 'SH-2042', time: '15:00 - 23:00' }, { type: 'night', status: 'off' }] },
+            { shifts: [{ type: 'morning', status: 'booked', facility: "St. James's Hospital, Dublin", shiftId: 'SH-2043', time: '07:00 - 15:00' }, { type: 'afternoon', status: 'available' }, { type: 'night', status: 'off' }] },
+            { shifts: [{ type: 'morning', status: 'booked', facility: "Beaumont Hospital, Dublin", shiftId: 'SH-2044', time: '07:00 - 15:00' }, { type: 'afternoon', status: 'booked', facility: "St. Vincent's University Hospital", shiftId: 'SH-2045', time: '15:00 - 23:00' }, { type: 'night', status: 'booked', facility: "Mater Misericordiae, Dublin", shiftId: 'SH-2046', time: '23:00 - 07:00' }] },
+            { shifts: [{ type: 'morning', status: 'available' }, { type: 'afternoon', status: 'available' }, { type: 'night', status: 'off' }] },
+            { shifts: [{ type: 'morning', status: 'booked', facility: "St. James's Hospital, Dublin", shiftId: 'SH-2047', time: '07:00 - 15:00' }, { type: 'afternoon', status: 'available' }, { type: 'night', status: 'off' }] },
+            { shifts: [{ type: 'morning', status: 'available' }, { type: 'afternoon', status: 'off' }, { type: 'night', status: 'off' }] },
+            { shifts: [{ type: 'morning', status: 'blocked' }, { type: 'afternoon', status: 'blocked' }, { type: 'night', status: 'blocked' }] },
+        ],
+    },
+    {
+        locumId: '#EC0125D', // Dr. James Harrison - Cardiology
+        days: [
+            { shifts: [{ type: 'morning', status: 'booked', facility: "Cork University Hospital", shiftId: 'SH-2050', time: '07:00 - 15:00' }, { type: 'afternoon', status: 'available' }, { type: 'night', status: 'off' }] },
+            { shifts: [{ type: 'morning', status: 'booked', facility: "Cork University Hospital", shiftId: 'SH-2051', time: '07:00 - 15:00' }, { type: 'afternoon', status: 'booked', facility: "Cork University Hospital", shiftId: 'SH-2052', time: '15:00 - 23:00' }, { type: 'night', status: 'off' }] },
+            { shifts: [{ type: 'morning', status: 'available' }, { type: 'afternoon', status: 'available' }, { type: 'night', status: 'available' }] },
+            { shifts: [{ type: 'morning', status: 'booked', facility: "Cork University Hospital", shiftId: 'SH-2053', time: '07:00 - 15:00' }, { type: 'afternoon', status: 'booked', facility: "Cork University Hospital", shiftId: 'SH-2054', time: '15:00 - 23:00' }, { type: 'night', status: 'booked', facility: "Cork University Hospital", shiftId: 'SH-2055', time: '23:00 - 07:00' }] },
+            { shifts: [{ type: 'morning', status: 'leave' }, { type: 'afternoon', status: 'leave' }, { type: 'night', status: 'leave' }] },
+            { shifts: [{ type: 'morning', status: 'leave' }, { type: 'afternoon', status: 'leave' }, { type: 'night', status: 'off' }] },
+            { shifts: [{ type: 'morning', status: 'blocked' }, { type: 'afternoon', status: 'blocked' }, { type: 'night', status: 'blocked' }] },
+        ],
+    },
+    {
+        locumId: '#MK4521A', // Dr. Emily Chen - Anesthesiology, night-shift specialist
+        days: [
+            { shifts: [{ type: 'morning', status: 'available' }, { type: 'afternoon', status: 'booked', facility: "University Hospital Galway", shiftId: 'SH-2060', time: '15:00 - 23:00' }, { type: 'night', status: 'booked', facility: "University Hospital Galway", shiftId: 'SH-2061', time: '23:00 - 07:00' }] },
+            { shifts: [{ type: 'morning', status: 'off' }, { type: 'afternoon', status: 'available' }, { type: 'night', status: 'booked', facility: "University Hospital Galway", shiftId: 'SH-2062', time: '23:00 - 07:00' }] },
+            { shifts: [{ type: 'morning', status: 'off' }, { type: 'afternoon', status: 'off' }, { type: 'night', status: 'booked', facility: "University Hospital Galway", shiftId: 'SH-2063', time: '23:00 - 07:00' }] },
+            { shifts: [{ type: 'morning', status: 'booked', facility: "University Hospital Galway", shiftId: 'SH-2064', time: '07:00 - 15:00' }, { type: 'afternoon', status: 'booked', facility: "University Hospital Galway", shiftId: 'SH-2065', time: '15:00 - 23:00' }, { type: 'night', status: 'off' }] },
+            { shifts: [{ type: 'morning', status: 'available' }, { type: 'afternoon', status: 'available' }, { type: 'night', status: 'available' }] },
+            { shifts: [{ type: 'morning', status: 'available' }, { type: 'afternoon', status: 'off' }, { type: 'night', status: 'off' }] },
+            { shifts: [{ type: 'morning', status: 'off' }, { type: 'afternoon', status: 'off' }, { type: 'night', status: 'off' }] },
+        ],
+    },
+    {
+        locumId: '#LW9872P', // Dr. Michael Brooks - Emergency Medicine, heavy shifts
+        days: [
+            { shifts: [{ type: 'morning', status: 'blocked' }, { type: 'afternoon', status: 'blocked' }, { type: 'night', status: 'blocked' }] },
+            { shifts: [{ type: 'morning', status: 'booked', facility: "University Hospital Limerick", shiftId: 'SH-2070', time: '07:00 - 15:00' }, { type: 'afternoon', status: 'booked', facility: "University Hospital Limerick", shiftId: 'SH-2071', time: '15:00 - 23:00' }, { type: 'night', status: 'booked', facility: "University Hospital Limerick", shiftId: 'SH-2072', time: '23:00 - 07:00' }] },
+            { shifts: [{ type: 'morning', status: 'booked', facility: "University Hospital Limerick", shiftId: 'SH-2073', time: '07:00 - 15:00' }, { type: 'afternoon', status: 'available' }, { type: 'night', status: 'off' }] },
+            { shifts: [{ type: 'morning', status: 'available' }, { type: 'afternoon', status: 'available' }, { type: 'night', status: 'off' }] },
+            { shifts: [{ type: 'morning', status: 'booked', facility: "University Hospital Limerick", shiftId: 'SH-2074', time: '07:00 - 15:00' }, { type: 'afternoon', status: 'booked', facility: "University Hospital Limerick", shiftId: 'SH-2075', time: '15:00 - 23:00' }, { type: 'night', status: 'off' }] },
+            { shifts: [{ type: 'morning', status: 'available' }, { type: 'afternoon', status: 'off' }, { type: 'night', status: 'off' }] },
+            { shifts: [{ type: 'morning', status: 'blocked' }, { type: 'afternoon', status: 'blocked' }, { type: 'night', status: 'blocked' }] },
+        ],
+    },
+    {
+        locumId: '#PM6543K', // Dr. Rachel Martinez
+        days: [
+            { shifts: [{ type: 'morning', status: 'booked', facility: "St. James's Hospital, Dublin", shiftId: 'SH-2080', time: '07:00 - 15:00' }, { type: 'afternoon', status: 'booked', facility: "St. James's Hospital, Dublin", shiftId: 'SH-2081', time: '15:00 - 23:00' }, { type: 'night', status: 'off' }] },
+            { shifts: [{ type: 'morning', status: 'booked', facility: "St. James's Hospital, Dublin", shiftId: 'SH-2082', time: '07:00 - 15:00' }, { type: 'afternoon', status: 'available' }, { type: 'night', status: 'off' }] },
+            { shifts: [{ type: 'morning', status: 'available' }, { type: 'afternoon', status: 'available' }, { type: 'night', status: 'off' }] },
+            { shifts: [{ type: 'morning', status: 'booked', facility: "St. James's Hospital, Dublin", shiftId: 'SH-2083', time: '07:00 - 15:00' }, { type: 'afternoon', status: 'available' }, { type: 'night', status: 'off' }] },
+            { shifts: [{ type: 'morning', status: 'leave' }, { type: 'afternoon', status: 'leave' }, { type: 'night', status: 'leave' }] },
+            { shifts: [{ type: 'morning', status: 'leave' }, { type: 'afternoon', status: 'leave' }, { type: 'night', status: 'off' }] },
+            { shifts: [{ type: 'morning', status: 'blocked' }, { type: 'afternoon', status: 'blocked' }, { type: 'night', status: 'blocked' }] },
+        ],
+    },
+    {
+        locumId: '#RT8765N', // Dr. David Thompson
+        days: [
+            { shifts: [{ type: 'morning', status: 'available' }, { type: 'afternoon', status: 'available' }, { type: 'night', status: 'off' }] },
+            { shifts: [{ type: 'morning', status: 'booked', facility: "Waterford University Hospital", shiftId: 'SH-2090', time: '07:00 - 15:00' }, { type: 'afternoon', status: 'booked', facility: "Waterford University Hospital", shiftId: 'SH-2091', time: '15:00 - 23:00' }, { type: 'night', status: 'off' }] },
+            { shifts: [{ type: 'morning', status: 'booked', facility: "Waterford University Hospital", shiftId: 'SH-2092', time: '07:00 - 15:00' }, { type: 'afternoon', status: 'available' }, { type: 'night', status: 'off' }] },
+            { shifts: [{ type: 'morning', status: 'available' }, { type: 'afternoon', status: 'available' }, { type: 'night', status: 'off' }] },
+            { shifts: [{ type: 'morning', status: 'blocked' }, { type: 'afternoon', status: 'blocked' }, { type: 'night', status: 'blocked' }] },
+            { shifts: [{ type: 'morning', status: 'blocked' }, { type: 'afternoon', status: 'blocked' }, { type: 'night', status: 'blocked' }] },
+            { shifts: [{ type: 'morning', status: 'blocked' }, { type: 'afternoon', status: 'blocked' }, { type: 'night', status: 'blocked' }] },
+        ],
+    },
+];
+
+export function LocumManagement({ onViewProfile }: { onViewProfile?: (id: string) => void }) {
+    const [locumsList, setLocumsList] = useState<Locum[]>([]);
+    const [applicantsList, setApplicantsList] = useState<Applicant[]>([]);
+    const [searchTerm, setSearchTerm] = useState('');
+    const [showAddDialog, setShowAddDialog] = useState(false);
+    const [showEditDialog, setShowEditDialog] = useState(false);
+    const [showArchiveDialog, setShowArchiveDialog] = useState(false);
+    const [selectedLocum, setSelectedLocum] = useState<any>(null);
+    const [editTab, setEditTab] = useState<'personal' | 'professional' | 'financial'>('personal');
+    const [selectedApplicant, setSelectedApplicant] = useState<any>(null);
+    const [targetStage, setTargetStage] = useState<string>('');
+    const [showApplicantView, setShowApplicantView] = useState(false);
+    const [showAdvanceStage, setShowAdvanceStage] = useState(false);
+    const [statusFilter, setStatusFilter] = useState('all');
+    const [specialtyFilter, setSpecialtyFilter] = useState('all');
+    const [departmentFilter, setDepartmentFilter] = useState('all');
+    const [viewMode, setViewMode] = useState<'grid' | 'list'>('list');
+    const [activeTab, setActiveTab] = useState<'directory' | 'recruitment' | 'availability'>('directory');
+    const { permissions } = useUserRole();
+
+    // Fetch locums and applicants on mount
+    useEffect(() => {
+        const loadData = async () => {
+            try {
+                const locumsData = await locumService.getAllLocums();
+                const applicantsData = await locumService.getAllApplicants();
+                setLocumsList(locumsData);
+                setApplicantsList(applicantsData);
+            } catch (err) {
+                toast.error('Failed to load directories');
+            }
+        };
+        loadData();
+    }, []);
+
+    const handleAddLocumSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+        e.preventDefault();
+        const formData = new FormData(e.currentTarget);
+        const firstName = formData.get('firstName') as string;
+        const lastName = formData.get('lastName') as string;
+        const specialty = formData.get('specialty') as string;
+        const location = formData.get('location') as string;
+        const phone = formData.get('phone') as string;
+        const email = formData.get('email') as string;
+        const experience = formData.get('experience') as string;
+
+        const newLocumId = `#LC${Math.floor(10000 + Math.random() * 90000)}`;
+        const fullName = `Dr. ${firstName} ${lastName}`;
+        const avatarLetters = `${firstName[0] || ''}${lastName[0] || ''}`.toUpperCase() || 'DR';
+
+        const newLocum: Locum = {
+            id: newLocumId,
+            name: fullName,
+            avatar: avatarLetters,
+            specialty: specialty || 'General Practice',
+            department: 'Internal Medicine',
+            location: location || 'Dublin, Ireland',
+            phone: phone || '+353 1 123 4567',
+            email: email || `${firstName.toLowerCase()}.${lastName.toLowerCase()}@email.com`,
+            status: 'available',
+            shifts: 0,
+            rating: 5.0,
+            compliance: 100,
+            experience: `${experience || 1} years`,
+            qualifications: ['MB BCh BAO'],
+            joinDate: new Date().toISOString().split('T')[0]
+        };
+
+        try {
+            await locumService.createLocum(newLocum);
+            const updated = await locumService.getAllLocums();
+            setLocumsList(updated);
+            toast.success(`${fullName} added successfully`);
+            setShowAddDialog(false);
+        } catch (err) {
+            toast.error('Failed to create locum profile');
+        }
+    };
+
+    const handleEditLocumSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+        e.preventDefault();
+        const formData = new FormData(e.currentTarget);
+        const firstName = formData.get('firstName') as string;
+        const lastName = formData.get('lastName') as string;
+        const status = formData.get('status') as string;
+        const specialty = formData.get('specialty') as string;
+        const qualifications = formData.get('qualifications') as string;
+        const experience = formData.get('experience') as string;
+
+        const fullName = `Dr. ${firstName} ${lastName}`;
+        const avatarLetters = `${firstName[0] || ''}${lastName[0] || ''}`.toUpperCase() || 'DR';
+
+        const updatedLocum: Locum = {
+            ...selectedLocum,
+            name: fullName,
+            avatar: avatarLetters,
+            status: status as any,
+            specialty: specialty || selectedLocum.specialty,
+            qualifications: qualifications ? qualifications.split(',').map(q => q.trim()) : selectedLocum.qualifications,
+            experience: experience ? `${experience} years` : selectedLocum.experience
+        };
+
+        try {
+            await locumService.updateLocum(updatedLocum);
+            const updated = await locumService.getAllLocums();
+            setLocumsList(updated);
+            toast.success(`Profile updated for ${fullName}`);
+            setShowEditDialog(false);
+        } catch (err) {
+            toast.error('Failed to save profile changes');
+        }
+    };
+
+    // Availability tab state
+    const [availWeekOffset, setAvailWeekOffset] = useState(0);
+    const [availShiftFilter, setAvailShiftFilter] = useState<'all' | ShiftType>('all');
+    const [availStatusFilter, setAvailStatusFilter] = useState<'all' | ShiftSlotStatus>('all');
+    const [hoveredSlot, setHoveredSlot] = useState<{ locumIdx: number; dayIdx: number; shiftIdx: number } | null>(null);
+    const [tooltipPos, setTooltipPos] = useState<{ x: number; y: number }>({ x: 0, y: 0 });
+    const tableRef = useRef<HTMLDivElement>(null);
+
+    const filteredLocums = locumsList.filter(locum => {
+        const matchesSearch = locum.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            locum.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            locum.specialty.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            locum.location.toLowerCase().includes(searchTerm.toLowerCase());
+        const matchesStatus = statusFilter === 'all' || locum.status === statusFilter;
+        const matchesSpecialty = specialtyFilter === 'all' || locum.specialty === specialtyFilter;
+        const matchesDepartment = departmentFilter === 'all' || locum.department === departmentFilter;
+        return matchesSearch && matchesStatus && matchesSpecialty && matchesDepartment;
+    });
+
+    const handleExport = () => {
+        const csvContent = [
+            ['ID', 'Name', 'Specialty', 'Department', 'Location', 'Phone', 'Email', 'Status', 'Shifts', 'Rating', 'Compliance'],
+            ...locumsList.map(locum => [locum.id, locum.name, locum.specialty, locum.department || 'N/A', locum.location, locum.phone, locum.email, locum.status, locum.shifts, locum.rating, locum.compliance])
+        ].map(row => row.join(',')).join('\n');
+        const blob = new Blob([csvContent], { type: 'text/csv' });
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a'); a.href = url; a.download = `locums-${new Date().toISOString().split('T')[0]}.csv`; a.click();
+    };
+
+    const specialties = [...new Set(locumsList.map(l => l.specialty))];
+    const departments = [...new Set(locumsList.map(l => l.department).filter(Boolean))];
+
+    // Compute week dates based on offset
+    const getWeekDates = (offset: number) => {
+        const today = new Date(2026, 1, 10); // Feb 10, 2026 (Tuesday)
+        const startOfWeek = new Date(today);
+        startOfWeek.setDate(today.getDate() - today.getDay() + 1 + offset * 7); // Monday
+        const days = [];
+        const dayNames = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+        for (let i = 0; i < 7; i++) {
+            const d = new Date(startOfWeek);
+            d.setDate(startOfWeek.getDate() + i);
+            days.push({
+                name: dayNames[i],
+                date: d.getDate(),
+                month: d.toLocaleString('en-IE', { month: 'short' }),
+                full: d.toLocaleDateString('en-IE', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }),
+                isToday: d.toDateString() === today.toDateString(),
+                isWeekend: i >= 5,
+            });
+        }
+        return days;
+    };
+
+    const weekDates = getWeekDates(availWeekOffset);
+
+    // Get week summary stats
+    const getWeekStats = () => {
+        let totalShifts = 0;
+        let bookedShifts = 0;
+        let availableSlots = 0;
+        let tripleShiftDays = 0;
+        let doubleShiftDays = 0;
+
+        weekSchedules.forEach(schedule => {
+            schedule.days.forEach(day => {
+                const booked = day.shifts.filter(s => s.status === 'booked').length;
+                const available = day.shifts.filter(s => s.status === 'available').length;
+                totalShifts += booked;
+                bookedShifts += booked;
+                availableSlots += available;
+                if (booked >= 3) tripleShiftDays++;
+                else if (booked >= 2) doubleShiftDays++;
+            });
+        });
+
+        return { totalShifts, bookedShifts, availableSlots, tripleShiftDays, doubleShiftDays };
+    };
+
+    const weekStats = getWeekStats();
+
+    // Get locum's weekly shift count
+    const getLocumWeekShiftCount = (schedule: LocumWeekSchedule) => {
+        return schedule.days.reduce((sum, day) => sum + day.shifts.filter(s => s.status === 'booked').length, 0);
+    };
+
+    // Get locum's max shifts in a single day
+    const getLocumMaxDailyShifts = (schedule: LocumWeekSchedule) => {
+        return Math.max(...schedule.days.map(day => day.shifts.filter(s => s.status === 'booked').length));
+    };
+
+    // Handle tooltip positioning
+    const handleSlotHover = (e: React.MouseEvent, locumIdx: number, dayIdx: number, shiftIdx: number) => {
+        const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
+        const containerRect = tableRef.current?.getBoundingClientRect();
+        if (containerRect) {
+            setTooltipPos({
+                x: rect.left - containerRect.left + rect.width / 2,
+                y: rect.top - containerRect.top - 8,
+            });
+        }
+        setHoveredSlot({ locumIdx, dayIdx, shiftIdx });
+    };
+
+    return (
+        <div className="p-6 space-y-6">
+            <div>
+                <h2 className="text-[#1F2937] mb-1">Locum Professionals</h2>
+                <p className="text-sm text-[#6B7280]">Manage locum directory, recruitment pipeline, and availability</p>
+            </div>
+
+            {/* Stats */}
+            <div className="grid grid-cols-5 gap-4">
+                {[
+                    { label: 'Total Locums', value: '1,247', sub: '+12% from last month', color: '#10B981' },
+                    { label: 'Available Now', value: '892', sub: '71% availability rate', color: '#3B82F6' },
+                    { label: 'Currently Booked', value: '234', sub: 'Active this week', color: '#8B5CF6' },
+                    { label: 'New Applicants', value: '5', sub: 'Pending review', color: '#F59E0B' },
+                    { label: 'Avg. Compliance', value: '94.8%', sub: '+3% improvement', color: '#10B981' },
+                ].map(s => (
+                    <div key={s.label} className="bg-white rounded-xl p-4 border border-[#E5E7EB]">
+                        <p className="text-xs text-[#9CA3AF]">{s.label}</p>
+                        <p className="text-xl text-[#1F2937] mt-1" style={{ fontWeight: 700 }}>{s.value}</p>
+                        <p className="text-xs mt-0.5" style={{ color: s.color }}>{s.sub}</p>
+                    </div>
+                ))}
+            </div>
+
+            {/* Tabs */}
+            <div className="bg-white rounded-xl border border-[#E5E7EB]">
+                <div className="border-b border-[#E5E7EB] px-5 flex items-center justify-between">
+                    <div className="flex gap-6">
+                        {[
+                            { id: 'directory' as const, label: 'Locum Directory' },
+                            { id: 'recruitment' as const, label: 'Recruitment Pipeline', badge: 5 },
+                            { id: 'availability' as const, label: 'Availability Management' },
+                        ].map(tab => (
+                            <button
+                                key={tab.id}
+                                onClick={() => setActiveTab(tab.id)}
+                                className={`py-3 text-sm border-b-2 transition-colors flex items-center gap-2 ${activeTab === tab.id ? 'border-[#10B981] text-[#10B981]' : 'border-transparent text-[#6B7280] hover:text-[#1F2937]'}`}
+                                style={{ fontWeight: activeTab === tab.id ? 600 : 400 }}
+                            >
+                                {tab.label}
+                                {tab.badge && <span className="bg-[#F59E0B] text-white text-[10px] px-1.5 py-0.5 rounded-full">{tab.badge}</span>}
+                            </button>
+                        ))}
+                    </div>
+                    <div className="flex items-center gap-2">
+                        {activeTab === 'directory' && (
+                            <>
+                                <div className="flex items-center border border-[#E5E7EB] rounded-lg overflow-hidden">
+                                    <button className={`px-2.5 py-1.5 ${viewMode === 'grid' ? 'bg-[#10B981] text-white' : 'bg-white text-[#6B7280]'}`} onClick={() => setViewMode('grid')}><Grid3x3 className="w-4 h-4" /></button>
+                                    <button className={`px-2.5 py-1.5 ${viewMode === 'list' ? 'bg-[#10B981] text-white' : 'bg-white text-[#6B7280]'}`} onClick={() => setViewMode('list')}><List className="w-4 h-4" /></button>
+                                </div>
+                                {permissions.canExportData && (
+                                    <button onClick={handleExport} className="flex items-center gap-1.5 px-3 py-1.5 text-sm text-[#6B7280] border border-[#E5E7EB] rounded-lg hover:bg-[#F9FAFB]"><Download className="w-4 h-4" /> Export</button>
+                                )}
+                                {permissions.canCreateEntities && (
+                                    <button onClick={() => setShowAddDialog(true)} className="flex items-center gap-1.5 px-3 py-1.5 text-sm bg-[#10B981] text-white rounded-lg hover:bg-[#059669]"><Plus className="w-4 h-4" /> Add Locum</button>
+                                )}
+                            </>
+                        )}
+                    </div>
+                </div>
+
+                {/* Toolbar */}
+                {activeTab === 'directory' && (
+                    <div className="p-4 border-b border-[#E5E7EB] flex items-center gap-2">
+                        <div className="relative flex-1 max-w-sm">
+                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#9CA3AF]" />
+                            <input value={searchTerm} onChange={e => setSearchTerm(e.target.value)} placeholder="Search by name, ID, specialty, or location..." className="w-full pl-9 pr-4 py-2 text-sm border border-[#E5E7EB] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#10B981]" />
+                        </div>
+                        <select value={statusFilter} onChange={e => setStatusFilter(e.target.value)} className="px-3 py-2 text-sm border border-[#E5E7EB] rounded-lg bg-white">
+                            <option value="all">All Status</option>
+                            <option value="available">Available</option>
+                            <option value="booked">Booked</option>
+                            <option value="unavailable">Unavailable</option>
+                        </select>
+                        <select value={specialtyFilter} onChange={e => setSpecialtyFilter(e.target.value)} className="px-3 py-2 text-sm border border-[#E5E7EB] rounded-lg bg-white">
+                            <option value="all">All Specialties</option>
+                            {specialties.map(s => <option key={s} value={s}>{s}</option>)}
+                        </select>
+                        <select value={departmentFilter} onChange={e => setDepartmentFilter(e.target.value)} className="px-3 py-2 text-sm border border-[#E5E7EB] rounded-lg bg-white">
+                            <option value="all">All Departments</option>
+                            {departments.map(d => <option key={d} value={d}>{d}</option>)}
+                        </select>
+                    </div>
+                )}
+
+                {/* Directory - List View */}
+                {activeTab === 'directory' && viewMode === 'list' && (
+                    <div className="overflow-x-auto">
+                        <table className="w-full">
+                            <thead>
+                                <tr className="border-b border-[#E5E7EB]">
+                                    {['Locum', 'Specialty', 'Location', 'Experience', 'Shifts', 'Rating', 'Compliance', 'Status', 'Actions'].map(h => (
+                                        <th key={h} className="px-4 py-2.5 text-left text-xs text-[#9CA3AF]" style={{ fontWeight: 500 }}>{h}</th>
+                                    ))}
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {filteredLocums.map(locum => (
+                                    <tr key={locum.id} className="border-b border-[#F3F4F6] hover:bg-[#F9FAFB] cursor-pointer group" onClick={() => onViewProfile?.(locum.id)}>
+                                        <td className="px-4 py-3">
+                                            <div className="flex items-center gap-2.5">
+                                                <div className="w-9 h-9 bg-[#10B981] rounded-full flex items-center justify-center text-white text-xs">{locum.avatar}</div>
+                                                <div>
+                                                    <p className="text-sm text-[#1F2937]">{locum.name}</p>
+                                                    <p className="text-[11px] text-[#9CA3AF]">{locum.id}</p>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td className="px-4 py-3 text-xs text-[#6B7280]">{locum.specialty}</td>
+                                        <td className="px-4 py-3">
+                                            <div className="flex items-center gap-1"><MapPin className="w-3 h-3 text-[#9CA3AF]" /><span className="text-xs text-[#6B7280]">{locum.location}</span></div>
+                                        </td>
+                                        <td className="px-4 py-3 text-xs text-[#6B7280]">{locum.experience}</td>
+                                        <td className="px-4 py-3 text-sm text-[#1F2937]" style={{ fontWeight: 500 }}>{locum.shifts}</td>
+                                        <td className="px-4 py-3">
+                                            <div className="flex items-center gap-1">
+                                                <Star className="w-3.5 h-3.5 text-[#F59E0B] fill-[#F59E0B]" />
+                                                <span className="text-xs text-[#1F2937]">{locum.rating}</span>
+                                            </div>
+                                        </td>
+                                        <td className="px-4 py-3">
+                                            <div className="flex items-center gap-2">
+                                                <div className="w-10 h-1.5 bg-[#E5E7EB] rounded-full overflow-hidden">
+                                                    <div className={`h-full rounded-full ${locum.compliance === 100 ? 'bg-[#10B981]' : locum.compliance >= 75 ? 'bg-[#F59E0B]' : 'bg-[#EF4444]'}`} style={{ width: `${locum.compliance}%` }} />
+                                                </div>
+                                                <span className="text-xs text-[#1F2937]">{locum.compliance}%</span>
+                                            </div>
+                                        </td>
+                                        <td className="px-4 py-3">
+                                            <span className={`px-2 py-1 rounded-full text-[11px] border ${locum.status === 'available' ? 'bg-[#D1FAE5] text-[#059669] border-[#A7F3D0]' :
+                                                    locum.status === 'booked' ? 'bg-[#DBEAFE] text-[#1D4ED8] border-[#BFDBFE]' :
+                                                        'bg-[#FEE2E2] text-[#DC2626] border-[#FECACA]'
+                                                }`}>
+                                                {locum.status.charAt(0).toUpperCase() + locum.status.slice(1)}
+                                            </span>
+                                        </td>
+                                        <td className="px-4 py-3" onClick={e => e.stopPropagation()}>
+                                            <div className="flex items-center gap-2">
+                                                <button onClick={() => { setSelectedLocum(locum); setEditTab('personal'); setShowEditDialog(true); }} className="p-1.5 text-[#6B7280] hover:text-[#10B981] hover:bg-[#ECFDF5] rounded-lg transition-colors" title="Edit">
+                                                    <Pencil className="w-4 h-4" />
+                                                </button>
+                                                <button onClick={() => { setSelectedLocum(locum); setShowArchiveDialog(true); }} className="p-1.5 text-[#6B7280] hover:text-[#EF4444] hover:bg-[#FEF2F2] rounded-lg transition-colors" title="Archive">
+                                                    <Archive className="w-4 h-4" />
+                                                </button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    </div>
+                )}
+
+                {/* Directory - Grid View */}
+                {activeTab === 'directory' && viewMode === 'grid' && (
+                    <div className="grid grid-cols-3 gap-4 p-5">
+                        {filteredLocums.map(locum => (
+                            <div key={locum.id} className="border border-[#E5E7EB] rounded-xl p-4 hover:shadow-sm transition-shadow cursor-pointer group" onClick={() => onViewProfile?.(locum.id)}>
+                                <div className="flex items-start justify-between mb-3">
+                                    <div className="flex items-center gap-2.5">
+                                        <div className="w-10 h-10 bg-[#10B981] rounded-full flex items-center justify-center text-white text-xs">{locum.avatar}</div>
+                                        <div>
+                                            <p className="text-sm text-[#1F2937]">{locum.name}</p>
+                                            <p className="text-[11px] text-[#9CA3AF]">{locum.specialty}</p>
+                                        </div>
+                                    </div>
+                                    <span className={`px-2 py-0.5 rounded-full text-[10px] border ${locum.status === 'available' ? 'bg-[#D1FAE5] text-[#059669] border-[#A7F3D0]' :
+                                            locum.status === 'booked' ? 'bg-[#DBEAFE] text-[#1D4ED8] border-[#BFDBFE]' :
+                                                'bg-[#FEE2E2] text-[#DC2626] border-[#FECACA]'
+                                        }`}>
+                                        {locum.status.charAt(0).toUpperCase() + locum.status.slice(1)}
+                                    </span>
+                                </div>
+                                <div className="space-y-1.5 mb-3">
+                                    <div className="flex items-center gap-1.5 text-xs text-[#6B7280]"><MapPin className="w-3 h-3" />{locum.location}</div>
+                                    <div className="flex items-center gap-1.5 text-xs text-[#6B7280]"><Phone className="w-3 h-3" />{locum.phone}</div>
+                                    <div className="flex items-center gap-1.5 text-xs text-[#6B7280]"><Mail className="w-3 h-3" /><span className="truncate">{locum.email}</span></div>
+                                </div>
+                                <div className="grid grid-cols-3 gap-2 mb-3 pt-3 border-t border-[#E5E7EB]">
+                                    <div><p className="text-[10px] text-[#9CA3AF]">Shifts</p><p className="text-sm text-[#1F2937]" style={{ fontWeight: 600 }}>{locum.shifts}</p></div>
+                                    <div><p className="text-[10px] text-[#9CA3AF]">Rating</p><p className="text-sm text-[#1F2937]" style={{ fontWeight: 600 }}>{locum.rating}</p></div>
+                                    <div><p className="text-[10px] text-[#9CA3AF]">Compliance</p><p className="text-sm text-[#1F2937]" style={{ fontWeight: 600 }}>{locum.compliance}%</p></div>
+                                </div>
+                                <div className="flex items-center gap-2" onClick={e => e.stopPropagation()}>
+                                    <button onClick={() => { setSelectedLocum(locum); setEditTab('personal'); setShowEditDialog(true); }} className="flex-1 py-2 text-xs border border-[#E5E7EB] rounded-lg hover:bg-[#ECFDF5] hover:text-[#10B981] hover:border-[#10B981] flex items-center justify-center gap-1.5 transition-colors">
+                                        <Pencil className="w-3.5 h-3.5" /> Edit
+                                    </button>
+                                    <button onClick={() => { setSelectedLocum(locum); setShowArchiveDialog(true); }} className="flex-1 py-2 text-xs border border-[#E5E7EB] rounded-lg hover:bg-[#FEF2F2] hover:text-[#EF4444] hover:border-[#EF4444] flex items-center justify-center gap-1.5 transition-colors">
+                                        <Archive className="w-3.5 h-3.5" /> Archive
+                                    </button>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                )}
+
+                {/* Recruitment Pipeline Tab */}
+                {activeTab === 'recruitment' && (
+                    <div className="p-5 space-y-4">
+                        <div className="flex items-center justify-between">
+                            <h4 className="text-[#1F2937]">Recruitment Pipeline</h4>
+                            <button className="flex items-center gap-1.5 px-3 py-1.5 text-sm bg-[#10B981] text-white rounded-lg hover:bg-[#059669]"><UserPlus className="w-4 h-4" /> Add Applicant</button>
+                        </div>
+                        <div className="grid grid-cols-4 gap-4 mb-4">
+                            {[
+                                { label: 'New Applications', value: applicantsList.filter(a => a.status === 'new').length, color: '#3B82F6' },
+                                { label: 'Interview Stage', value: applicantsList.filter(a => a.status === 'interview').length, color: '#F59E0B' },
+                                { label: 'Credential Verification', value: applicantsList.filter(a => a.status === 'verification').length, color: '#8B5CF6' },
+                                { label: 'Onboarding', value: applicantsList.filter(a => a.status === 'onboarding').length, color: '#10B981' },
+                            ].map(s => (
+                                <div key={s.label} className="p-3 rounded-lg border border-[#E5E7EB]">
+                                    <p className="text-xs text-[#9CA3AF]">{s.label}</p>
+                                    <p className="text-xl mt-1" style={{ fontWeight: 700, color: s.color }}>{s.value}</p>
+                                </div>
+                            ))}
+                        </div>
+                        <div className="border border-[#E5E7EB] rounded-lg overflow-hidden">
+                            <table className="w-full">
+                                <thead>
+                                    <tr className="bg-[#F9FAFB] border-b border-[#E5E7EB]">
+                                        {['Applicant', 'Specialty', 'Location', 'Applied Date', 'Stage', 'Actions'].map(h => (
+                                            <th key={h} className="px-4 py-2.5 text-left text-xs text-[#9CA3AF]" style={{ fontWeight: 500 }}>{h}</th>
+                                        ))}
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {applicantsList.map(a => {
+                                        const sc = stageConfig[a.status];
+                                        return (
+                                            <tr key={a.id} className="border-b border-[#F3F4F6] hover:bg-[#F9FAFB]">
+                                                <td className="px-4 py-3">
+                                                    <p className="text-sm text-[#1F2937]">{a.name}</p>
+                                                    <p className="text-[11px] text-[#9CA3AF]">{a.id}</p>
+                                                </td>
+                                                <td className="px-4 py-3 text-xs text-[#6B7280]">{a.specialty}</td>
+                                                <td className="px-4 py-3 text-xs text-[#6B7280]">{a.location}</td>
+                                                <td className="px-4 py-3 text-xs text-[#6B7280]">{a.appliedDate}</td>
+                                                <td className="px-4 py-3">
+                                                    <span className="px-2 py-1 rounded-full text-[11px] border" style={{ backgroundColor: sc.bg, color: sc.color, borderColor: sc.border }}>{a.stage}</span>
+                                                </td>
+                                                <td className="px-4 py-3">
+                                                    <div className="flex items-center gap-1.5">
+                                                        <button
+                                                            onClick={() => {
+                                                                setSelectedApplicant(a);
+                                                                const nextId = a.status === 'new' ? 'interview' : a.status === 'interview' ? 'verification' : 'onboarding';
+                                                                setTargetStage(nextId);
+                                                                setShowAdvanceStage(true);
+                                                            }}
+                                                            className="flex items-center gap-1 px-2.5 py-1 text-[11px] text-[#10B981] bg-[#ECFDF5] border border-[#10B981] rounded hover:bg-[#D1FAE5] transition-colors"
+                                                        >
+                                                            <ArrowRight className="w-3 h-3" /> Advance
+                                                        </button>
+                                                        <button
+                                                            onClick={() => { setSelectedApplicant(a); setShowApplicantView(true); }}
+                                                            className="flex items-center gap-1 px-2.5 py-1 text-[11px] text-[#6B7280] bg-white border border-[#E5E7EB] rounded hover:bg-[#F9FAFB] transition-colors"
+                                                        >
+                                                            <Eye className="w-3 h-3" /> View
+                                                        </button>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        );
+                                    })}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                )}
+
+                {/* ============ AVAILABILITY MANAGEMENT TAB ============ */}
+                {activeTab === 'availability' && (
+                    <div className="p-5 space-y-4">
+                        {/* Summary Stats */}
+                        <div className="grid grid-cols-5 gap-3">
+                            <div className="p-3 bg-[#F0FDF4] rounded-lg border border-[#A7F3D0]">
+                                <p className="text-[10px] text-[#065F46]" style={{ fontWeight: 500 }}>Available Slots</p>
+                                <p className="text-xl text-[#065F46] mt-0.5" style={{ fontWeight: 700 }}>{weekStats.availableSlots}</p>
+                                <p className="text-[10px] text-[#065F46] opacity-70">Open this week</p>
+                            </div>
+                            <div className="p-3 bg-[#EFF6FF] rounded-lg border border-[#BFDBFE]">
+                                <p className="text-[10px] text-[#1E40AF]" style={{ fontWeight: 500 }}>Booked Shifts</p>
+                                <p className="text-xl text-[#1E40AF] mt-0.5" style={{ fontWeight: 700 }}>{weekStats.bookedShifts}</p>
+                                <p className="text-[10px] text-[#1E40AF] opacity-70">Confirmed this week</p>
+                            </div>
+                            <div className="p-3 bg-[#FEF3C7] rounded-lg border border-[#FDE68A]">
+                                <p className="text-[10px] text-[#92400E]" style={{ fontWeight: 500 }}>Double Shifts</p>
+                                <p className="text-xl text-[#92400E] mt-0.5" style={{ fontWeight: 700 }}>{weekStats.doubleShiftDays}</p>
+                                <p className="text-[10px] text-[#92400E] opacity-70">2 shifts/day instances</p>
+                            </div>
+                            <div className="p-3 bg-[#FEE2E2] rounded-lg border border-[#FECACA]">
+                                <p className="text-[10px] text-[#991B1B]" style={{ fontWeight: 500 }}>Triple Shifts</p>
+                                <p className="text-xl text-[#991B1B] mt-0.5" style={{ fontWeight: 700 }}>{weekStats.tripleShiftDays}</p>
+                                <p className="text-[10px] text-[#991B1B] opacity-70">3 shifts/day — review WTD</p>
+                            </div>
+                            <div className="p-3 bg-[#F5F3FF] rounded-lg border border-[#DDD6FE]">
+                                <p className="text-[10px] text-[#5B21B6]" style={{ fontWeight: 500 }}>Total Booked</p>
+                                <p className="text-xl text-[#5B21B6] mt-0.5" style={{ fontWeight: 700 }}>{weekStats.totalShifts}</p>
+                                <p className="text-[10px] text-[#5B21B6] opacity-70">Shifts this week</p>
+                            </div>
+                        </div>
+
+                        {/* Week Navigation & Filters */}
+                        <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-2">
+                                <button
+                                    onClick={() => setAvailWeekOffset(o => o - 1)}
+                                    className="p-1.5 border border-[#E5E7EB] rounded-lg hover:bg-[#F9FAFB]"
+                                >
+                                    <ChevronLeft className="w-4 h-4 text-[#6B7280]" />
+                                </button>
+                                <button
+                                    onClick={() => setAvailWeekOffset(0)}
+                                    className={`px-3 py-1.5 text-xs rounded-lg border transition-colors ${availWeekOffset === 0 ? 'bg-[#10B981] text-white border-[#10B981]' : 'border-[#E5E7EB] text-[#6B7280] hover:bg-[#F9FAFB]'}`}
+                                >
+                                    This Week
+                                </button>
+                                <button
+                                    onClick={() => setAvailWeekOffset(o => o + 1)}
+                                    className="p-1.5 border border-[#E5E7EB] rounded-lg hover:bg-[#F9FAFB]"
+                                >
+                                    <ChevronRight className="w-4 h-4 text-[#6B7280]" />
+                                </button>
+                                <span className="text-sm text-[#1F2937] ml-2" style={{ fontWeight: 500 }}>
+                                    {weekDates[0].date} {weekDates[0].month} – {weekDates[6].date} {weekDates[6].month} 2026
+                                </span>
+                            </div>
+                            <div className="flex items-center gap-2">
+                                <select
+                                    value={availShiftFilter}
+                                    onChange={e => setAvailShiftFilter(e.target.value as 'all' | ShiftType)}
+                                    className="px-2.5 py-1.5 text-xs border border-[#E5E7EB] rounded-lg"
+                                >
+                                    <option value="all">All Shifts</option>
+                                    <option value="morning">Morning (07-15)</option>
+                                    <option value="afternoon">Afternoon (15-23)</option>
+                                    <option value="night">Night (23-07)</option>
+                                </select>
+                                <select
+                                    value={availStatusFilter}
+                                    onChange={e => setAvailStatusFilter(e.target.value as 'all' | ShiftSlotStatus)}
+                                    className="px-2.5 py-1.5 text-xs border border-[#E5E7EB] rounded-lg"
+                                >
+                                    <option value="all">All Statuses</option>
+                                    <option value="available">Available</option>
+                                    <option value="booked">Booked</option>
+                                    <option value="leave">On Leave</option>
+                                    <option value="blocked">Blocked</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        {/* Legend */}
+                        <div className="flex items-center gap-4 text-[10px]">
+                            <span className="text-[#9CA3AF]" style={{ fontWeight: 500 }}>LEGEND:</span>
+                            {(['available', 'booked', 'leave', 'blocked', 'off'] as ShiftSlotStatus[]).map(status => (
+                                <div key={status} className="flex items-center gap-1.5">
+                                    <div
+                                        className="w-3 h-3 rounded-sm border"
+                                        style={{
+                                            backgroundColor: shiftStatusConfig[status].bg === 'transparent' ? '#F9FAFB' : shiftStatusConfig[status].bg,
+                                            borderColor: shiftStatusConfig[status].border === 'transparent' ? '#E5E7EB' : shiftStatusConfig[status].border,
+                                        }}
+                                    />
+                                    <span className="text-[#6B7280]">{shiftStatusConfig[status].label}</span>
+                                </div>
+                            ))}
+                            <div className="ml-2 flex items-center gap-1.5 text-[#9CA3AF]">
+                                <span>|</span>
+                                <span>AM = 07:00-15:00</span>
+                                <span className="px-0.5">&#183;</span>
+                                <span>PM = 15:00-23:00</span>
+                                <span className="px-0.5">&#183;</span>
+                                <span>NT = 23:00-07:00</span>
+                            </div>
+                        </div>
+
+                        {/* Schedule Grid */}
+                        <div className="border border-[#E5E7EB] rounded-lg overflow-hidden relative" ref={tableRef}>
+                            <table className="w-full">
+                                <thead>
+                                    <tr className="bg-[#F9FAFB] border-b border-[#E5E7EB]">
+                                        <th className="px-3 py-2 text-left text-xs text-[#9CA3AF] w-[180px] min-w-[180px]" style={{ fontWeight: 500 }}>Locum</th>
+                                        <th className="px-1 py-2 text-center text-xs text-[#9CA3AF] w-[60px]" style={{ fontWeight: 500 }}>Wk Total</th>
+                                        {weekDates.map((day, idx) => (
+                                            <th
+                                                key={idx}
+                                                className={`px-1 py-2 text-center text-xs min-w-[100px] ${day.isToday ? 'bg-[#F0FDF4]' : day.isWeekend ? 'bg-[#F9FAFB]' : ''}`}
+                                                style={{ fontWeight: day.isToday ? 600 : 500 }}
+                                            >
+                                                <span className={day.isToday ? 'text-[#10B981]' : 'text-[#9CA3AF]'}>{day.name}</span>
+                                                <br />
+                                                <span className={`text-[11px] ${day.isToday ? 'text-[#10B981] bg-[#10B981]/10 px-1.5 py-0.5 rounded-full inline-block' : 'text-[#6B7280]'}`}>
+                                                    {day.date}
+                                                </span>
+                                            </th>
+                                        ))}
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {weekSchedules.map((schedule, locumIdx) => {
+                                        const locum = locumsList.find(l => l.id === schedule.locumId);
+                                        if (!locum) return null;
+                                        const weekTotal = getLocumWeekShiftCount(schedule);
+                                        const maxDaily = getLocumMaxDailyShifts(schedule);
+
+                                        return (
+                                            <tr key={schedule.locumId} className="border-b border-[#F3F4F6] hover:bg-[#FAFBFC]">
+                                                <td className="px-3 py-2">
+                                                    <div className="flex items-center gap-2">
+                                                        <div className="w-7 h-7 bg-[#10B981] rounded-full flex items-center justify-center text-white text-[10px] flex-shrink-0">{locum.avatar}</div>
+                                                        <div className="min-w-0">
+                                                            <p className="text-xs text-[#1F2937] truncate" style={{ fontWeight: 500 }}>{locum.name}</p>
+                                                            <p className="text-[10px] text-[#9CA3AF] truncate">{locum.specialty}</p>
+                                                        </div>
+                                                    </div>
+                                                </td>
+                                                <td className="px-1 py-2 text-center">
+                                                    <div className="flex flex-col items-center">
+                                                        <span className="text-sm text-[#1F2937]" style={{ fontWeight: 600 }}>{weekTotal}</span>
+                                                        <span className="text-[9px] text-[#9CA3AF]">shifts</span>
+                                                        {maxDaily >= 3 && (
+                                                            <span className="text-[8px] px-1 py-0.5 bg-[#FEE2E2] text-[#DC2626] rounded mt-0.5" style={{ fontWeight: 500 }}>
+                                                                3/day
+                                                            </span>
+                                                        )}
+                                                        {maxDaily === 2 && (
+                                                            <span className="text-[8px] px-1 py-0.5 bg-[#FEF3C7] text-[#92400E] rounded mt-0.5" style={{ fontWeight: 500 }}>
+                                                                2/day
+                                                            </span>
+                                                        )}
+                                                    </div>
+                                                </td>
+                                                {schedule.days.map((day, dayIdx) => {
+                                                    const bookedCount = day.shifts.filter(s => s.status === 'booked').length;
+                                                    const filteredShifts = day.shifts.filter(s => {
+                                                        const matchesShift = availShiftFilter === 'all' || s.type === availShiftFilter;
+                                                        const matchesStatus = availStatusFilter === 'all' || s.status === availStatusFilter;
+                                                        return matchesShift && matchesStatus;
+                                                    });
+
+                                                    return (
+                                                        <td
+                                                            key={dayIdx}
+                                                            className={`px-0.5 py-1.5 ${weekDates[dayIdx]?.isToday ? 'bg-[#F0FDF4]/50' : weekDates[dayIdx]?.isWeekend ? 'bg-[#F9FAFB]/50' : ''}`}
+                                                        >
+                                                            <div className="flex flex-col gap-[2px] px-0.5">
+                                                                {filteredShifts.map((shift, shiftIdx) => {
+                                                                    if (shift.status === 'off') {
+                                                                        return (
+                                                                            <div
+                                                                                key={shiftIdx}
+                                                                                className="h-[18px] rounded-sm flex items-center justify-center border border-dashed border-[#E5E7EB]"
+                                                                            >
+                                                                                <span className="text-[8px] text-[#D1D5DB]">{shiftTypeLabels[shift.type].abbr}</span>
+                                                                            </div>
+                                                                        );
+                                                                    }
+                                                                    const cfg = shiftStatusConfig[shift.status];
+                                                                    return (
+                                                                        <div
+                                                                            key={shiftIdx}
+                                                                            className="h-[18px] rounded-sm flex items-center justify-center cursor-pointer transition-all hover:ring-1 hover:ring-offset-0 relative"
+                                                                            style={{
+                                                                                backgroundColor: cfg.bg,
+                                                                                border: `1px solid ${cfg.border}`,
+                                                                            }}
+                                                                            onMouseEnter={(e) => handleSlotHover(e, locumIdx, dayIdx, shiftIdx)}
+                                                                            onMouseLeave={() => setHoveredSlot(null)}
+                                                                        >
+                                                                            <span className="text-[8px]" style={{ color: cfg.color, fontWeight: 500 }}>
+                                                                                {shiftTypeLabels[shift.type].abbr}
+                                                                                {shift.status === 'booked' && (
+                                                                                    <span className="ml-0.5 opacity-70">&#9679;</span>
+                                                                                )}
+                                                                            </span>
+                                                                        </div>
+                                                                    );
+                                                                })}
+                                                                {filteredShifts.length === 0 && (
+                                                                    <div className="h-[18px] flex items-center justify-center">
+                                                                        <span className="text-[8px] text-[#D1D5DB]">--</span>
+                                                                    </div>
+                                                                )}
+                                                            </div>
+                                                            {bookedCount >= 2 && availShiftFilter === 'all' && availStatusFilter === 'all' && (
+                                                                <div className="text-center mt-0.5">
+                                                                    <span className={`text-[7px] px-1 py-px rounded ${bookedCount >= 3 ? 'bg-[#FEE2E2] text-[#DC2626]' : 'bg-[#FEF3C7] text-[#92400E]'}`} style={{ fontWeight: 600 }}>
+                                                                        {bookedCount}x
+                                                                    </span>
+                                                                </div>
+                                                            )}
+                                                        </td>
+                                                    );
+                                                })}
+                                            </tr>
+                                        );
+                                    })}
+                                </tbody>
+                            </table>
+
+                            {/* Hover Tooltip */}
+                            {hoveredSlot && (() => {
+                                const schedule = weekSchedules[hoveredSlot.locumIdx];
+                                if (!schedule) return null;
+                                const day = schedule.days[hoveredSlot.dayIdx];
+                                if (!day) return null;
+                                const filteredShifts = day.shifts.filter(s => {
+                                    const matchesShift = availShiftFilter === 'all' || s.type === availShiftFilter;
+                                    const matchesStatus = availStatusFilter === 'all' || s.status === availStatusFilter;
+                                    return matchesShift && matchesStatus;
+                                });
+                                const shift = filteredShifts[hoveredSlot.shiftIdx];
+                                if (!shift || shift.status === 'off') return null;
+                                const locum = locumsList.find(l => l.id === schedule.locumId);
+                                const dayInfo = weekDates[hoveredSlot.dayIdx];
+                                const cfg = shiftStatusConfig[shift.status];
+
+                                return (
+                                    <div
+                                        className="absolute z-30 bg-white rounded-lg shadow-lg border border-[#E5E7EB] p-3 pointer-events-none"
+                                        style={{
+                                            left: Math.min(Math.max(tooltipPos.x, 120), 900),
+                                            top: tooltipPos.y,
+                                            transform: 'translate(-50%, -100%)',
+                                            minWidth: 240,
+                                        }}
+                                    >
+                                        <div className="flex items-center gap-2 mb-2">
+                                            <div
+                                                className="w-2 h-2 rounded-full"
+                                                style={{ backgroundColor: cfg.color }}
+                                            />
+                                            <span className="text-xs text-[#1F2937]" style={{ fontWeight: 600 }}>
+                                                {shiftTypeLabels[shift.type].label} Shift
+                                            </span>
+                                            <span
+                                                className="text-[10px] px-1.5 py-0.5 rounded-full border ml-auto"
+                                                style={{ backgroundColor: cfg.bg, color: cfg.color, borderColor: cfg.border }}
+                                            >
+                                                {cfg.label}
+                                            </span>
+                                        </div>
+                                        <div className="space-y-1 text-[10px]">
+                                            <div className="flex items-center justify-between">
+                                                <span className="text-[#9CA3AF]">Locum</span>
+                                                <span className="text-[#1F2937]" style={{ fontWeight: 500 }}>{locum?.name}</span>
+                                            </div>
+                                            <div className="flex items-center justify-between">
+                                                <span className="text-[#9CA3AF]">Date</span>
+                                                <span className="text-[#1F2937]">{dayInfo?.full}</span>
+                                            </div>
+                                            <div className="flex items-center justify-between">
+                                                <span className="text-[#9CA3AF]">Time</span>
+                                                <span className="text-[#1F2937]">{shift.time || shiftTypeLabels[shift.type].time}</span>
+                                            </div>
+                                            {shift.facility && (
+                                                <div className="flex items-center justify-between">
+                                                    <span className="text-[#9CA3AF]">Facility</span>
+                                                    <span className="text-[#1F2937] text-right max-w-[160px]" style={{ fontWeight: 500 }}>{shift.facility}</span>
+                                                </div>
+                                            )}
+                                            {shift.shiftId && (
+                                                <div className="flex items-center justify-between">
+                                                    <span className="text-[#9CA3AF]">Shift ID</span>
+                                                    <span className="text-[#3B82F6]">{shift.shiftId}</span>
+                                                </div>
+                                            )}
+                                        </div>
+                                        {day.shifts.filter(s => s.status === 'booked').length >= 2 && (
+                                            <div className="mt-2 pt-2 border-t border-[#F3F4F6]">
+                                                <div className="flex items-center gap-1">
+                                                    <Info className="w-3 h-3 text-[#F59E0B] flex-shrink-0" />
+                                                    <span className="text-[9px] text-[#92400E]" style={{ fontWeight: 500 }}>
+                                                        {day.shifts.filter(s => s.status === 'booked').length} shifts booked this day — check WTD compliance
+                                                    </span>
+                                                </div>
+                                            </div>
+                                        )}
+                                    </div>
+                                );
+                            })()}
+                        </div>
+
+                        {/* Working Time Directive Alerts */}
+                        {(() => {
+                            const alerts: { locum: string; day: string; count: number; locumId: string }[] = [];
+                            weekSchedules.forEach(schedule => {
+                                const locum = locumsList.find(l => l.id === schedule.locumId);
+                                schedule.days.forEach((day, dayIdx) => {
+                                    const bookedCount = day.shifts.filter(s => s.status === 'booked').length;
+                                    if (bookedCount >= 3) {
+                                        alerts.push({
+                                            locum: locum?.name || '',
+                                            day: `${weekDates[dayIdx]?.name} ${weekDates[dayIdx]?.date} ${weekDates[dayIdx]?.month}`,
+                                            count: bookedCount,
+                                            locumId: schedule.locumId,
+                                        });
+                                    }
+                                });
+                            });
+
+                            if (alerts.length === 0) return null;
+
+                            return (
+                                <div className="bg-[#FEF2F2] border border-[#FECACA] rounded-lg p-4">
+                                    <div className="flex items-center gap-2 mb-2">
+                                        <div className="w-5 h-5 bg-[#DC2626] rounded-full flex items-center justify-center flex-shrink-0">
+                                            <span className="text-white text-[10px]" style={{ fontWeight: 700 }}>!</span>
+                                        </div>
+                                        <span className="text-xs text-[#991B1B]" style={{ fontWeight: 600 }}>
+                                            Working Time Directive Alert — Triple Shift Days Detected
+                                        </span>
+                                    </div>
+                                    <p className="text-[10px] text-[#991B1B] mb-2 opacity-80">
+                                        The following locums have 3 shifts booked in a single day. Under the Organisation of Working Time Act 1997 (Ireland) and EU Working Time Directive, ensure adequate rest periods (minimum 11 consecutive hours in any 24-hour period).
+                                    </p>
+                                    <div className="space-y-1.5">
+                                        {alerts.map((alert, idx) => (
+                                            <div key={idx} className="flex items-center justify-between bg-white/60 rounded px-3 py-1.5">
+                                                <div className="flex items-center gap-2">
+                                                    <span className="text-xs text-[#1F2937]" style={{ fontWeight: 500 }}>{alert.locum}</span>
+                                                    <span className="text-[10px] text-[#6B7280]">&#183;</span>
+                                                    <span className="text-[10px] text-[#6B7280]">{alert.day}</span>
+                                                </div>
+                                                <div className="flex items-center gap-2">
+                                                    <span className="text-[10px] px-1.5 py-0.5 bg-[#FEE2E2] text-[#DC2626] rounded" style={{ fontWeight: 600 }}>
+                                                        {alert.count} shifts / 24hrs
+                                                    </span>
+                                                    <button className="text-[10px] text-[#DC2626] hover:underline" style={{ fontWeight: 500 }}>Review</button>
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+                            );
+                        })()}
+
+                        {/* Daily Breakdown Summary */}
+                        <div className="border border-[#E5E7EB] rounded-lg overflow-hidden">
+                            <div className="bg-[#F9FAFB] px-4 py-2.5 border-b border-[#E5E7EB]">
+                                <span className="text-xs text-[#1F2937]" style={{ fontWeight: 600 }}>Daily Shift Distribution</span>
+                            </div>
+                            <div className="grid grid-cols-7 divide-x divide-[#E5E7EB]">
+                                {weekDates.map((day, dayIdx) => {
+                                    let morningBooked = 0, afternoonBooked = 0, nightBooked = 0;
+                                    let morningAvail = 0, afternoonAvail = 0, nightAvail = 0;
+
+                                    weekSchedules.forEach(schedule => {
+                                        const d = schedule.days[dayIdx];
+                                        if (!d) return;
+                                        d.shifts.forEach(s => {
+                                            if (s.status === 'booked') {
+                                                if (s.type === 'morning') morningBooked++;
+                                                else if (s.type === 'afternoon') afternoonBooked++;
+                                                else nightBooked++;
+                                            } else if (s.status === 'available') {
+                                                if (s.type === 'morning') morningAvail++;
+                                                else if (s.type === 'afternoon') afternoonAvail++;
+                                                else nightAvail++;
+                                            }
+                                        });
+                                    });
+
+                                    const totalBooked = morningBooked + afternoonBooked + nightBooked;
+                                    const totalAvail = morningAvail + afternoonAvail + nightAvail;
+
+                                    return (
+                                        <div key={dayIdx} className={`p-3 ${day.isToday ? 'bg-[#F0FDF4]/50' : ''}`}>
+                                            <p className={`text-[10px] text-center mb-2 ${day.isToday ? 'text-[#10B981]' : 'text-[#9CA3AF]'}`} style={{ fontWeight: 600 }}>
+                                                {day.name} {day.date}
+                                            </p>
+                                            <div className="space-y-1.5">
+                                                <div className="flex items-center justify-between">
+                                                    <span className="text-[9px] text-[#9CA3AF]">AM</span>
+                                                    <div className="flex items-center gap-1">
+                                                        <span className="text-[9px] text-[#1E40AF]" style={{ fontWeight: 500 }}>{morningBooked}B</span>
+                                                        <span className="text-[9px] text-[#D1D5DB]">/</span>
+                                                        <span className="text-[9px] text-[#059669]" style={{ fontWeight: 500 }}>{morningAvail}A</span>
+                                                    </div>
+                                                </div>
+                                                <div className="flex items-center justify-between">
+                                                    <span className="text-[9px] text-[#9CA3AF]">PM</span>
+                                                    <div className="flex items-center gap-1">
+                                                        <span className="text-[9px] text-[#1E40AF]" style={{ fontWeight: 500 }}>{afternoonBooked}B</span>
+                                                        <span className="text-[9px] text-[#D1D5DB]">/</span>
+                                                        <span className="text-[9px] text-[#059669]" style={{ fontWeight: 500 }}>{afternoonAvail}A</span>
+                                                    </div>
+                                                </div>
+                                                <div className="flex items-center justify-between">
+                                                    <span className="text-[9px] text-[#9CA3AF]">NT</span>
+                                                    <div className="flex items-center gap-1">
+                                                        <span className="text-[9px] text-[#1E40AF]" style={{ fontWeight: 500 }}>{nightBooked}B</span>
+                                                        <span className="text-[9px] text-[#D1D5DB]">/</span>
+                                                        <span className="text-[9px] text-[#059669]" style={{ fontWeight: 500 }}>{nightAvail}A</span>
+                                                    </div>
+                                                </div>
+                                                <div className="pt-1.5 mt-1.5 border-t border-[#E5E7EB]">
+                                                    <div className="flex items-center justify-between">
+                                                        <span className="text-[9px] text-[#6B7280]" style={{ fontWeight: 500 }}>Total</span>
+                                                        <span className="text-[10px] text-[#1F2937]" style={{ fontWeight: 600 }}>{totalBooked}B / {totalAvail}A</span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    );
+                                })}
+                            </div>
+                        </div>
+                    </div>
+                )}
+            </div>
+
+            {/* Add Locum Dialog */}
+            {showAddDialog && (
+                <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+                    <form onSubmit={handleAddLocumSubmit} className="bg-white rounded-xl p-6 w-[480px]">
+                        <div className="flex items-center justify-between mb-5">
+                            <h3 className="text-[#1F2937]">Add New Locum</h3>
+                            <button type="button" onClick={() => setShowAddDialog(false)} className="p-1 hover:bg-[#F3F4F6] rounded-lg"><X className="w-5 h-5 text-[#6B7280]" /></button>
+                        </div>
+                        <div className="space-y-4">
+                            <div className="grid grid-cols-2 gap-3">
+                                <div><label className="text-xs text-[#6B7280] block mb-1">First Name</label><input name="firstName" required className="w-full px-3 py-2 text-sm border border-[#E5E7EB] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#10B981]" /></div>
+                                <div><label className="text-xs text-[#6B7280] block mb-1">Last Name</label><input name="lastName" required className="w-full px-3 py-2 text-sm border border-[#E5E7EB] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#10B981]" /></div>
+                            </div>
+                            <div><label className="text-xs text-[#6B7280] block mb-1">Specialty</label>
+                                <select name="specialty" className="w-full px-3 py-2 text-sm border border-[#E5E7EB] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#10B981]">
+                                    <option value="">Select specialty...</option>
+                                    {specialties.map(s => <option key={s} value={s}>{s}</option>)}
+                                </select>
+                            </div>
+                            <div><label className="text-xs text-[#6B7280] block mb-1">Location</label><input name="location" className="w-full px-3 py-2 text-sm border border-[#E5E7EB] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#10B981]" placeholder="e.g., Dublin, Ireland" /></div>
+                            <div className="grid grid-cols-2 gap-3">
+                                <div><label className="text-xs text-[#6B7280] block mb-1">Phone</label><input name="phone" className="w-full px-3 py-2 text-sm border border-[#E5E7EB] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#10B981]" placeholder="+353" /></div>
+                                <div><label className="text-xs text-[#6B7280] block mb-1">Email</label><input type="email" name="email" className="w-full px-3 py-2 text-sm border border-[#E5E7EB] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#10B981]" /></div>
+                            </div>
+                            <div><label className="text-xs text-[#6B7280] block mb-1">Years of Experience</label><input type="number" name="experience" className="w-full px-3 py-2 text-sm border border-[#E5E7EB] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#10B981]" /></div>
+                        </div>
+                        <div className="flex gap-2 mt-5 justify-end">
+                            <button type="button" onClick={() => setShowAddDialog(false)} className="px-4 py-2 text-sm border border-[#E5E7EB] text-[#6B7280] rounded-lg hover:bg-[#F9FAFB]">Cancel</button>
+                            <button type="submit" className="px-4 py-2 text-sm bg-[#10B981] text-white rounded-lg hover:bg-[#059669]">Add Locum</button>
+                        </div>
+                    </form>
+                </div>
+            )}
+
+            {/* Edit Locum Dialog */}
+            {showEditDialog && selectedLocum && (
+                <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+                    <form onSubmit={handleEditLocumSubmit} className="bg-white rounded-xl shadow-2xl w-full max-w-2xl overflow-hidden flex flex-col max-h-[90vh]">
+                        <div className="p-6 border-b border-[#E5E7EB] flex items-center justify-between bg-[#F9FAFB]">
+                            <div>
+                                <h3 className="text-[#1F2937] text-lg" style={{ fontWeight: 600 }}>Edit Locum Profile</h3>
+                                <p className="text-xs text-[#6B7280]">Updating records for {selectedLocum.name} ({selectedLocum.id})</p>
+                            </div>
+                            <button type="button" onClick={() => setShowEditDialog(false)} className="p-2 hover:bg-[#E5E7EB] rounded-full transition-colors">
+                                <X className="w-5 h-5 text-[#6B7280]" />
+                            </button>
+                        </div>
+
+                        <div className="flex border-b border-[#E5E7EB] bg-white px-6">
+                            {[
+                                { id: 'personal', label: 'Personal Information', icon: User },
+                                { id: 'professional', label: 'Professional Details', icon: Briefcase },
+                                { id: 'financial', label: 'Financial & Rates', icon: CreditCard },
+                            ].map(tab => (
+                                <button
+                                    type="button"
+                                    key={tab.id}
+                                    onClick={() => setEditTab(tab.id as any)}
+                                    className={`flex items-center gap-2 py-4 px-4 text-sm border-b-2 transition-all ${editTab === tab.id ? 'border-[#10B981] text-[#10B981]' : 'border-transparent text-[#6B7280] hover:text-[#1F2937]'}`}
+                                    style={{ fontWeight: editTab === tab.id ? 600 : 400 }}
+                                >
+                                    <tab.icon className="w-4 h-4" />
+                                    {tab.label}
+                                </button>
+                            ))}
+                        </div>
+
+                        <div className="p-6 overflow-y-auto bg-white flex-1">
+                            <div className={`space-y-5 animate-in fade-in slide-in-from-bottom-2 duration-300 ${editTab !== 'personal' ? 'hidden' : ''}`}>
+                                <div className="space-y-5 animate-in fade-in slide-in-from-bottom-2 duration-300">
+                                    <div className="grid grid-cols-2 gap-4">
+                                        <div>
+                                            <label className="text-xs text-[#6B7280] block mb-1.5" style={{ fontWeight: 500 }}>First Name</label>
+                                            <input name="firstName" required defaultValue={selectedLocum.name.split(' ')[1]} className="w-full px-3 py-2 text-sm border border-[#E5E7EB] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#10B981]" />
+                                        </div>
+                                        <div>
+                                            <label className="text-xs text-[#6B7280] block mb-1.5" style={{ fontWeight: 500 }}>Last Name</label>
+                                            <input name="lastName" required defaultValue={selectedLocum.name.split(' ')[2] || selectedLocum.name.split(' ')[1]} className="w-full px-3 py-2 text-sm border border-[#E5E7EB] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#10B981]" />
+                                        </div>
+                                    </div>
+                                    <div className="grid grid-cols-2 gap-4">
+                                        <div>
+                                            <label className="text-xs text-[#6B7280] block mb-1.5" style={{ fontWeight: 500 }}>Date of Birth</label>
+                                            <input type="date" defaultValue="1984-06-15" className="w-full px-3 py-2 text-sm border border-[#E5E7EB] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#10B981]" />
+                                        </div>
+                                        <div>
+                                            <label className="text-xs text-[#6B7280] block mb-1.5" style={{ fontWeight: 500 }}>Gender</label>
+                                            <select className="w-full px-3 py-2 text-sm border border-[#E5E7EB] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#10B981]">
+                                                <option>Female</option>
+                                                <option>Male</option>
+                                                <option>Other</option>
+                                                <option>Prefer not to say</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <div className="grid grid-cols-2 gap-4">
+                                        <div>
+                                            <label className="text-xs text-[#6B7280] block mb-1.5" style={{ fontWeight: 500 }}>Nationality</label>
+                                            <input defaultValue="Irish" className="w-full px-3 py-2 text-sm border border-[#E5E7EB] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#10B981]" />
+                                        </div>
+                                        <div>
+                                            <label className="text-xs text-[#6B7280] block mb-1.5" style={{ fontWeight: 500 }}>PPSN (Ireland)</label>
+                                            <input defaultValue="1234567T" className="w-full px-3 py-2 text-sm border border-[#E5E7EB] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#10B981]" />
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <label className="text-xs text-[#6B7280] block mb-1.5" style={{ fontWeight: 500 }}>Home Address</label>
+                                        <textarea defaultValue="42 Pembroke Road, Ballsbridge, Dublin 4" rows={2} className="w-full px-3 py-2 text-sm border border-[#E5E7EB] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#10B981] resize-none" />
+                                    </div>
+                                    <div className="grid grid-cols-2 gap-4">
+                                        <div>
+                                            <label className="text-xs text-[#6B7280] block mb-1.5" style={{ fontWeight: 500 }}>Eircode / Postcode</label>
+                                            <input defaultValue="D04 X5K2" className="w-full px-3 py-2 text-sm border border-[#E5E7EB] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#10B981]" />
+                                        </div>
+                                        <div>
+                                            <label className="text-xs text-[#6B7280] block mb-1.5" style={{ fontWeight: 500 }}>Emergency Contact</label>
+                                            <input defaultValue="John Mitchell (Spouse)" className="w-full px-3 py-2 text-sm border border-[#E5E7EB] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#10B981]" />
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div className={`space-y-5 animate-in fade-in slide-in-from-bottom-2 duration-300 ${editTab !== 'professional' ? 'hidden' : ''}`}>
+                                    <div className="grid grid-cols-2 gap-4">
+                                        <div>
+                                            <label className="text-xs text-[#6B7280] block mb-1.5" style={{ fontWeight: 500 }}>Grade / Level</label>
+                                            <select defaultValue="Consultant" className="w-full px-3 py-2 text-sm border border-[#E5E7EB] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#10B981]">
+                                                <option>Consultant</option>
+                                                <option>Registrar</option>
+                                                <option>SHO (Senior House Officer)</option>
+                                                <option>Intern</option>
+                                                <option>Nurse (Advanced Practitioner)</option>
+                                            </select>
+                                        </div>
+                                        <div>
+                                            <label className="text-xs text-[#6B7280] block mb-1.5" style={{ fontWeight: 500 }}>Status</label>
+                                            <select name="status" defaultValue={selectedLocum.status} className="w-full px-3 py-2 text-sm border border-[#E5E7EB] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#10B981]">
+                                                <option value="available">Available</option>
+                                                <option value="booked">Booked</option>
+                                                <option value="unavailable">Unavailable</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <div className="grid grid-cols-2 gap-4">
+                                        <div>
+                                            <label className="text-xs text-[#6B7280] block mb-1.5" style={{ fontWeight: 500 }}>Specialty</label>
+                                            <select name="specialty" defaultValue={selectedLocum.specialty} className="w-full px-3 py-2 text-sm border border-[#E5E7EB] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#10B981]">
+                                                {specialties.map(s => <option key={s} value={s}>{s}</option>)}
+                                            </select>
+                                        </div>
+                                        <div>
+                                            <label className="text-xs text-[#6B7280] block mb-1.5" style={{ fontWeight: 500 }}>Sub-Specialty</label>
+                                            <input name="subSpecialty" defaultValue="Laparoscopic Surgery" className="w-full px-3 py-2 text-sm border border-[#E5E7EB] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#10B981]" />
+                                        </div>
+                                    </div>
+                                    <div className="grid grid-cols-2 gap-4">
+                                        <div>
+                                            <label className="text-xs text-[#6B7280] block mb-1.5" style={{ fontWeight: 500 }}>IMC Number (Ireland)</label>
+                                            <input name="imcNumber" defaultValue="IMC-34521" className="w-full px-3 py-2 text-sm border border-[#E5E7EB] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#10B981]" />
+                                        </div>
+                                        <div>
+                                            <label className="text-xs text-[#6B7280] block mb-1.5" style={{ fontWeight: 500 }}>GMC Number (UK)</label>
+                                            <input name="gmcNumber" defaultValue="GMC-7654321" className="w-full px-3 py-2 text-sm border border-[#E5E7EB] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#10B981]" />
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <label className="text-xs text-[#6B7280] block mb-1.5" style={{ fontWeight: 500 }}>Qualifications</label>
+                                        <input name="qualifications" defaultValue="FRCS, MB BCh BAO" className="w-full px-3 py-2 text-sm border border-[#E5E7EB] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#10B981]" placeholder="e.g. MRCPI, FRCS, MD" />
+                                    </div>
+                                    <div className="grid grid-cols-2 gap-4">
+                                        <div>
+                                            <label className="text-xs text-[#6B7280] block mb-1.5" style={{ fontWeight: 500 }}>Years of Experience</label>
+                                            <input name="experience" defaultValue={selectedLocum.experience.split(' ')[0]} type="number" className="w-full px-3 py-2 text-sm border border-[#E5E7EB] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#10B981]" />
+                                        </div>
+                                        <div>
+                                            <label className="text-xs text-[#6B7280] block mb-1.5" style={{ fontWeight: 500 }}>Primary Language</label>
+                                            <input defaultValue="English" className="w-full px-3 py-2 text-sm border border-[#E5E7EB] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#10B981]" />
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div className={`space-y-5 animate-in fade-in slide-in-from-bottom-2 duration-300 ${editTab !== 'financial' ? 'hidden' : ''}`}>
+                                    <div className="grid grid-cols-2 gap-4">
+                                        <div>
+                                            <label className="text-xs text-[#6B7280] block mb-1.5" style={{ fontWeight: 500 }}>Tax Status</label>
+                                            <select className="w-full px-3 py-2 text-sm border border-[#E5E7EB] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#10B981]">
+                                                <option>Self-Employed (Sole Trader)</option>
+                                                <option>Limited Company (Umbrella)</option>
+                                                <option>PAYE (Agency Worker)</option>
+                                            </select>
+                                        </div>
+                                        <div>
+                                            <label className="text-xs text-[#6B7280] block mb-1.5" style={{ fontWeight: 500 }}>Revenue Registered</label>
+                                            <div className="flex items-center gap-2 mt-2">
+                                                <input type="checkbox" defaultChecked className="w-4 h-4 text-[#10B981] focus:ring-[#10B981] border-[#E5E7EB] rounded" />
+                                                <span className="text-xs text-[#1F2937]">Registered for Tax in Ireland</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <label className="text-xs text-[#6B7280] block mb-1.5" style={{ fontWeight: 500 }}>Bank Name</label>
+                                        <input defaultValue="AIB" className="w-full px-3 py-2 text-sm border border-[#E5E7EB] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#10B981]" />
+                                    </div>
+                                    <div className="grid grid-cols-2 gap-4">
+                                        <div>
+                                            <label className="text-xs text-[#6B7280] block mb-1.5" style={{ fontWeight: 500 }}>IBAN</label>
+                                            <input defaultValue="IE29 AIBK 9311 5212 3456 78" className="w-full px-3 py-2 text-sm border border-[#E5E7EB] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#10B981]" />
+                                        </div>
+                                        <div>
+                                            <label className="text-xs text-[#6B7280] block mb-1.5" style={{ fontWeight: 500 }}>BIC / SWIFT</label>
+                                            <input defaultValue="AIBKIE2D" className="w-full px-3 py-2 text-sm border border-[#E5E7EB] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#10B981]" />
+                                        </div>
+                                    </div>
+                                    <div className="pt-4 border-t border-[#E5E7EB]">
+                                        <h4 className="text-xs text-[#1F2937] mb-3" style={{ fontWeight: 600 }}>Standard Rates (\u20AC)</h4>
+                                        <div className="grid grid-cols-4 gap-3">
+                                            <div>
+                                                <label className="text-[10px] text-[#6B7280] block mb-1">Day Rate (/hr)</label>
+                                                <input defaultValue="85" type="number" className="w-full px-2 py-1.5 text-xs border border-[#E5E7EB] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#10B981]" />
+                                            </div>
+                                            <div>
+                                                <label className="text-[10px] text-[#6B7280] block mb-1">Night Rate (/hr)</label>
+                                                <input defaultValue="105" type="number" className="w-full px-2 py-1.5 text-xs border border-[#E5E7EB] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#10B981]" />
+                                            </div>
+                                            <div>
+                                                <label className="text-[10px] text-[#6B7280] block mb-1">Weekend (/hr)</label>
+                                                <input defaultValue="110" type="number" className="w-full px-2 py-1.5 text-xs border border-[#E5E7EB] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#10B981]" />
+                                            </div>
+                                            <div>
+                                                <label className="text-[10px] text-[#6B7280] block mb-1">On-Call (/hr)</label>
+                                                <input defaultValue="45" type="number" className="w-full px-2 py-1.5 text-xs border border-[#E5E7EB] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#10B981]" />
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div className="p-6 border-t border-[#E5E7EB] bg-[#F9FAFB] flex items-center justify-between">
+                            <div className="flex items-center gap-2 text-xs text-[#6B7280]">
+                                <Clock className="w-3.5 h-3.5" />
+                                Last updated: May 8, 2026
+                            </div>
+                            <div className="flex gap-3">
+                                <button type="button" onClick={() => setShowEditDialog(false)} className="px-5 py-2 text-sm border border-[#E5E7EB] text-[#6B7280] rounded-lg hover:bg-white transition-colors" style={{ fontWeight: 500 }}>Cancel</button>
+                                <button type="submit" className="px-5 py-2 text-sm bg-[#10B981] text-white rounded-lg hover:bg-[#059669] shadow-md transition-all active:scale-95" style={{ fontWeight: 600 }}>Save Changes</button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            )}
+
+            {/* Archive Locum Dialog */}
+            {showArchiveDialog && selectedLocum && (
+                <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+                    <div className="bg-white rounded-xl p-6 w-[400px] text-center">
+                        <div className="w-12 h-12 bg-[#FEF2F2] text-[#EF4444] rounded-full flex items-center justify-center mx-auto mb-4">
+                            <Archive className="w-6 h-6" />
+                        </div>
+                        <h3 className="text-[#1F2937] mb-2">Archive Locum?</h3>
+                        <p className="text-sm text-[#6B7280] mb-6">Are you sure you want to archive <strong>{selectedLocum.name}</strong>? This will remove them from the active directory and cancel any pending availability.</p>
+                        <div className="flex gap-3">
+                            <button onClick={() => setShowArchiveDialog(false)} className="flex-1 px-4 py-2 text-sm border border-[#E5E7EB] text-[#6B7280] rounded-lg hover:bg-[#F9FAFB]">Cancel</button>
+                             <button type="button" className="flex-1 px-4 py-2 text-sm bg-[#EF4444] text-white rounded-lg hover:bg-[#DC2626]" onClick={async () => {
+                                try {
+                                    await locumService.archiveLocum(selectedLocum.id);
+                                    const updated = await locumService.getAllLocums();
+                                    setLocumsList(updated);
+                                    toast.success(`${selectedLocum.name} has been archived`);
+                                    setShowArchiveDialog(false);
+                                } catch (err) {
+                                    toast.error('Failed to archive locum');
+                                }
+                            }}>Confirm Archive</button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* View Applicant Dialog */}
+            {showApplicantView && selectedApplicant && (
+                <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+                    <div className="bg-white rounded-xl w-full max-w-xl overflow-hidden shadow-2xl animate-in zoom-in-95 duration-200">
+                        <div className="p-6 border-b border-[#E5E7EB] flex items-center justify-between bg-[#F9FAFB]">
+                            <div className="flex items-center gap-3">
+                                <div className="w-12 h-12 bg-[#3B82F6] rounded-full flex items-center justify-center text-white text-lg font-bold">
+                                    {selectedApplicant.name.split(' ').map((n: string) => n[0]).join('')}
+                                </div>
+                                <div>
+                                    <h3 className="text-[#1F2937] text-lg font-bold">{selectedApplicant.name}</h3>
+                                    <p className="text-xs text-[#6B7280]">Application ID: {selectedApplicant.id}</p>
+                                </div>
+                            </div>
+                            <button onClick={() => setShowApplicantView(false)} className="p-2 hover:bg-[#E5E7EB] rounded-full">
+                                <X className="w-5 h-5 text-[#6B7280]" />
+                            </button>
+                        </div>
+
+                        <div className="p-6 space-y-6">
+                            <div className="grid grid-cols-2 gap-6">
+                                <div className="space-y-4">
+                                    <div>
+                                        <p className="text-[10px] text-[#9CA3AF] uppercase font-semibold tracking-wider">Specialty</p>
+                                        <p className="text-sm text-[#1F2937] font-medium mt-1">{selectedApplicant.specialty}</p>
+                                    </div>
+                                    <div>
+                                        <p className="text-[10px] text-[#9CA3AF] uppercase font-semibold tracking-wider">Location</p>
+                                        <div className="flex items-center gap-1.5 mt-1">
+                                            <MapPin className="w-3.5 h-3.5 text-[#6B7280]" />
+                                            <p className="text-sm text-[#1F2937] font-medium">{selectedApplicant.location}, Ireland</p>
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <p className="text-[10px] text-[#9CA3AF] uppercase font-semibold tracking-wider">Applied Date</p>
+                                        <div className="flex items-center gap-1.5 mt-1">
+                                            <Calendar className="w-3.5 h-3.5 text-[#6B7280]" />
+                                            <p className="text-sm text-[#1F2937] font-medium">{selectedApplicant.appliedDate}</p>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div className="space-y-4">
+                                    <div>
+                                        <p className="text-[10px] text-[#9CA3AF] uppercase font-semibold tracking-wider">Current Stage</p>
+                                        <div className="mt-1">
+                                            <span className="px-2 py-1 rounded-full text-[11px] border font-semibold"
+                                                style={{
+                                                    backgroundColor: stageConfig[selectedApplicant.status]?.bg,
+                                                    color: stageConfig[selectedApplicant.status]?.color,
+                                                    borderColor: stageConfig[selectedApplicant.status]?.border
+                                                }}>
+                                                {selectedApplicant.stage}
+                                            </span>
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <p className="text-[10px] text-[#9CA3AF] uppercase font-semibold tracking-wider">Contact Details</p>
+                                        <div className="space-y-1.5 mt-1">
+                                            <div className="flex items-center gap-1.5 text-sm text-[#6B7280]"><Phone className="w-3.5 h-3.5" /> +353 87 234 {selectedApplicant.id.slice(-4)}</div>
+                                            <div className="flex items-center gap-1.5 text-sm text-[#6B7280]"><Mail className="w-3.5 h-3.5" /> {selectedApplicant.name.toLowerCase().replace(' ', '.')}@email.com</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div className="pt-4 border-t border-[#E5E7EB]">
+                                <p className="text-[10px] text-[#9CA3AF] uppercase font-semibold tracking-wider mb-3">Documents Provided</p>
+                                <div className="grid grid-cols-2 gap-2">
+                                    {['Curriculum Vitae', 'Medical Council Reg', 'Professional Indemnity', 'Garda Vetting'].map(doc => (
+                                        <div key={doc} className="flex items-center justify-between p-2 rounded-lg bg-[#F9FAFB] border border-[#E5E7EB]">
+                                            <div className="flex items-center gap-2">
+                                                <FileText className="w-3.5 h-3.5 text-[#10B981]" />
+                                                <span className="text-xs text-[#1F2937]">{doc}</span>
+                                            </div>
+                                            <CheckCircle className="w-3.5 h-3.5 text-[#10B981]" />
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        </div>
+
+                        <div className="p-6 border-t border-[#E5E7EB] bg-[#F9FAFB] flex justify-end gap-3">
+                            <button onClick={() => setShowApplicantView(false)} className="px-4 py-2 text-sm text-[#6B7280] font-medium hover:text-[#1F2937]">Close</button>
+                            <button
+                                onClick={() => {
+                                    setShowApplicantView(false);
+                                    const nextId = selectedApplicant.status === 'new' ? 'interview' : selectedApplicant.status === 'interview' ? 'verification' : 'onboarding';
+                                    setTargetStage(nextId);
+                                    setShowAdvanceStage(true);
+                                }}
+                                className="px-4 py-2 text-sm bg-[#10B981] text-white rounded-lg font-bold hover:bg-[#059669] flex items-center gap-2"
+                            >
+                                Progress Application <ArrowRight className="w-4 h-4" />
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Advance Stage Dialog */}
+            {showAdvanceStage && selectedApplicant && (
+                <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+                    <div className="bg-white rounded-xl p-6 w-[420px] shadow-2xl animate-in slide-in-from-bottom-4 duration-300">
+                        <div className="w-14 h-14 bg-[#ECFDF5] text-[#10B981] rounded-full flex items-center justify-center mx-auto mb-4 border-4 border-[#D1FAE5]">
+                            <ArrowDown className="w-7 h-7" />
+                        </div>
+                        <h3 className="text-[#1F2937] text-lg font-bold text-center mb-1">Update Application Stage</h3>
+                        <p className="text-sm text-[#6B7280] text-center mb-6">
+                            Update the recruitment progress for <strong>{selectedApplicant.name}</strong>.
+                        </p>
+
+                        <div className="space-y-4 mb-6">
+                            <div className="p-3 rounded-lg border border-[#E5E7EB] bg-[#F9FAFB]">
+                                <p className="text-[10px] text-[#9CA3AF] font-bold mb-1">CURRENT STAGE</p>
+                                <div className="flex items-center gap-2">
+                                    <span className="px-2 py-0.5 rounded-full text-[10px] border font-semibold"
+                                        style={{
+                                            backgroundColor: stageConfig[selectedApplicant.status]?.bg,
+                                            color: stageConfig[selectedApplicant.status]?.color,
+                                            borderColor: stageConfig[selectedApplicant.status]?.border
+                                        }}>
+                                        {selectedApplicant.stage}
+                                    </span>
+                                </div>
+                            </div>
+
+                            <div className="flex justify-center">
+                                <ArrowDown className="w-5 h-5 text-[#9CA3AF]" />
+                            </div>
+
+                            <div>
+                                <label className="text-[10px] text-[#10B981] font-bold block mb-1.5 uppercase tracking-wider">Target Recruitment Stage</label>
+                                <div className="relative">
+                                    <select
+                                        value={targetStage}
+                                        onChange={(e) => setTargetStage(e.target.value)}
+                                        className="w-full px-4 py-2.5 text-sm border border-[#E5E7EB] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#10B981] bg-white font-medium appearance-none"
+                                    >
+                                        <option value="new">New Application</option>
+                                        <option value="interview">Interview Scheduled</option>
+                                        <option value="verification">Credential Verification</option>
+                                        <option value="onboarding">Onboarding Checklist</option>
+                                        <option value="hired">Hired / Active Directory</option>
+                                    </select>
+                                    <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none">
+                                        <ChevronDown className="w-4 h-4 text-[#6B7280]" />
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div className="bg-[#FFFBEB] border border-[#FEF3C7] p-3 rounded-lg flex gap-3">
+                                <Info className="w-4 h-4 text-[#D97706] shrink-0 mt-0.5" />
+                                <p className="text-xs text-[#92400E]">Moving the applicant will trigger the appropriate status updates and notifications in their portal.</p>
+                            </div>
+                        </div>
+
+                        <div className="flex gap-3">
+                            <button onClick={() => setShowAdvanceStage(false)} className="flex-1 px-4 py-2 text-sm border border-[#E5E7EB] text-[#6B7280] rounded-lg font-medium hover:bg-[#F9FAFB] transition-colors">Cancel</button>
+                            <button
+                                type="button"
+                                className="flex-1 px-4 py-2 text-sm bg-[#10B981] text-white rounded-lg font-bold hover:bg-[#059669] flex items-center justify-center gap-2 shadow-sm transition-all active:scale-95"
+                                onClick={async () => {
+                                    const targetLabel = targetStage === 'new' ? 'New Application' :
+                                        targetStage === 'interview' ? 'Interview Scheduled' :
+                                            targetStage === 'verification' ? 'Credential Verification' :
+                                                targetStage === 'onboarding' ? 'Onboarding Checklist' : 'Hired';
+                                    
+                                    try {
+                                        if (targetStage === 'hired') {
+                                            await locumService.hireApplicant(selectedApplicant.id);
+                                            const updatedLocums = await locumService.getAllLocums();
+                                            const updatedApplicants = await locumService.getAllApplicants();
+                                            setLocumsList(updatedLocums);
+                                            setApplicantsList(updatedApplicants);
+                                            toast.success(`${selectedApplicant.name} has been successfully hired and added to the Locum Directory!`);
+                                        } else {
+                                            await locumService.updateApplicantStage(selectedApplicant.id, targetLabel, targetStage as any);
+                                            const updatedApplicants = await locumService.getAllApplicants();
+                                            setApplicantsList(updatedApplicants);
+                                            toast.success(`${selectedApplicant.name} updated to ${targetLabel} stage`);
+                                        }
+                                    } catch (err) {
+                                        toast.error('Failed to update applicant stage');
+                                    }
+                                    setShowAdvanceStage(false);
+                                }}
+                            >
+                                <UserCheck className="w-4 h-4" /> Confirm Update
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+        </div>
+    );
+}
