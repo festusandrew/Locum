@@ -83,6 +83,36 @@ export function PayrollInvoicing() {
     const [showPayrollDetail, setShowPayrollDetail] = useState(false);
     const [selectedInvoice, setSelectedInvoice] = useState<Invoice | null>(null);
     const [selectedPayroll, setSelectedPayroll] = useState<PayrollItem | null>(null);
+
+    const [payrollForm, setPayrollForm] = useState({
+        id: `PAY-${Math.floor(1000 + Math.random() * 9000)}`,
+        locum: '',
+        period: '',
+        shifts: 0,
+        hours: 0,
+        baseRate: 0,
+        grossPay: 0,
+        tax: 0,
+        prsi: 0,
+        netPay: 0,
+        payDate: new Date().toISOString().split('T')[0],
+        status: 'pending' as 'processed' | 'pending' | 'on_hold'
+    });
+
+    const calculatePayroll = (field: string, value: any) => {
+        const updated = { ...payrollForm, [field]: value };
+
+        if (field === 'hours' || field === 'baseRate') {
+            updated.grossPay = updated.hours * updated.baseRate;
+        }
+
+        updated.tax = updated.grossPay * 0.20;
+        updated.prsi = updated.grossPay * 0.04;
+        updated.netPay = updated.grossPay - updated.tax - updated.prsi;
+
+        setPayrollForm(updated);
+    };
+
     const [invoiceForm, setInvoiceForm] = useState({
         client: '',
         invoiceNumber: '',
@@ -103,12 +133,6 @@ export function PayrollInvoicing() {
     const totalNet = payrollItems.reduce((s, p) => s + p.netPay, 0);
     const outstandingInvoices = invoices.filter(i => i.status === 'sent' || i.status === 'overdue').reduce((s, i) => s + i.amount, 0);
     const overdueAmount = invoices.filter(i => i.status === 'overdue').reduce((s, i) => s + i.amount, 0);
-
-    // Calculate invoice totals
-    const calculateLineTotal = (index: number) => {
-        const item = invoiceForm.lineItems[index];
-        return item.quantity * item.rate;
-    };
 
     const subtotal = invoiceForm.lineItems.reduce((sum, item) => sum + (item.quantity * item.rate), 0);
     const vatAmount = invoiceForm.vatRegistered ? (subtotal * parseFloat(invoiceForm.vatRate || '0') / 100) : 0;
@@ -299,9 +323,6 @@ export function PayrollInvoicing() {
                                                     >
                                                         <Eye className="w-3.5 h-3.5" />
                                                     </button>
-                                                    {inv.status === 'draft' && (
-                                                        <button className="p-1.5 rounded-lg hover:bg-[#D1FAE5] text-[#10B981]"><Send className="w-3.5 h-3.5" /></button>
-                                                    )}
                                                 </div>
                                             </td>
                                         </tr>
@@ -348,6 +369,188 @@ export function PayrollInvoicing() {
                 )}
             </div>
 
+            {/* Updated Log Payroll Modal */}
+            {showLogPayrollModal && (
+                <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-6">
+                    <div className="bg-white rounded-xl w-full max-w-4xl shadow-2xl animate-in fade-in zoom-in duration-200 overflow-hidden flex flex-col max-h-[90vh]">
+                        <div className="p-5 border-b border-[#E5E7EB] flex items-center justify-between bg-white shrink-0">
+                            <div className="flex items-center gap-3">
+                                <div className="p-2 bg-[#D1FAE5] text-[#10B981] rounded-lg">
+                                    <Wallet className="w-5 h-5" />
+                                </div>
+                                <h3 className="text-[#1F2937]" style={{ fontWeight: 700 }}>Log Locum Payroll</h3>
+                            </div>
+                            <button onClick={() => setShowLogPayrollModal(false)} className="p-2 hover:bg-[#F3F4F6] rounded-lg transition-colors">
+                                <X className="w-5 h-5 text-[#6B7280]" />
+                            </button>
+                        </div>
+
+                        <div className="flex-1 overflow-y-auto p-6 space-y-8">
+                            <div className="grid grid-cols-2 gap-8">
+                                {/* Left Column: Basic Info */}
+                                <div className="space-y-6">
+                                    <h4 className="text-xs font-black text-[#1F2937] uppercase tracking-widest border-b border-[#F3F4F6] pb-2">Record Details</h4>
+                                    <div className="grid grid-cols-2 gap-4">
+                                        <div>
+                                            <label className="block text-xs font-bold text-[#6B7280] uppercase tracking-wider mb-1.5">Payroll ID</label>
+                                            <input
+                                                type="text"
+                                                value={payrollForm.id}
+                                                readOnly
+                                                className="w-full px-4 py-2.5 text-sm border border-[#E5E7EB] rounded-lg bg-[#F9FAFB] text-[#6B7280] outline-none font-mono"
+                                            />
+                                        </div>
+                                        <div>
+                                            <label className="block text-xs font-bold text-[#6B7280] uppercase tracking-wider mb-1.5">Payroll Status</label>
+                                            <select
+                                                value={payrollForm.status}
+                                                onChange={(e) => calculatePayroll('status', e.target.value)}
+                                                className="w-full px-4 py-2.5 text-sm border border-[#E5E7EB] rounded-lg focus:ring-2 focus:ring-[#10B981] outline-none"
+                                            >
+                                                <option value="pending">Pending</option>
+                                                <option value="processed">Processed</option>
+                                                <option value="on_hold">On Hold</option>
+                                            </select>
+                                        </div>
+                                    </div>
+
+                                    <h4 className="text-xs font-black text-[#1F2937] uppercase tracking-widest border-b border-[#F3F4F6] pb-2">Professional & Period</h4>
+                                    <div className="grid grid-cols-1 gap-4">
+                                        <div>
+                                            <label className="block text-xs font-bold text-[#6B7280] uppercase tracking-wider mb-1.5">Locum Professional</label>
+                                            <select
+                                                value={payrollForm.locum}
+                                                onChange={(e) => calculatePayroll('locum', e.target.value)}
+                                                className="w-full px-4 py-2.5 text-sm border border-[#E5E7EB] rounded-lg focus:ring-2 focus:ring-[#10B981] outline-none transition-all"
+                                            >
+                                                <option value="">Select Locum...</option>
+                                                <option value="Dr. Sarah Mitchell">Dr. Sarah Mitchell</option>
+                                                <option value="Dr. James Harrison">Dr. James Harrison</option>
+                                                <option value="Dr. Emily Chen">Dr. Emily Chen</option>
+                                                <option value="Dr. Michael Brooks">Dr. Michael Brooks</option>
+                                            </select>
+                                        </div>
+                                        <div className="grid grid-cols-2 gap-4">
+                                            <div>
+                                                <label className="block text-xs font-bold text-[#6B7280] uppercase tracking-wider mb-1.5">Payroll Period</label>
+                                                <input
+                                                    type="text"
+                                                    placeholder="e.g. Feb 1-15, 2026"
+                                                    value={payrollForm.period}
+                                                    onChange={(e) => calculatePayroll('period', e.target.value)}
+                                                    className="w-full px-4 py-2.5 text-sm border border-[#E5E7EB] rounded-lg focus:ring-2 focus:ring-[#10B981] outline-none"
+                                                />
+                                            </div>
+                                            <div>
+                                                <label className="block text-xs font-bold text-[#6B7280] uppercase tracking-wider mb-1.5">Pay Date</label>
+                                                <input
+                                                    type="date"
+                                                    value={payrollForm.payDate}
+                                                    onChange={(e) => calculatePayroll('payDate', e.target.value)}
+                                                    className="w-full px-4 py-2.5 text-sm border border-[#E5E7EB] rounded-lg focus:ring-2 focus:ring-[#10B981] outline-none"
+                                                />
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <h4 className="text-xs font-black text-[#1F2937] uppercase tracking-widest border-b border-[#F3F4F6] pb-2">Work Metrics</h4>
+                                    <div className="grid grid-cols-2 gap-4">
+                                        <div>
+                                            <label className="block text-xs font-bold text-[#6B7280] uppercase tracking-wider mb-1.5">Total Shifts</label>
+                                            <input
+                                                type="number"
+                                                value={payrollForm.shifts || ''}
+                                                onChange={(e) => calculatePayroll('shifts', parseInt(e.target.value) || 0)}
+                                                className="w-full px-4 py-2.5 text-sm border border-[#E5E7EB] rounded-lg focus:ring-2 focus:ring-[#10B981] outline-none"
+                                            />
+                                        </div>
+                                        <div>
+                                            <label className="block text-xs font-bold text-[#6B7280] uppercase tracking-wider mb-1.5">Total Hours</label>
+                                            <input
+                                                type="number"
+                                                value={payrollForm.hours || ''}
+                                                onChange={(e) => calculatePayroll('hours', parseFloat(e.target.value) || 0)}
+                                                className="w-full px-4 py-2.5 text-sm border border-[#E5E7EB] rounded-lg focus:ring-2 focus:ring-[#10B981] outline-none"
+                                            />
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* Right Column: Financial Breakdown */}
+                                <div className="space-y-6">
+                                    <h4 className="text-xs font-black text-[#1F2937] uppercase tracking-widest border-b border-[#F3F4F6] pb-2 text-right">Compensation & Statutory Deductions</h4>
+
+                                    <div className="grid grid-cols-1 gap-4 mb-4">
+                                        <div className="text-right">
+                                            <label className="block text-xs font-bold text-[#6B7280] uppercase tracking-wider mb-1.5">Base Hourly Rate (€)</label>
+                                            <input
+                                                type="number"
+                                                value={payrollForm.baseRate || ''}
+                                                onChange={(e) => calculatePayroll('baseRate', parseFloat(e.target.value) || 0)}
+                                                className="w-32 px-4 py-2.5 text-sm border border-[#E5E7EB] rounded-lg focus:ring-2 focus:ring-[#10B981] outline-none text-right ml-auto"
+                                            />
+                                        </div>
+                                    </div>
+
+                                    <div className="bg-[#F8FAFC] rounded-2xl p-6 border border-[#E5E7EB] space-y-4">
+                                        <div className="flex justify-between items-center pb-4 border-b border-[#E5E7EB]">
+                                            <span className="text-sm text-[#6B7280] font-medium uppercase tracking-tighter">Gross Pay</span>
+                                            <span className="text-xl font-black text-[#1F2937]">€{payrollForm.grossPay.toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
+                                        </div>
+
+                                        <div className="space-y-3 pt-2">
+                                            <div className="flex justify-between items-center text-sm">
+                                                <span className="text-[#6B7280]">Tax (20% PAYE)</span>
+                                                <span className="text-[#DC2626] font-bold">-€{payrollForm.tax.toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
+                                            </div>
+                                            <div className="flex justify-between items-center text-sm">
+                                                <span className="text-[#6B7280]">PRSI (4% Employee)</span>
+                                                <span className="text-[#DC2626] font-bold">-€{payrollForm.prsi.toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
+                                            </div>
+                                        </div>
+
+                                        <div className="pt-6 mt-4 border-t-2 border-dashed border-[#E5E7EB]">
+                                            <div className="flex justify-between items-center">
+                                                <div>
+                                                    <p className="text-xs font-black text-[#10B981] uppercase tracking-tighter">Net Take-Home Pay</p>
+                                                    <p className="text-[10px] text-[#9CA3AF]">Calculated Remittance Value</p>
+                                                </div>
+                                                <span className="text-3xl font-black text-[#10B981]">€{payrollForm.netPay.toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div className="p-4 bg-emerald-50 rounded-xl border border-emerald-100">
+                                        <p className="text-[11px] text-[#059669] leading-relaxed">
+                                            <strong>Audit Note:</strong> This payroll record (ID: {payrollForm.id}) includes all mandatory fields required for Irish Revenue compliance. Net pay is derived after statutory PAYE and PRSI deductions.
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div className="p-5 border-t border-[#E5E7EB] flex justify-end gap-3 bg-[#F9FAFB] shrink-0">
+                            <button
+                                onClick={() => setShowLogPayrollModal(false)}
+                                className="px-6 py-2.5 text-sm text-[#6B7280] font-bold hover:text-[#1F2937] transition-colors"
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                onClick={() => {
+                                    console.log('Payroll logged:', payrollForm);
+                                    setShowLogPayrollModal(false);
+                                }}
+                                className="px-8 py-2.5 bg-[#10B981] text-white rounded-lg text-sm font-bold hover:bg-[#059669] shadow-lg shadow-emerald-100 transition-all active:scale-95 flex items-center gap-2"
+                            >
+                                <CheckCircle className="w-4 h-4" />
+                                Commit to Ledger
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
             {/* New Invoice Modal */}
             {showNewInvoiceModal && (
                 <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-6">
@@ -365,7 +568,7 @@ export function PayrollInvoicing() {
                                 <h4 className="text-sm text-[#1F2937] mb-3" style={{ fontWeight: 600 }}>Invoice Information</h4>
                                 <div className="grid grid-cols-3 gap-4">
                                     <div>
-                                        <label className="block text-xs text-[#6B7280] mb-1" style={{ fontWeight: 500 }}>Invoice Number <span className="text-[#EF4444]">*</span></label>
+                                        <label className="block text-xs text-[#6B7280] mb-1" style={{ fontWeight: 500 }}>Invoice Number *</label>
                                         <input
                                             type="text"
                                             placeholder="INV-2026-046"
@@ -375,7 +578,7 @@ export function PayrollInvoicing() {
                                         />
                                     </div>
                                     <div>
-                                        <label className="block text-xs text-[#6B7280] mb-1" style={{ fontWeight: 500 }}>Issue Date <span className="text-[#EF4444]">*</span></label>
+                                        <label className="block text-xs text-[#6B7280] mb-1" style={{ fontWeight: 500 }}>Issue Date *</label>
                                         <input
                                             type="date"
                                             className="w-full px-3 py-2 text-sm border border-[#E5E7EB] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#10B981]"
@@ -384,7 +587,7 @@ export function PayrollInvoicing() {
                                         />
                                     </div>
                                     <div>
-                                        <label className="block text-xs text-[#6B7280] mb-1" style={{ fontWeight: 500 }}>Due Date <span className="text-[#EF4444]">*</span></label>
+                                        <label className="block text-xs text-[#6B7280] mb-1" style={{ fontWeight: 500 }}>Due Date *</label>
                                         <input
                                             type="date"
                                             className="w-full px-3 py-2 text-sm border border-[#E5E7EB] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#10B981]"
@@ -400,7 +603,7 @@ export function PayrollInvoicing() {
                                 <h4 className="text-sm text-[#1F2937] mb-3" style={{ fontWeight: 600 }}>Client Details</h4>
                                 <div className="grid grid-cols-2 gap-4">
                                     <div>
-                                        <label className="block text-xs text-[#6B7280] mb-1" style={{ fontWeight: 500 }}>Client Name <span className="text-[#EF4444]">*</span></label>
+                                        <label className="block text-xs text-[#6B7280] mb-1" style={{ fontWeight: 500 }}>Client Name *</label>
                                         <select
                                             className="w-full px-3 py-2 text-sm border border-[#E5E7EB] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#10B981]"
                                             value={invoiceForm.client}
@@ -428,177 +631,19 @@ export function PayrollInvoicing() {
                                 </div>
                             </div>
 
-                            {/* Line Items */}
-                            <div>
-                                <div className="flex items-center justify-between mb-3">
-                                    <h4 className="text-sm text-[#1F2937]" style={{ fontWeight: 600 }}>Line Items</h4>
-                                    <button
-                                        type="button"
-                                        onClick={addLineItem}
-                                        className="flex items-center gap-1.5 px-3 py-1.5 text-sm text-[#10B981] border border-[#10B981] rounded-lg hover:bg-[#ECFDF5]"
-                                    >
-                                        <Plus className="w-3.5 h-3.5" /> Add Line
-                                    </button>
+                            {/* Summary */}
+                            <div className="bg-[#F9FAFB] rounded-lg p-4 space-y-2">
+                                <div className="flex justify-between text-sm">
+                                    <span className="text-[#6B7280]">Subtotal:</span>
+                                    <span className="text-[#1F2937]" style={{ fontWeight: 600 }}>€{subtotal.toFixed(2)}</span>
                                 </div>
-                                <div className="border border-[#E5E7EB] rounded-lg overflow-hidden">
-                                    <table className="w-full">
-                                        <thead>
-                                            <tr className="bg-[#F9FAFB] border-b border-[#E5E7EB]">
-                                                <th className="px-3 py-2 text-left text-xs text-[#9CA3AF]" style={{ fontWeight: 500 }}>Description</th>
-                                                <th className="px-3 py-2 text-left text-xs text-[#9CA3AF] w-24" style={{ fontWeight: 500 }}>Qty</th>
-                                                <th className="px-3 py-2 text-left text-xs text-[#9CA3AF] w-32" style={{ fontWeight: 500 }}>Rate (€)</th>
-                                                <th className="px-3 py-2 text-left text-xs text-[#9CA3AF] w-32" style={{ fontWeight: 500 }}>Amount (€)</th>
-                                                <th className="px-3 py-2 w-10"></th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            {invoiceForm.lineItems.map((item, index) => (
-                                                <tr key={index} className="border-b border-[#F3F4F6]">
-                                                    <td className="px-3 py-2">
-                                                        <input
-                                                            type="text"
-                                                            placeholder="e.g., Locum services - General Surgery"
-                                                            className="w-full px-2 py-1.5 text-sm border border-[#E5E7EB] rounded focus:outline-none focus:ring-1 focus:ring-[#10B981]"
-                                                            value={item.description}
-                                                            onChange={(e) => updateLineItem(index, 'description', e.target.value)}
-                                                        />
-                                                    </td>
-                                                    <td className="px-3 py-2">
-                                                        <input
-                                                            type="number"
-                                                            min="0"
-                                                            step="0.01"
-                                                            className="w-full px-2 py-1.5 text-sm border border-[#E5E7EB] rounded focus:outline-none focus:ring-1 focus:ring-[#10B981]"
-                                                            value={item.quantity}
-                                                            onChange={(e) => updateLineItem(index, 'quantity', parseFloat(e.target.value) || 0)}
-                                                        />
-                                                    </td>
-                                                    <td className="px-3 py-2">
-                                                        <input
-                                                            type="number"
-                                                            min="0"
-                                                            step="0.01"
-                                                            className="w-full px-2 py-1.5 text-sm border border-[#E5E7EB] rounded focus:outline-none focus:ring-1 focus:ring-[#10B981]"
-                                                            value={item.rate}
-                                                            onChange={(e) => updateLineItem(index, 'rate', parseFloat(e.target.value) || 0)}
-                                                        />
-                                                    </td>
-                                                    <td className="px-3 py-2">
-                                                        <div className="text-sm text-[#1F2937]" style={{ fontWeight: 600 }}>
-                                                            €{(item.quantity * item.rate).toFixed(2)}
-                                                        </div>
-                                                    </td>
-                                                    <td className="px-3 py-2">
-                                                        <button
-                                                            type="button"
-                                                            onClick={() => removeLineItem(index)}
-                                                            disabled={invoiceForm.lineItems.length === 1}
-                                                            className="p-1.5 rounded hover:bg-[#FEE2E2] text-[#DC2626] disabled:opacity-30 disabled:hover:bg-transparent"
-                                                        >
-                                                            <Trash2 className="w-3.5 h-3.5" />
-                                                        </button>
-                                                    </td>
-                                                </tr>
-                                            ))}
-                                        </tbody>
-                                    </table>
-                                </div>
-                            </div>
-
-                            {/* VAT & Payment Terms */}
-                            <div className="grid grid-cols-2 gap-6">
-                                <div>
-                                    <h4 className="text-sm text-[#1F2937] mb-3" style={{ fontWeight: 600 }}>VAT Details</h4>
-                                    <div className="space-y-3">
-                                        <div className="flex items-center gap-3">
-                                            <input
-                                                type="checkbox"
-                                                id="vatRegistered"
-                                                className="w-4 h-4 text-[#10B981] border-[#E5E7EB] rounded focus:ring-[#10B981]"
-                                                checked={invoiceForm.vatRegistered}
-                                                onChange={(e) => setInvoiceForm({ ...invoiceForm, vatRegistered: e.target.checked })}
-                                            />
-                                            <label htmlFor="vatRegistered" className="text-sm text-[#1F2937]">
-                                                VAT Registered
-                                            </label>
-                                        </div>
-                                        {invoiceForm.vatRegistered && (
-                                            <div>
-                                                <label className="block text-xs text-[#6B7280] mb-1" style={{ fontWeight: 500 }}>VAT Rate (%)</label>
-                                                <select
-                                                    className="w-full px-3 py-2 text-sm border border-[#E5E7EB] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#10B981]"
-                                                    value={invoiceForm.vatRate}
-                                                    onChange={(e) => setInvoiceForm({ ...invoiceForm, vatRate: e.target.value })}
-                                                >
-                                                    <option value="0">0% - Zero Rated</option>
-                                                    <option value="9">9% - Reduced Rate</option>
-                                                    <option value="13.5">13.5% - Reduced Rate</option>
-                                                    <option value="23">23% - Standard Rate</option>
-                                                </select>
-                                            </div>
-                                        )}
-                                    </div>
-                                </div>
-
-                                <div>
-                                    <h4 className="text-sm text-[#1F2937] mb-3" style={{ fontWeight: 600 }}>Payment Terms</h4>
-                                    <div>
-                                        <label className="block text-xs text-[#6B7280] mb-1" style={{ fontWeight: 500 }}>Payment Terms (Days)</label>
-                                        <select
-                                            className="w-full px-3 py-2 text-sm border border-[#E5E7EB] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#10B981]"
-                                            value={invoiceForm.paymentTerms}
-                                            onChange={(e) => setInvoiceForm({ ...invoiceForm, paymentTerms: e.target.value })}
-                                        >
-                                            <option value="0">Due on Receipt</option>
-                                            <option value="7">Net 7 Days</option>
-                                            <option value="14">Net 14 Days</option>
-                                            <option value="30">Net 30 Days</option>
-                                            <option value="60">Net 60 Days</option>
-                                            <option value="90">Net 90 Days</option>
-                                        </select>
-                                    </div>
-                                </div>
-                            </div>
-
-                            {/* Notes */}
-                            <div>
-                                <h4 className="text-sm text-[#1F2937] mb-3" style={{ fontWeight: 600 }}>Additional Notes</h4>
-                                <textarea
-                                    rows={3}
-                                    placeholder="Add any additional notes or payment instructions..."
-                                    className="w-full px-3 py-2 text-sm border border-[#E5E7EB] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#10B981]"
-                                    value={invoiceForm.notes}
-                                    onChange={(e) => setInvoiceForm({ ...invoiceForm, notes: e.target.value })}
-                                />
-                            </div>
-
-                            {/* Invoice Summary */}
-                            <div className="border-t border-[#E5E7EB] pt-4">
-                                <div className="bg-[#F9FAFB] rounded-lg p-4">
-                                    <h4 className="text-sm text-[#1F2937] mb-3" style={{ fontWeight: 600 }}>Invoice Summary</h4>
-                                    <div className="space-y-2">
-                                        <div className="flex justify-between text-sm">
-                                            <span className="text-[#6B7280]">Subtotal:</span>
-                                            <span className="text-[#1F2937]" style={{ fontWeight: 600 }}>€{subtotal.toFixed(2)}</span>
-                                        </div>
-                                        {invoiceForm.vatRegistered && (
-                                            <div className="flex justify-between text-sm">
-                                                <span className="text-[#6B7280]">VAT ({invoiceForm.vatRate}%):</span>
-                                                <span className="text-[#1F2937]" style={{ fontWeight: 600 }}>€{vatAmount.toFixed(2)}</span>
-                                            </div>
-                                        )}
-                                        <div className="border-t border-[#E5E7EB] pt-2 mt-2">
-                                            <div className="flex justify-between">
-                                                <span className="text-[#1F2937]" style={{ fontWeight: 600 }}>Total Amount:</span>
-                                                <span className="text-lg text-[#10B981]" style={{ fontWeight: 700 }}>€{totalAmount.toFixed(2)}</span>
-                                            </div>
-                                        </div>
-                                    </div>
+                                <div className="flex justify-between">
+                                    <span className="text-[#1F2937]" style={{ fontWeight: 600 }}>Total Amount:</span>
+                                    <span className="text-lg text-[#10B981]" style={{ fontWeight: 700 }}>€{totalAmount.toFixed(2)}</span>
                                 </div>
                             </div>
                         </div>
 
-                        {/* Footer Actions */}
                         <div className="p-5 border-t border-[#E5E7EB] flex justify-end gap-2 sticky bottom-0 bg-white">
                             <button
                                 type="button"
@@ -609,20 +654,11 @@ export function PayrollInvoicing() {
                             </button>
                             <button
                                 type="button"
-                                className="px-4 py-2 border border-[#E5E7EB] text-[#1F2937] rounded-lg text-sm hover:bg-[#F9FAFB]"
-                            >
-                                Save as Draft
-                            </button>
-                            <button
-                                type="button"
-                                onClick={() => {
-                                    console.log('Invoice created:', invoiceForm);
-                                    setShowNewInvoiceModal(false);
-                                }}
+                                onClick={() => setShowNewInvoiceModal(false)}
                                 className="px-4 py-2 bg-[#10B981] text-white rounded-lg text-sm hover:bg-[#059669] flex items-center gap-2"
                             >
                                 <CheckCircle className="w-4 h-4" />
-                                Create & Send Invoice
+                                Create Invoice
                             </button>
                         </div>
                     </div>
@@ -633,370 +669,74 @@ export function PayrollInvoicing() {
             {showInvoiceDetail && selectedInvoice && (
                 <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-6">
                     <div className="bg-white rounded-xl w-full max-w-4xl max-h-[90vh] overflow-hidden flex flex-col shadow-2xl animate-in fade-in zoom-in duration-200">
-                        {/* Header */}
                         <div className="p-5 border-b border-[#E5E7EB] flex items-center justify-between bg-white shrink-0">
                             <div className="flex items-center gap-3">
                                 <div className="w-10 h-10 bg-[#ECFDF5] text-[#10B981] rounded-lg flex items-center justify-center">
                                     <FileText className="w-6 h-6" />
                                 </div>
-                                <div>
-                                    <h3 className="text-[#1F2937] text-lg" style={{ fontWeight: 700 }}>Invoice {selectedInvoice.id}</h3>
-                                    <div className="flex items-center gap-2 mt-0.5">
-                                        <span className="text-xs text-[#6B7280]">Issued on {selectedInvoice.issueDate}</span>
-                                        <span className="w-1 h-1 bg-[#D1D5DB] rounded-full"></span>
-                                        <span className={`px-2 py-0.5 rounded-full text-[10px] border font-semibold`}
-                                            style={{
-                                                backgroundColor: invStatusConfig[selectedInvoice.status].bg,
-                                                color: invStatusConfig[selectedInvoice.status].color,
-                                                borderColor: invStatusConfig[selectedInvoice.status].border
-                                            }}>
-                                            {invStatusConfig[selectedInvoice.status].label}
-                                        </span>
-                                    </div>
-                                </div>
+                                <h3 className="text-[#1F2937] text-lg" style={{ fontWeight: 700 }}>Invoice {selectedInvoice.id}</h3>
                             </div>
-                            <div className="flex items-center gap-2">
-                                <button className="flex items-center gap-2 px-3 py-1.5 text-sm text-[#6B7280] border border-[#E5E7EB] rounded-lg hover:bg-[#F9FAFB]">
-                                    <Download className="w-4 h-4" /> Download PDF
-                                </button>
-                                <button onClick={() => setShowInvoiceDetail(false)} className="p-2 hover:bg-[#F3F4F6] rounded-lg transition-colors">
-                                    <X className="w-5 h-5 text-[#6B7280]" />
-                                </button>
-                            </div>
-                        </div>
-
-                        {/* Content */}
-                        <div className="flex-1 overflow-y-auto p-8 bg-[#F8FAFC]">
-                            <div className="max-w-3xl mx-auto space-y-8 bg-white p-10 rounded-xl shadow-sm border border-[#E5E7EB]">
-                                {/* Branding & Status */}
-                                <div className="flex justify-between items-start">
-                                    <div className="space-y-1">
-                                        <h1 className="text-2xl font-black text-[#10B981] tracking-tighter">MPLOYUS</h1>
-                                        <p className="text-xs text-[#6B7280] font-medium tracking-widest uppercase">Locum Management Solutions</p>
-                                    </div>
-                                    <div className="text-right">
-                                        <h2 className="text-3xl font-bold text-[#1F2937] uppercase tracking-tight">INVOICE</h2>
-                                        <p className="text-sm text-[#6B7280] mt-1 font-mono">{selectedInvoice.id}</p>
-                                    </div>
-                                </div>
-
-                                {/* Invoice Meta */}
-                                <div className="flex justify-between items-start border-y border-[#F3F4F6] py-8">
-                                    <div className="space-y-4">
-                                        <div>
-                                            <p className="text-[10px] text-[#9CA3AF] font-bold uppercase tracking-wider mb-2">Issued By</p>
-                                            <div className="space-y-1">
-                                                <p className="text-sm text-[#1F2937]" style={{ fontWeight: 700 }}>Mployus Locum Solutions Ltd.</p>
-                                                <p className="text-xs text-[#6B7280]">123 Business Park, Dublin 2</p>
-                                                <p className="text-xs text-[#6B7280]">Ireland</p>
-                                                <p className="text-xs text-[#6B7280]">VAT ID: IE 9876543A</p>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div className="text-right space-y-4">
-                                        <div>
-                                            <p className="text-[10px] text-[#9CA3AF] font-bold uppercase tracking-wider mb-2">Billed To</p>
-                                            <div className="space-y-1">
-                                                <p className="text-sm text-[#1F2937]" style={{ fontWeight: 700 }}>{selectedInvoice.client}</p>
-                                                <p className="text-xs text-[#6B7280]">Accounts Payable Department</p>
-                                                <p className="text-xs text-[#6B7280]">Health Service Executive</p>
-                                                <p className="text-xs text-[#6B7280]">Dublin, Ireland</p>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <div className="grid grid-cols-3 gap-6 py-6 border-b border-[#F3F4F6]">
-                                    <div>
-                                        <p className="text-[10px] text-[#9CA3AF] font-bold uppercase tracking-wider mb-1">Invoice Date</p>
-                                        <p className="text-sm text-[#1F2937]" style={{ fontWeight: 600 }}>{selectedInvoice.issueDate}</p>
-                                    </div>
-                                    <div>
-                                        <p className="text-[10px] text-[#9CA3AF] font-bold uppercase tracking-wider mb-1">Due Date</p>
-                                        <p className="text-sm text-[#1F2937]" style={{ fontWeight: 600 }}>{selectedInvoice.dueDate}</p>
-                                    </div>
-                                    <div>
-                                        <p className="text-[10px] text-[#9CA3AF] font-bold uppercase tracking-wider mb-1">Reference</p>
-                                        <p className="text-sm text-[#1F2937]" style={{ fontWeight: 600 }}>PO-2026-X892</p>
-                                    </div>
-                                </div>
-
-                                {/* Items Table */}
-                                <div>
-                                    <table className="w-full">
-                                        <thead>
-                                            <tr className="border-b-2 border-[#1F2937]">
-                                                <th className="py-3 text-left text-[10px] text-[#1F2937] font-black uppercase tracking-wider">Description</th>
-                                                <th className="py-3 text-center text-[10px] text-[#1F2937] font-black uppercase tracking-wider w-20">Qty</th>
-                                                <th className="py-3 text-right text-[10px] text-[#1F2937] font-black uppercase tracking-wider w-32">Rate</th>
-                                                <th className="py-3 text-right text-[10px] text-[#1F2937] font-black uppercase tracking-wider w-32">Amount</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody className="divide-y divide-[#F3F4F6]">
-                                            {[
-                                                { desc: 'Professional Locum Medical Services', qty: selectedInvoice.shifts, rate: selectedInvoice.amount / selectedInvoice.shifts * 0.85, amount: selectedInvoice.amount * 0.85 },
-                                                { desc: 'Administrative & Agency Processing Fee', qty: 1, rate: selectedInvoice.amount * 0.15, amount: selectedInvoice.amount * 0.15 },
-                                            ].map((item, i) => (
-                                                <tr key={i}>
-                                                    <td className="py-4">
-                                                        <p className="text-sm text-[#1F2937] font-bold">{item.desc}</p>
-                                                        <p className="text-xs text-[#6B7280] mt-0.5 italic">Services provided for locum shift period: Feb 2026</p>
-                                                    </td>
-                                                    <td className="py-4 text-center text-sm text-[#1F2937] font-medium">{item.qty}</td>
-                                                    <td className="py-4 text-right text-sm text-[#1F2937]">€{item.rate.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
-                                                    <td className="py-4 text-right text-sm text-[#1F2937]" style={{ fontWeight: 700 }}>€{item.amount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
-                                                </tr>
-                                            ))}
-                                        </tbody>
-                                    </table>
-                                </div>
-
-                                {/* Totals */}
-                                <div className="flex justify-end pt-4">
-                                    <div className="w-72 space-y-4">
-                                        <div className="flex justify-between text-sm">
-                                            <span className="text-[#6B7280] font-medium">Subtotal</span>
-                                            <span className="text-[#1F2937] font-bold">€{(selectedInvoice.amount / 1.23).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
-                                        </div>
-                                        <div className="flex justify-between text-sm">
-                                            <span className="text-[#6B7280] font-medium">VAT (23%)</span>
-                                            <span className="text-[#1F2937] font-bold">€{(selectedInvoice.amount - (selectedInvoice.amount / 1.23)).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
-                                        </div>
-                                        <div className="flex justify-between items-center py-4 px-4 bg-[#10B981] text-white rounded-lg shadow-sm">
-                                            <span className="text-sm font-black uppercase tracking-widest">Total Amount Due</span>
-                                            <span className="text-2xl font-black">€{selectedInvoice.amount.toLocaleString()}</span>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                {/* Payment Info */}
-                                <div className="pt-8 border-t border-[#F3F4F6] grid grid-cols-2 gap-8">
-                                    <div>
-                                        <h5 className="text-[10px] text-[#1F2937] font-black uppercase tracking-widest mb-3">Bank Details</h5>
-                                        <div className="space-y-1 text-xs text-[#6B7280]">
-                                            <p className="flex justify-between"><span className="font-bold text-[#1F2937]">Bank:</span> Bank of Ireland</p>
-                                            <p className="flex justify-between"><span className="font-bold text-[#1F2937]">IBAN:</span> IE49 BOFI 9000 0123 4567 89</p>
-                                            <p className="flex justify-between"><span className="font-bold text-[#1F2937]">BIC:</span> BOFIIE2D</p>
-                                        </div>
-                                    </div>
-                                    <div className="text-xs text-[#6B7280] leading-relaxed italic">
-                                        <p>Notes: Please settle this invoice within 30 days of issuance. Late payments may be subject to statutory interest as per the European Communities (Late Payment in Commercial Transactions) Regulations.</p>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        {/* Footer Actions */}
-                        <div className="p-5 border-t border-[#E5E7EB] bg-[#F9FAFB] flex justify-end gap-3 shrink-0">
-                            <button
-                                onClick={() => setShowInvoiceDetail(false)}
-                                className="px-6 py-2.5 text-sm text-[#6B7280] font-bold hover:text-[#1F2937] transition-colors"
-                            >
-                                Close
-                            </button>
-                            {selectedInvoice.status !== 'paid' && (
-                                <button className="px-6 py-2.5 bg-[#10B981] text-white rounded-lg text-sm font-black hover:bg-[#059669] flex items-center gap-2 shadow-md shadow-emerald-100 transition-all active:scale-95">
-                                    <Send className="w-4 h-4" /> Send Reminder
-                                </button>
-                            )}
-                        </div>
-                    </div>
-                </div>
-            )}
-
-            {/* Log Payroll Modal */}
-            {showLogPayrollModal && (
-                <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-6">
-                    <div className="bg-white rounded-xl w-full max-w-2xl shadow-2xl animate-in fade-in zoom-in duration-200">
-                        <div className="p-5 border-b border-[#E5E7EB] flex items-center justify-between">
-                            <h3 className="text-[#1F2937]" style={{ fontWeight: 600 }}>Log Locum Payroll</h3>
-                            <button onClick={() => setShowLogPayrollModal(false)} className="p-2 hover:bg-[#F3F4F6] rounded-lg">
+                            <button onClick={() => setShowInvoiceDetail(false)} className="p-2 hover:bg-[#F3F4F6] rounded-lg">
                                 <X className="w-5 h-5 text-[#6B7280]" />
                             </button>
                         </div>
-                        <div className="p-6 space-y-4">
-                            <div className="grid grid-cols-2 gap-4">
-                                <div className="col-span-2">
-                                    <label className="block text-xs text-[#6B7280] mb-1">Select Locum Professional</label>
-                                    <select className="w-full px-3 py-2 text-sm border border-[#E5E7EB] rounded-lg focus:ring-2 focus:ring-[#10B981]">
-                                        <option>Select locum...</option>
-                                        <option>Dr. Sarah Mitchell</option>
-                                        <option>Dr. James Harrison</option>
-                                        <option>Dr. Emily Chen</option>
-                                    </select>
-                                </div>
-                                <div>
-                                    <label className="block text-xs text-[#6B7280] mb-1">Pay Period Start</label>
-                                    <input type="date" className="w-full px-3 py-2 text-sm border border-[#E5E7EB] rounded-lg focus:ring-2 focus:ring-[#10B981]" />
-                                </div>
-                                <div>
-                                    <label className="block text-xs text-[#6B7280] mb-1">Pay Period End</label>
-                                    <input type="date" className="w-full px-3 py-2 text-sm border border-[#E5E7EB] rounded-lg focus:ring-2 focus:ring-[#10B981]" />
-                                </div>
-                                <div>
-                                    <label className="block text-xs text-[#6B7280] mb-1">Hours Worked</label>
-                                    <input type="number" placeholder="0.00" className="w-full px-3 py-2 text-sm border border-[#E5E7EB] rounded-lg focus:ring-2 focus:ring-[#10B981]" />
-                                </div>
-                                <div>
-                                    <label className="block text-xs text-[#6B7280] mb-1">Hourly Rate (€)</label>
-                                    <input type="number" placeholder="0.00" className="w-full px-3 py-2 text-sm border border-[#E5E7EB] rounded-lg focus:ring-2 focus:ring-[#10B981]" />
+                        <div className="flex-1 overflow-y-auto p-8 bg-[#F8FAFC]">
+                            <div className="max-w-3xl mx-auto bg-white p-10 rounded-xl shadow-sm border border-[#E5E7EB]">
+                                <h1 className="text-2xl font-black text-[#10B981]">MPLOYUS</h1>
+                                <p className="text-sm text-[#6B7280] mt-4">Invoice for {selectedInvoice.client}</p>
+                                <div className="mt-8 border-t pt-8">
+                                    <div className="flex justify-between">
+                                        <span className="font-bold">Total Due:</span>
+                                        <span className="text-xl font-black text-[#1F2937]">€{selectedInvoice.amount.toLocaleString()}</span>
+                                    </div>
                                 </div>
                             </div>
-                            <div className="bg-[#F9FAFB] p-4 rounded-lg space-y-2">
-                                <div className="flex justify-between text-sm">
-                                    <span className="text-[#6B7280]">Gross Calculation</span>
-                                    <span className="font-bold text-[#1F2937]">€0.00</span>
-                                </div>
-                                <div className="flex justify-between text-xs">
-                                    <span className="text-[#6B7280]">Estimated Tax (20%)</span>
-                                    <span className="text-[#DC2626]">-€0.00</span>
-                                </div>
-                                <div className="flex justify-between text-xs">
-                                    <span className="text-[#6B7280]">Estimated PRSI (4%)</span>
-                                    <span className="text-[#DC2626]">-€0.00</span>
-                                </div>
-                                <div className="flex justify-between border-t border-[#E5E7EB] pt-2 mt-2">
-                                    <span className="text-sm font-bold text-[#1F2937]">Estimated Net Pay</span>
-                                    <span className="text-sm font-bold text-[#10B981]">€0.00</span>
-                                </div>
-                            </div>
-                        </div>
-                        <div className="p-5 border-t border-[#E5E7EB] bg-[#F9FAFB] flex justify-end gap-3">
-                            <button onClick={() => setShowLogPayrollModal(false)} className="px-4 py-2 text-sm text-[#6B7280] font-medium">Cancel</button>
-                            <button className="px-4 py-2 bg-[#10B981] text-white rounded-lg text-sm font-bold hover:bg-[#059669]">Log Payment Record</button>
                         </div>
                     </div>
                 </div>
             )}
 
-            {/* Payroll Detail Modal (Locum Invoice) */}
+            {/* Remittance Detail Modal */}
             {showPayrollDetail && selectedPayroll && (
-                <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-6">
+                <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-6">
                     <div className="bg-white rounded-xl w-full max-w-4xl max-h-[90vh] overflow-hidden flex flex-col shadow-2xl animate-in fade-in zoom-in duration-200">
-                        {/* Header */}
                         <div className="p-5 border-b border-[#E5E7EB] flex items-center justify-between bg-white shrink-0">
                             <div className="flex items-center gap-3">
-                                <div className="w-10 h-10 bg-[#DBEAFE] text-[#3B82F6] rounded-lg flex items-center justify-center">
-                                    <Receipt className="w-6 h-6" />
+                                <div className="p-2 bg-[#ECFDF5] text-[#10B981] rounded-lg">
+                                    <Receipt className="w-5 h-5" />
                                 </div>
-                                <div>
-                                    <h3 className="text-[#1F2937] text-lg" style={{ fontWeight: 700 }}>Locum Payment Advice: {selectedPayroll.id}</h3>
-                                    <div className="flex items-center gap-2 mt-0.5">
-                                        <span className="text-xs text-[#6B7280]">Period: {selectedPayroll.period}</span>
-                                        <span className="w-1 h-1 bg-[#D1D5DB] rounded-full"></span>
-                                        <span className={`px-2 py-0.5 rounded-full text-[10px] border font-semibold`}
-                                            style={{
-                                                backgroundColor: payStatusConfig[selectedPayroll.status].bg,
-                                                color: payStatusConfig[selectedPayroll.status].color,
-                                                borderColor: payStatusConfig[selectedPayroll.status].border
-                                            }}>
-                                            {payStatusConfig[selectedPayroll.status].label}
-                                        </span>
-                                    </div>
-                                </div>
+                                <h3 className="text-[#1F2937]" style={{ fontWeight: 700 }}>Remittance Advice: {selectedPayroll.id}</h3>
                             </div>
-                            <div className="flex items-center gap-2">
-                                <button className="flex items-center gap-2 px-3 py-1.5 text-sm text-[#6B7280] border border-[#E5E7EB] rounded-lg hover:bg-[#F9FAFB]">
-                                    <Download className="w-4 h-4" /> Download Statement
-                                </button>
-                                <button onClick={() => setShowPayrollDetail(false)} className="p-2 hover:bg-[#F3F4F6] rounded-lg transition-colors">
-                                    <X className="w-5 h-5 text-[#6B7280]" />
-                                </button>
-                            </div>
-                        </div>
-
-                        {/* Content */}
-                        <div className="flex-1 overflow-y-auto p-8 bg-[#F8FAFC]">
-                            <div className="max-w-3xl mx-auto space-y-8 bg-white p-10 rounded-xl shadow-sm border border-[#E5E7EB]">
-                                <div className="flex justify-between items-start">
-                                    <div>
-                                        <h1 className="text-xl font-black text-[#1F2937] tracking-tight">MPLOYUS PAYROLL</h1>
-                                        <p className="text-[10px] text-[#6B7280] font-bold tracking-widest uppercase mt-1">Locum Remittance Advice</p>
-                                    </div>
-                                    <div className="text-right">
-                                        <p className="text-xs text-[#9CA3AF] uppercase font-bold tracking-widest">Statement Date</p>
-                                        <p className="text-sm text-[#1F2937] font-bold">{selectedPayroll.payDate}</p>
-                                    </div>
-                                </div>
-
-                                <div className="grid grid-cols-2 gap-12 py-8 border-y border-[#F3F4F6]">
-                                    <div>
-                                        <p className="text-[10px] text-[#9CA3AF] font-bold uppercase tracking-wider mb-2">Agency Details</p>
-                                        <div className="text-xs space-y-1">
-                                            <p className="font-bold text-[#1F2937]">Mployus Locum Solutions Ltd.</p>
-                                            <p className="text-[#6B7280]">123 Business Park, Dublin 2</p>
-                                            <p className="text-[#6B7280]">Ireland</p>
-                                            <p className="text-[#6B7280]">Employer Reg: 8274920L</p>
-                                        </div>
-                                    </div>
-                                    <div className="text-right">
-                                        <p className="text-[10px] text-[#9CA3AF] font-bold uppercase tracking-wider mb-2">Recipient</p>
-                                        <div className="text-xs space-y-1">
-                                            <p className="font-bold text-[#1F2937]">{selectedPayroll.locum}</p>
-                                            <p className="text-[#6B7280]">PPS No: 1234567FA</p>
-                                            <p className="text-[#6B7280]">Medical Registration: MC9988</p>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <div>
-                                    <h4 className="text-xs text-[#1F2937] font-black uppercase tracking-widest mb-4">Earnings Breakdown</h4>
-                                    <div className="space-y-4">
-                                        <div className="flex justify-between text-sm py-2 border-b border-dashed border-[#E5E7EB]">
-                                            <div>
-                                                <p className="font-bold text-[#1F2937]">Professional Services ({selectedPayroll.hours} Hours)</p>
-                                                <p className="text-xs text-[#6B7280]">Locum shifts across {selectedPayroll.shifts} scheduled slots</p>
-                                            </div>
-                                            <span className="font-bold text-[#1F2937]">€{selectedPayroll.grossPay.toLocaleString()}</span>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <div className="space-y-4">
-                                    <h4 className="text-xs text-[#1F2937] font-black uppercase tracking-widest">Deductions & Statutory</h4>
-                                    <div className="space-y-2 bg-[#F9FAFB] p-4 rounded-lg">
-                                        <div className="flex justify-between text-sm">
-                                            <span className="text-[#6B7280]">PAYE Income Tax (20%)</span>
-                                            <span className="text-[#DC2626] font-medium">-€{selectedPayroll.tax.toLocaleString()}</span>
-                                        </div>
-                                        <div className="flex justify-between text-sm">
-                                            <span className="text-[#6B7280]">PRSI (Employee Contribution)</span>
-                                            <span className="text-[#DC2626] font-medium">-€{selectedPayroll.prsi.toLocaleString()}</span>
-                                        </div>
-                                        <div className="flex justify-between border-t border-[#E5E7EB] pt-2 mt-2">
-                                            <span className="text-sm font-black text-[#1F2937]">Total Deductions</span>
-                                            <span className="text-sm font-bold text-[#DC2626]">-€{(selectedPayroll.tax + selectedPayroll.prsi).toLocaleString()}</span>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <div className="flex justify-end pt-4">
-                                    <div className="w-full bg-[#10B981] text-white rounded-xl p-6 shadow-lg shadow-emerald-100 flex justify-between items-center">
-                                        <div>
-                                            <p className="text-[10px] font-black uppercase tracking-widest opacity-80">Net Amount Transferable</p>
-                                            <h2 className="text-3xl font-black">€{selectedPayroll.netPay.toLocaleString()}</h2>
-                                        </div>
-                                        <div className="text-right">
-                                            <p className="text-[10px] font-black uppercase tracking-widest opacity-80 mb-1">Payment Method</p>
-                                            <p className="text-sm font-bold">SEPA Bank Transfer</p>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <div className="pt-8 text-[10px] text-[#9CA3AF] leading-relaxed italic border-t border-[#F3F4F6]">
-                                    <p>This document serves as a remittance advice and is not a valid tax invoice. Statutory contributions are calculated based on current Revenue Ireland guidelines for locum practitioners.</p>
-                                </div>
-                            </div>
-                        </div>
-
-                        {/* Footer Actions */}
-                        <div className="p-5 border-t border-[#E5E7EB] bg-[#F9FAFB] flex justify-end gap-3 shrink-0">
-                            <button
-                                onClick={() => setShowPayrollDetail(false)}
-                                className="px-6 py-2.5 text-sm text-[#6B7280] font-bold hover:text-[#1F2937] transition-colors"
-                            >
-                                Close
+                            <button onClick={() => setShowPayrollDetail(false)} className="p-2 hover:bg-[#F3F4F6] rounded-lg">
+                                <X className="w-5 h-5 text-[#6B7280]" />
                             </button>
+                        </div>
+                        <div className="flex-1 overflow-y-auto p-10 bg-[#F8FAFC]">
+                            <div className="max-w-3xl mx-auto bg-white p-12 rounded-2xl shadow-sm border border-[#E5E7EB] space-y-10">
+                                <div className="flex justify-between items-start">
+                                    <div className="space-y-1">
+                                        <h1 className="text-3xl font-black text-[#10B981] tracking-tighter">MPLOYUS</h1>
+                                        <p className="text-[10px] text-[#6B7280] font-bold uppercase tracking-widest">Locum Payroll Remittance</p>
+                                    </div>
+                                    <div className="text-right">
+                                        <h2 className="text-sm font-black text-[#1F2937] uppercase tracking-widest">Processed Date</h2>
+                                        <p className="text-xl font-bold text-[#10B981]">{selectedPayroll.payDate}</p>
+                                    </div>
+                                </div>
+                                <div className="grid grid-cols-2 gap-12 py-8 border-y border-[#F3F4F6]">
+                                    <div className="space-y-4">
+                                        <p className="text-[10px] text-[#9CA3AF] font-bold uppercase tracking-widest">Recipient Details</p>
+                                        <div className="space-y-1">
+                                            <p className="text-lg font-black text-[#1F2937]">{selectedPayroll.locum}</p>
+                                            <p className="text-sm text-[#6B7280]">Period: {selectedPayroll.period}</p>
+                                        </div>
+                                    </div>
+                                    <div className="text-right space-y-4 border-l border-[#F3F4F6] pl-12">
+                                        <p className="text-[10px] text-[#9CA3AF] font-bold uppercase tracking-widest">Net Payment</p>
+                                        <p className="text-4xl font-black text-[#10B981]">€{selectedPayroll.netPay.toLocaleString(undefined, { minimumFractionDigits: 2 })}</p>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
