@@ -4,10 +4,12 @@ import {
     CheckCircle, AlertTriangle, Edit, Ban, UserPlus, Download, MoreHorizontal,
     Phone, Mail, ShieldCheck, FileText, Activity, MessageSquare, X
 } from 'lucide-react';
+import { toast } from 'sonner';
 
 interface ShiftDetailPageProps {
     shiftId: string;
     onBack: () => void;
+    onViewLocumProfile?: (id: string) => void;
 }
 
 const shiftProfiles: Record<string, any> = {
@@ -159,14 +161,77 @@ function getShiftProfile(id: string) {
     return shiftProfiles['SH-001'];
 }
 
-export function ShiftDetailPage({ shiftId, onBack }: ShiftDetailPageProps) {
-    const profile = getShiftProfile(shiftId);
+export function ShiftDetailPage({ shiftId, onBack, onViewLocumProfile }: ShiftDetailPageProps) {
+    const [profile, setProfile] = useState(() => ({ ...getShiftProfile(shiftId) }));
     const [activeTab, setActiveTab] = useState<'details' | 'compliance' | 'timeline' | 'notes'>('details');
     const [showAssignModal, setShowAssignModal] = useState(false);
     const [showCancelModal, setShowCancelModal] = useState(false);
     const [cancelReason, setCancelReason] = useState('');
+    const [selectedAssignee, setSelectedAssignee] = useState('Sarah Mitchell');
+    const [showAddNoteInput, setShowAddNoteInput] = useState(false);
+    const [newNoteContent, setNewNoteContent] = useState('');
 
     const config = statusConfig[profile.status];
+
+    const handleAssignLocum = () => {
+        setProfile(prev => ({
+            ...prev,
+            status: 'filled',
+            locum: selectedAssignee,
+            locumId: selectedAssignee === 'Sarah Mitchell' ? 'LOC-001' : selectedAssignee === 'James Harrison' ? 'LOC-002' : 'LOC-003',
+            timeline: [
+                { date: new Date().toISOString().replace('T', ' ').substring(0, 16), user: 'Omar Murphy', action: 'Locum assigned', details: `${selectedAssignee} assigned to shift` },
+                ...prev.timeline
+            ]
+        }));
+        setShowAssignModal(false);
+        toast.success(`Locum ${selectedAssignee} assigned successfully!`);
+    };
+
+    const handleCancelShift = () => {
+        if (!cancelReason.trim()) {
+            toast.error("Please enter a cancellation reason.");
+            return;
+        }
+        setProfile(prev => ({
+            ...prev,
+            status: 'cancelled',
+            timeline: [
+                { date: new Date().toISOString().replace('T', ' ').substring(0, 16), user: 'Omar Murphy', action: 'Shift cancelled', details: `Reason: ${cancelReason}` },
+                ...prev.timeline
+            ]
+        }));
+        setShowCancelModal(false);
+        toast.success("Shift cancelled successfully.");
+    };
+
+    const handleAddNote = () => {
+        if (!newNoteContent.trim()) {
+            toast.error("Please enter note content.");
+            return;
+        }
+        setProfile(prev => ({
+            ...prev,
+            notes: [
+                { date: new Date().toISOString().split('T')[0], author: 'Omar Murphy', content: newNoteContent },
+                ...prev.notes
+            ]
+        }));
+        setNewNoteContent('');
+        setShowAddNoteInput(false);
+        toast.success("Note added successfully!");
+    };
+
+    const handleExport = () => {
+        const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(profile, null, 2));
+        const downloadAnchor = document.createElement('a');
+        downloadAnchor.setAttribute("href", dataStr);
+        downloadAnchor.setAttribute("download", `shift_${profile.id}.json`);
+        document.body.appendChild(downloadAnchor);
+        downloadAnchor.click();
+        downloadAnchor.remove();
+        toast.success("Shift details exported successfully!");
+    };
 
     const tabs = [
         { id: 'details' as const, label: 'Shift Details' },
@@ -207,10 +272,22 @@ export function ShiftDetailPage({ shiftId, onBack }: ShiftDetailPageProps) {
                             <UserPlus className="w-3.5 h-3.5" /> Assign Locum
                         </button>
                     )}
-                    <button className="flex items-center gap-1.5 px-3 py-2 text-sm border border-[#E5E7EB] rounded-lg hover:bg-[#F9FAFB]">
+                    <button 
+                        onClick={() => {
+                            const newRate = prompt("Enter new Hourly Rate (€):", profile.rate.toString());
+                            if (newRate && !isNaN(Number(newRate))) {
+                                setProfile(prev => ({ ...prev, rate: Number(newRate), totalPay: Number(newRate) * prev.hours }));
+                                toast.success("Hourly rate updated successfully!");
+                            }
+                        }}
+                        className="flex items-center gap-1.5 px-3 py-2 text-sm border border-[#E5E7EB] rounded-lg hover:bg-[#F9FAFB]"
+                    >
                         <Edit className="w-3.5 h-3.5" /> Edit
                     </button>
-                    <button className="flex items-center gap-1.5 px-3 py-2 text-sm border border-[#E5E7EB] rounded-lg hover:bg-[#F9FAFB]">
+                    <button 
+                        onClick={handleExport}
+                        className="flex items-center gap-1.5 px-3 py-2 text-sm border border-[#E5E7EB] rounded-lg hover:bg-[#F9FAFB]"
+                    >
                         <Download className="w-3.5 h-3.5" /> Export
                     </button>
                     {profile.status !== 'cancelled' && (
@@ -375,7 +452,10 @@ export function ShiftDetailPage({ shiftId, onBack }: ShiftDetailPageProps) {
                                                     <p className="text-xs text-[#6B7280]">{profile.grade} · ID: {profile.locumId}</p>
                                                 </div>
                                             </div>
-                                            <button className="flex items-center gap-1.5 px-3 py-1.5 text-sm text-[#10B981] border border-[#10B981] rounded-lg hover:bg-[#ECFDF5]">
+                                            <button 
+                                                onClick={() => onViewLocumProfile?.(profile.locumId)}
+                                                className="flex items-center gap-1.5 px-3 py-1.5 text-sm text-[#10B981] border border-[#10B981] rounded-lg hover:bg-[#ECFDF5]"
+                                            >
                                                 View Profile
                                             </button>
                                         </div>
@@ -478,10 +558,40 @@ export function ShiftDetailPage({ shiftId, onBack }: ShiftDetailPageProps) {
                         <div className="space-y-4">
                             <div className="flex items-center justify-between">
                                 <h4 className="text-sm text-[#1F2937]" style={{ fontWeight: 600 }}>Shift Notes</h4>
-                                <button className="flex items-center gap-1.5 px-3 py-1.5 text-sm text-[#10B981] border border-[#10B981] rounded-lg hover:bg-[#ECFDF5]">
+                                <button 
+                                    onClick={() => setShowAddNoteInput(true)}
+                                    className="flex items-center gap-1.5 px-3 py-1.5 text-sm text-[#10B981] border border-[#10B981] rounded-lg hover:bg-[#ECFDF5]"
+                                >
                                     <MessageSquare className="w-3.5 h-3.5" /> Add Note
                                 </button>
                             </div>
+                            
+                            {showAddNoteInput && (
+                                <div className="border border-[#E5E7EB] rounded-lg p-4 bg-[#F9FAFB] space-y-3">
+                                    <textarea
+                                        value={newNoteContent}
+                                        onChange={e => setNewNoteContent(e.target.value)}
+                                        placeholder="Type your note here..."
+                                        className="w-full px-3 py-2 border border-[#E5E7EB] rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#10B981] bg-white text-[#1F2937]"
+                                        rows={3}
+                                    />
+                                    <div className="flex justify-end gap-2">
+                                        <button 
+                                            onClick={() => setShowAddNoteInput(false)}
+                                            className="px-3 py-1.5 border border-[#E5E7EB] rounded-lg text-xs text-[#6B7280] hover:bg-[#F3F4F6]"
+                                        >
+                                            Cancel
+                                        </button>
+                                        <button 
+                                            onClick={handleAddNote}
+                                            className="px-3 py-1.5 bg-[#10B981] text-white rounded-lg text-xs hover:bg-[#059669]"
+                                        >
+                                            Save Note
+                                        </button>
+                                    </div>
+                                </div>
+                            )}
+
                             <div className="space-y-3">
                                 {profile.notes.map((note: any, idx: number) => (
                                     <div key={idx} className="border border-[#E5E7EB] rounded-lg p-4 bg-[#FFFBEB]">
@@ -513,11 +623,14 @@ export function ShiftDetailPage({ shiftId, onBack }: ShiftDetailPageProps) {
                         <div className="p-5 space-y-4">
                             <div>
                                 <label className="block text-sm text-[#1F2937] mb-1" style={{ fontWeight: 500 }}>Select Locum</label>
-                                <select className="w-full px-3 py-2 border border-[#E5E7EB] rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#10B981]">
-                                    <option>Select locum...</option>
-                                    <option>Sarah Mitchell - General Surgery</option>
-                                    <option>James Harrison - Cardiology</option>
-                                    <option>Emily Chen - Anesthesiology</option>
+                                <select 
+                                    value={selectedAssignee}
+                                    onChange={e => setSelectedAssignee(e.target.value)}
+                                    className="w-full px-3 py-2 border border-[#E5E7EB] rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#10B981] bg-white text-[#1F2937]"
+                                >
+                                    <option value="Sarah Mitchell">Sarah Mitchell - General Surgery</option>
+                                    <option value="James Harrison">James Harrison - Cardiology</option>
+                                    <option value="Emily Chen">Emily Chen - Anesthesiology</option>
                                 </select>
                             </div>
                             <div className="bg-[#EFF6FF] border border-[#BFDBFE] rounded-lg p-3">
@@ -530,7 +643,10 @@ export function ShiftDetailPage({ shiftId, onBack }: ShiftDetailPageProps) {
                             <button onClick={() => setShowAssignModal(false)} className="px-4 py-2 border border-[#E5E7EB] text-[#1F2937] rounded-lg text-sm hover:bg-[#F9FAFB]">
                                 Cancel
                             </button>
-                            <button className="px-4 py-2 bg-[#10B981] text-white rounded-lg text-sm hover:bg-[#059669]">
+                            <button 
+                                onClick={handleAssignLocum}
+                                className="px-4 py-2 bg-[#10B981] text-white rounded-lg text-sm hover:bg-[#059669]"
+                            >
                                 Assign Locum
                             </button>
                         </div>
@@ -569,7 +685,10 @@ export function ShiftDetailPage({ shiftId, onBack }: ShiftDetailPageProps) {
                             <button onClick={() => setShowCancelModal(false)} className="px-4 py-2 border border-[#E5E7EB] text-[#1F2937] rounded-lg text-sm hover:bg-[#F9FAFB]">
                                 Keep Shift
                             </button>
-                            <button className="px-4 py-2 bg-[#DC2626] text-white rounded-lg text-sm hover:bg-[#B91C1C]">
+                            <button 
+                                onClick={handleCancelShift}
+                                className="px-4 py-2 bg-[#DC2626] text-white rounded-lg text-sm hover:bg-[#B91C1C]"
+                            >
                                 Cancel Shift
                             </button>
                         </div>

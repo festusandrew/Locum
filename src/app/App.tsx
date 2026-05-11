@@ -163,9 +163,22 @@ function AppContent() {
             case 'facilityProfile':
                 return <FacilityProfilePage facilityId={selectedProfileId} onBack={() => setCurrentPage('clients')} />;
             case 'shiftDetail':
-                return <ShiftDetailPage shiftId={selectedProfileId} onBack={() => setCurrentPage('shifts')} />;
+                return (
+                    <ShiftDetailPage 
+                        shiftId={selectedProfileId} 
+                        onBack={() => setCurrentPage('shifts')} 
+                        onViewLocumProfile={handleViewLocumProfile}
+                    />
+                );
             case 'timesheetDetail':
-                return <TimesheetDetailPage timesheetId={selectedProfileId} onBack={() => setCurrentPage('timesheets')} />;
+                return (
+                    <TimesheetDetailPage 
+                        timesheetId={selectedProfileId} 
+                        onBack={() => setCurrentPage('timesheets')} 
+                        onViewLocumProfile={handleViewLocumProfile}
+                        onViewFacilityProfile={handleViewFacilityProfile}
+                    />
+                );
             case 'complianceDetail':
                 return <ComplianceDetailPage locumId={selectedProfileId} onBack={() => setCurrentPage('compliance')} />;
             default:

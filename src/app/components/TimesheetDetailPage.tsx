@@ -4,10 +4,13 @@ import {
     FileText, MapPin, Building2, User, Calendar, Navigation, Upload,
     Edit, MoreHorizontal, ThumbsUp, ThumbsDown, MessageSquare, Activity, X
 } from 'lucide-react';
+import { toast } from 'sonner';
 
 interface TimesheetDetailPageProps {
     timesheetId: string;
     onBack: () => void;
+    onViewLocumProfile?: (id: string) => void;
+    onViewFacilityProfile?: (id: string) => void;
 }
 
 const timesheetProfiles: Record<string, any> = {
@@ -143,14 +146,96 @@ function getTimesheetProfile(id: string) {
     return timesheetProfiles['TS-2026-001'];
 }
 
-export function TimesheetDetailPage({ timesheetId, onBack }: TimesheetDetailPageProps) {
-    const profile = getTimesheetProfile(timesheetId);
+export function TimesheetDetailPage({ timesheetId, onBack, onViewLocumProfile, onViewFacilityProfile }: TimesheetDetailPageProps) {
+    const [profile, setProfile] = useState(() => ({ ...getTimesheetProfile(timesheetId) }));
     const [activeTab, setActiveTab] = useState<'details' | 'breakdown' | 'timeline' | 'notes'>('details');
     const [showApprovalModal, setShowApprovalModal] = useState(false);
     const [showRejectModal, setShowRejectModal] = useState(false);
     const [rejectionReason, setRejectionReason] = useState('');
+    const [showAddNoteInput, setShowAddNoteInput] = useState(false);
+    const [newNoteContent, setNewNoteContent] = useState('');
+    const [showUploadModal, setShowUploadModal] = useState(false);
+    const [uploadFileName, setUploadFileName] = useState('');
 
     const config = statusConfig[profile.status];
+
+    const handleApproveTimesheet = () => {
+        setProfile(prev => ({
+            ...prev,
+            status: 'approved',
+            timeline: [
+                { date: new Date().toISOString().replace('T', ' ').substring(0, 16), user: 'Omar Murphy', action: 'Timesheet approved', details: 'Timesheet approved for payroll processing' },
+                ...prev.timeline
+            ]
+        }));
+        setShowApprovalModal(false);
+        toast.success("Timesheet approved successfully!");
+    };
+
+    const handleRejectTimesheet = () => {
+        if (!rejectionReason.trim()) {
+            toast.error("Please enter a rejection reason.");
+            return;
+        }
+        setProfile(prev => ({
+            ...prev,
+            status: 'rejected',
+            timeline: [
+                { date: new Date().toISOString().replace('T', ' ').substring(0, 16), user: 'Omar Murphy', action: 'Timesheet rejected', details: `Reason: ${rejectionReason}` },
+                ...prev.timeline
+            ]
+        }));
+        setShowRejectModal(false);
+        toast.success("Timesheet rejected successfully.");
+    };
+
+    const handleAddNote = () => {
+        if (!newNoteContent.trim()) {
+            toast.error("Please enter a note.");
+            return;
+        }
+        setProfile(prev => ({
+            ...prev,
+            notes: [
+                { date: new Date().toISOString().split('T')[0], author: 'Omar Murphy', content: newNoteContent },
+                ...prev.notes
+            ]
+        }));
+        setNewNoteContent('');
+        setShowAddNoteInput(false);
+        toast.success("Note added successfully!");
+    };
+
+    const handleSimulatedUpload = (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!uploadFileName.trim()) {
+            toast.error("Please enter a file name.");
+            return;
+        }
+        const newAttachment = {
+            name: uploadFileName.endsWith('.pdf') ? uploadFileName : `${uploadFileName}.pdf`,
+            size: `${Math.floor(50 + Math.random() * 400)} KB`,
+            uploadedAt: new Date().toISOString().replace('T', ' ').substring(0, 16)
+        };
+        setProfile(prev => ({
+            ...prev,
+            attachments: [...(prev.attachments || []), newAttachment]
+        }));
+        setUploadFileName('');
+        setShowUploadModal(false);
+        toast.success(`File "${newAttachment.name}" uploaded successfully!`);
+    };
+
+    const handleExportTimesheet = () => {
+        const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(profile, null, 2));
+        const downloadAnchor = document.createElement('a');
+        downloadAnchor.setAttribute("href", dataStr);
+        downloadAnchor.setAttribute("download", `timesheet_${profile.id}.json`);
+        document.body.appendChild(downloadAnchor);
+        downloadAnchor.click();
+        downloadAnchor.remove();
+        toast.success("Timesheet details exported successfully!");
+    };
 
     const tabs = [
         { id: 'details' as const, label: 'Timesheet Details' },
@@ -199,7 +284,10 @@ export function TimesheetDetailPage({ timesheetId, onBack }: TimesheetDetailPage
                             </button>
                         </>
                     )}
-                    <button className="flex items-center gap-1.5 px-3 py-2 text-sm border border-[#E5E7EB] rounded-lg hover:bg-[#F9FAFB]">
+                    <button 
+                        onClick={handleExportTimesheet}
+                        className="flex items-center gap-1.5 px-3 py-2 text-sm border border-[#E5E7EB] rounded-lg hover:bg-[#F9FAFB]"
+                    >
                         <Download className="w-3.5 h-3.5" /> Export PDF
                     </button>
                     <button className="p-2 border border-[#E5E7EB] rounded-lg hover:bg-[#F9FAFB]">
@@ -207,7 +295,7 @@ export function TimesheetDetailPage({ timesheetId, onBack }: TimesheetDetailPage
                     </button>
                 </div>
             </div>
-
+ 
             {/* Header Card */}
             <div className="bg-white rounded-xl border border-[#E5E7EB] p-6">
                 <div className="flex items-start gap-5">
@@ -216,12 +304,21 @@ export function TimesheetDetailPage({ timesheetId, onBack }: TimesheetDetailPage
                     </div>
                     <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-3 mb-1">
-                            <h3 className="text-xl text-[#1F2937]" style={{ fontWeight: 700 }}>{profile.locum}</h3>
+                            <h3 
+                                onClick={() => onViewLocumProfile?.(profile.locumId)}
+                                className="text-xl text-[#1F2937] hover:text-[#10B981] cursor-pointer transition-colors" 
+                                style={{ fontWeight: 700 }}
+                            >
+                                {profile.locum}
+                            </h3>
                             <span className="text-xs text-[#9CA3AF] bg-[#F3F4F6] px-2 py-0.5 rounded">{profile.id}</span>
                         </div>
                         <p className="text-sm text-[#6B7280] mb-3">{formatDate(profile.shiftDate)} · {profile.dayOfWeek} · {profile.shiftType}</p>
                         <div className="flex flex-wrap items-center gap-x-5 gap-y-2 text-sm text-[#6B7280]">
-                            <span className="flex items-center gap-1.5">
+                            <span 
+                                onClick={() => onViewFacilityProfile?.(profile.facilityId)}
+                                className="flex items-center gap-1.5 hover:text-[#10B981] cursor-pointer transition-colors"
+                            >
                                 <Building2 className="w-3.5 h-3.5 text-[#9CA3AF]" />{profile.facility}
                             </span>
                             <span className="flex items-center gap-1.5">
@@ -569,10 +666,40 @@ export function TimesheetDetailPage({ timesheetId, onBack }: TimesheetDetailPage
                             <div>
                                 <div className="flex items-center justify-between mb-3">
                                     <h4 className="text-sm text-[#1F2937]" style={{ fontWeight: 600 }}>Timesheet Notes</h4>
-                                    <button className="flex items-center gap-1.5 px-3 py-1.5 text-sm text-[#10B981] border border-[#10B981] rounded-lg hover:bg-[#ECFDF5]">
+                                    <button 
+                                        onClick={() => setShowAddNoteInput(true)}
+                                        className="flex items-center gap-1.5 px-3 py-1.5 text-sm text-[#10B981] border border-[#10B981] rounded-lg hover:bg-[#ECFDF5]"
+                                    >
                                         <MessageSquare className="w-3.5 h-3.5" /> Add Note
                                     </button>
                                 </div>
+
+                                {showAddNoteInput && (
+                                    <div className="border border-[#E5E7EB] rounded-lg p-4 bg-[#F9FAFB] space-y-3 mb-3">
+                                        <textarea
+                                            value={newNoteContent}
+                                            onChange={e => setNewNoteContent(e.target.value)}
+                                            placeholder="Type your timesheet note here..."
+                                            className="w-full px-3 py-2 border border-[#E5E7EB] rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#10B981] bg-white text-[#1F2937]"
+                                            rows={3}
+                                        />
+                                        <div className="flex justify-end gap-2">
+                                            <button 
+                                                onClick={() => setShowAddNoteInput(false)}
+                                                className="px-3 py-1.5 border border-[#E5E7EB] rounded-lg text-xs text-[#6B7280] hover:bg-[#F3F4F6]"
+                                            >
+                                                Cancel
+                                            </button>
+                                            <button 
+                                                onClick={handleAddNote}
+                                                className="px-3 py-1.5 bg-[#10B981] text-white rounded-lg text-xs hover:bg-[#059669]"
+                                            >
+                                                Save Note
+                                            </button>
+                                        </div>
+                                    </div>
+                                )}
+
                                 {profile.notes.length > 0 ? (
                                     <div className="space-y-3">
                                         {profile.notes.map((note: any, idx: number) => (
@@ -599,7 +726,10 @@ export function TimesheetDetailPage({ timesheetId, onBack }: TimesheetDetailPage
                             <div>
                                 <div className="flex items-center justify-between mb-3">
                                     <h4 className="text-sm text-[#1F2937]" style={{ fontWeight: 600 }}>Attachments</h4>
-                                    <button className="flex items-center gap-1.5 px-3 py-1.5 text-sm text-[#10B981] border border-[#10B981] rounded-lg hover:bg-[#ECFDF5]">
+                                    <button 
+                                        onClick={() => setShowUploadModal(true)}
+                                        className="flex items-center gap-1.5 px-3 py-1.5 text-sm text-[#10B981] border border-[#10B981] rounded-lg hover:bg-[#ECFDF5]"
+                                    >
                                         <Upload className="w-3.5 h-3.5" /> Upload File
                                     </button>
                                 </div>
@@ -614,7 +744,10 @@ export function TimesheetDetailPage({ timesheetId, onBack }: TimesheetDetailPage
                                                         <p className="text-xs text-[#9CA3AF]">{file.size} · Uploaded {file.uploadedAt}</p>
                                                     </div>
                                                 </div>
-                                                <button className="flex items-center gap-1.5 px-3 py-1.5 text-sm text-[#3B82F6] border border-[#3B82F6] rounded-lg hover:bg-[#EFF6FF]">
+                                                <button 
+                                                    onClick={() => toast.success(`Downloaded supporting file "${file.name}"!`)}
+                                                    className="flex items-center gap-1.5 px-3 py-1.5 text-sm text-[#3B82F6] border border-[#3B82F6] rounded-lg hover:bg-[#EFF6FF]"
+                                                >
                                                     <Download className="w-3.5 h-3.5" /> Download
                                                 </button>
                                             </div>
@@ -663,7 +796,10 @@ export function TimesheetDetailPage({ timesheetId, onBack }: TimesheetDetailPage
                             <button onClick={() => setShowApprovalModal(false)} className="px-4 py-2 border border-[#E5E7EB] text-[#1F2937] rounded-lg text-sm hover:bg-[#F9FAFB]">
                                 Cancel
                             </button>
-                            <button className="px-4 py-2 bg-[#10B981] text-white rounded-lg text-sm hover:bg-[#059669] flex items-center gap-2">
+                            <button 
+                                onClick={handleApproveTimesheet}
+                                className="px-4 py-2 bg-[#10B981] text-white rounded-lg text-sm hover:bg-[#059669] flex items-center gap-2"
+                            >
                                 <CheckCircle className="w-4 h-4" />
                                 Approve Timesheet
                             </button>
@@ -703,12 +839,50 @@ export function TimesheetDetailPage({ timesheetId, onBack }: TimesheetDetailPage
                             <button onClick={() => setShowRejectModal(false)} className="px-4 py-2 border border-[#E5E7EB] text-[#1F2937] rounded-lg text-sm hover:bg-[#F9FAFB]">
                                 Cancel
                             </button>
-                            <button className="px-4 py-2 bg-[#DC2626] text-white rounded-lg text-sm hover:bg-[#B91C1C] flex items-center gap-2">
+                            <button 
+                                onClick={handleRejectTimesheet}
+                                className="px-4 py-2 bg-[#DC2626] text-white rounded-lg text-sm hover:bg-[#B91C1C] flex items-center gap-2"
+                            >
                                 <XCircle className="w-4 h-4" />
                                 Reject Timesheet
                             </button>
                         </div>
                     </div>
+                </div>
+            )}
+
+            {/* Upload File Modal */}
+            {showUploadModal && (
+                <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-6">
+                    <form onSubmit={handleSimulatedUpload} className="bg-white rounded-xl w-full max-w-md">
+                        <div className="p-5 border-b border-[#E5E7EB] flex items-center justify-between">
+                            <h3 className="text-[#1F2937]" style={{ fontWeight: 600 }}>Upload Supporting Document</h3>
+                            <button type="button" onClick={() => setShowUploadModal(false)} className="p-2 hover:bg-[#F3F4F6] rounded-lg">
+                                <X className="w-5 h-5 text-[#6B7280]" />
+                            </button>
+                        </div>
+                        <div className="p-5 space-y-4">
+                            <div>
+                                <label className="block text-sm text-[#1F2937] mb-1" style={{ fontWeight: 500 }}>Document Name</label>
+                                <input
+                                    type="text"
+                                    value={uploadFileName}
+                                    onChange={e => setUploadFileName(e.target.value)}
+                                    placeholder="e.g. Travel_Expense_Receipt"
+                                    className="w-full px-3 py-2 border border-[#E5E7EB] rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#10B981] bg-white text-[#1F2937]"
+                                    required
+                                />
+                            </div>
+                        </div>
+                        <div className="p-5 border-t border-[#E5E7EB] flex justify-end gap-2">
+                            <button type="button" onClick={() => setShowUploadModal(false)} className="px-4 py-2 border border-[#E5E7EB] text-[#1F2937] rounded-lg text-sm hover:bg-[#F9FAFB]">
+                                Cancel
+                            </button>
+                            <button type="submit" className="px-4 py-2 bg-[#10B981] text-white rounded-lg text-sm hover:bg-[#059669]">
+                                Upload file
+                            </button>
+                        </div>
+                    </form>
                 </div>
             )}
         </div>

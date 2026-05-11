@@ -151,8 +151,8 @@ export function LocumManagement({ onViewProfile }: { onViewProfile?: (id: string
         const experience = formData.get('experience') as string;
 
         const newLocumId = `#LC${Math.floor(10000 + Math.random() * 90000)}`;
-        const fullName = `Dr. ${firstName} ${lastName}`;
-        const avatarLetters = `${firstName[0] || ''}${lastName[0] || ''}`.toUpperCase() || 'DR';
+        const fullName = `${firstName} ${lastName}`;
+        const avatarLetters = `${firstName[0] || ''}${lastName[0] || ''}`.toUpperCase() || 'LP';
 
         const newLocum: Locum = {
             id: newLocumId,
@@ -193,8 +193,8 @@ export function LocumManagement({ onViewProfile }: { onViewProfile?: (id: string
         const qualifications = formData.get('qualifications') as string;
         const experience = formData.get('experience') as string;
 
-        const fullName = `Dr. ${firstName} ${lastName}`;
-        const avatarLetters = `${firstName[0] || ''}${lastName[0] || ''}`.toUpperCase() || 'DR';
+        const fullName = `${firstName} ${lastName}`;
+        const avatarLetters = `${firstName[0] || ''}${lastName[0] || ''}`.toUpperCase() || 'LP';
 
         const updatedLocum: Locum = {
             ...selectedLocum,
