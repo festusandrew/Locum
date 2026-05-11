@@ -598,6 +598,14 @@ export function LocumProfilePage({ locumId, onBack }: LocumProfilePageProps) {
     const [editIban, setEditIban] = useState('');
     const [editBic, setEditBic] = useState('');
 
+    // Details-aligned extra edit fields
+    const [editLanguages, setEditLanguages] = useState('');
+    const [editMaxWeeklyHours, setEditMaxWeeklyHours] = useState<number>(48);
+    const [editPreferredLocations, setEditPreferredLocations] = useState('');
+    const [editPreferredShifts, setEditPreferredShifts] = useState<string[]>([]);
+    const [editRevenueRegistered, setEditRevenueRegistered] = useState(false);
+    const [editVatRegistered, setEditVatRegistered] = useState(false);
+
     const handleOpenEdit = () => {
         setEditName(profile.name);
         setEditStatus(profile.status);
@@ -636,6 +644,14 @@ export function LocumProfilePage({ locumId, onBack }: LocumProfilePageProps) {
         setEditIban(profile.financial.iban || '');
         setEditBic(profile.financial.bic || '');
 
+        // Load custom extra details-aligned fields
+        setEditLanguages(profile.professional.languages ? profile.professional.languages.join(', ') : '');
+        setEditMaxWeeklyHours(profile.professional.maxWeeklyHours || 48);
+        setEditPreferredLocations(profile.professional.preferredLocations ? profile.professional.preferredLocations.join(', ') : '');
+        setEditPreferredShifts(profile.professional.preferredShifts || []);
+        setEditRevenueRegistered(profile.financial.revenueRegistered || false);
+        setEditVatRegistered(profile.financial.vatRegistered || false);
+
         setEditModalTab('personal');
         setShowEditModal(true);
     };
@@ -672,6 +688,10 @@ export function LocumProfilePage({ locumId, onBack }: LocumProfilePageProps) {
                 subSpecialty: editSubSpecialty,
                 experience: editExperience,
                 grade: editGrade,
+                languages: editLanguages.split(',').map(s => s.trim()).filter(Boolean),
+                maxWeeklyHours: Number(editMaxWeeklyHours),
+                preferredLocations: editPreferredLocations.split(',').map(s => s.trim()).filter(Boolean),
+                preferredShifts: editPreferredShifts,
                 imcNumber: editImcNumber,
                 imcExpiry: editImcExpiry,
                 gmcNumber: editGmcNumber,
@@ -681,6 +701,8 @@ export function LocumProfilePage({ locumId, onBack }: LocumProfilePageProps) {
             financial: {
                 ...profile.financial,
                 taxStatus: editTaxStatus,
+                revenueRegistered: editRevenueRegistered,
+                vatRegistered: editVatRegistered,
                 standardDayRate: Number(editStandardDayRate),
                 standardNightRate: Number(editStandardNightRate),
                 weekendRate: Number(editWeekendRate),
@@ -1852,13 +1874,76 @@ export function LocumProfilePage({ locumId, onBack }: LocumProfilePageProps) {
                                             />
                                         </div>
                                         <div>
-                                            <label className="block text-xs text-[#4B5563] mb-1 font-medium">Total Experience</label>
+                                            <label className="block text-xs text-[#4B5563] mb-1 font-medium">Total Experience (Years)</label>
                                             <input 
                                                 type="text" 
                                                 value={editExperience}
                                                 onChange={e => setEditExperience(e.target.value)}
                                                 className="w-full px-3 py-2 border border-[#E5E7EB] rounded-lg text-sm bg-white text-[#1F2937] focus:outline-none focus:ring-2 focus:ring-[#10B981]"
                                             />
+                                        </div>
+                                    </div>
+
+                                    <h4 className="text-xs font-semibold text-[#374151] uppercase tracking-wider border-b border-[#F3F4F6] pb-1 pt-2">Work Preferences & Capabilities</h4>
+                                    <div className="grid grid-cols-2 gap-4">
+                                        <div>
+                                            <label className="block text-xs text-[#4B5563] mb-1 font-medium">Languages Spoken (comma-separated)</label>
+                                            <input 
+                                                type="text" 
+                                                value={editLanguages}
+                                                onChange={e => setEditLanguages(e.target.value)}
+                                                className="w-full px-3 py-2 border border-[#E5E7EB] rounded-lg text-sm bg-white text-[#1F2937] focus:outline-none focus:ring-2 focus:ring-[#10B981]"
+                                                placeholder="e.g. English, Spanish"
+                                            />
+                                        </div>
+                                        <div>
+                                            <label className="block text-xs text-[#4B5563] mb-1 font-medium">EWTD Max Hours (weekly)</label>
+                                            <input 
+                                                type="number" 
+                                                value={editMaxWeeklyHours}
+                                                onChange={e => setEditMaxWeeklyHours(Number(e.target.value))}
+                                                className="w-full px-3 py-2 border border-[#E5E7EB] rounded-lg text-sm bg-white text-[#1F2937] focus:outline-none focus:ring-2 focus:ring-[#10B981]"
+                                            />
+                                        </div>
+                                    </div>
+
+                                    <div>
+                                        <label className="block text-xs text-[#4B5563] mb-1 font-medium">Preferred Locations (comma-separated)</label>
+                                        <input 
+                                            type="text" 
+                                            value={editPreferredLocations}
+                                            onChange={e => setEditPreferredLocations(e.target.value)}
+                                            className="w-full px-3 py-2 border border-[#E5E7EB] rounded-lg text-sm bg-white text-[#1F2937] focus:outline-none focus:ring-2 focus:ring-[#10B981]"
+                                            placeholder="e.g. Dublin, Galway, Cork"
+                                        />
+                                    </div>
+
+                                    <div>
+                                        <label className="block text-xs text-[#4B5563] mb-2 font-medium">Preferred Shifts</label>
+                                        <div className="flex flex-wrap gap-2">
+                                            {['Day', 'Night', 'Weekend', 'On-Call'].map(shift => {
+                                                const isSelected = editPreferredShifts.includes(shift);
+                                                return (
+                                                    <button
+                                                        key={shift}
+                                                        type="button"
+                                                        onClick={() => {
+                                                            if (isSelected) {
+                                                                setEditPreferredShifts(editPreferredShifts.filter(s => s !== shift));
+                                                            } else {
+                                                                setEditPreferredShifts([...editPreferredShifts, shift]);
+                                                            }
+                                                        }}
+                                                        className={`px-3 py-1.5 rounded-full text-xs font-semibold border transition-all ${
+                                                            isSelected 
+                                                                ? 'bg-[#E0F2FE] text-[#0369A1] border-[#BAE6FD]'
+                                                                : 'bg-[#F9FAFB] text-[#4B5563] border-[#E5E7EB] hover:bg-[#F3F4F6]'
+                                                        }`}
+                                                    >
+                                                        {shift}
+                                                    </button>
+                                                );
+                                            })}
                                         </div>
                                     </div>
 
@@ -1931,6 +2016,33 @@ export function LocumProfilePage({ locumId, onBack }: LocumProfilePageProps) {
                                                 className="w-full px-3 py-2 border border-[#E5E7EB] rounded-lg text-sm bg-white text-[#1F2937] focus:outline-none focus:ring-2 focus:ring-[#10B981]"
                                                 placeholder="e.g. Self-Employed (Sole Trader)"
                                             />
+                                        </div>
+                                    </div>
+
+                                    <div className="grid grid-cols-2 gap-4 pt-1">
+                                        <div className="flex items-center gap-3 p-3 bg-[#F9FAFB] border border-[#E5E7EB] rounded-xl">
+                                            <input 
+                                                type="checkbox"
+                                                id="editRevenueRegistered"
+                                                checked={editRevenueRegistered}
+                                                onChange={e => setEditRevenueRegistered(e.target.checked)}
+                                                className="w-4 h-4 text-[#10B981] focus:ring-[#10B981] border-[#E5E7EB] rounded"
+                                            />
+                                            <label htmlFor="editRevenueRegistered" className="text-xs text-[#374151] font-semibold cursor-pointer select-none">
+                                                Revenue Registered Status
+                                            </label>
+                                        </div>
+                                        <div className="flex items-center gap-3 p-3 bg-[#F9FAFB] border border-[#E5E7EB] rounded-xl">
+                                            <input 
+                                                type="checkbox"
+                                                id="editVatRegistered"
+                                                checked={editVatRegistered}
+                                                onChange={e => setEditVatRegistered(e.target.checked)}
+                                                className="w-4 h-4 text-[#10B981] focus:ring-[#10B981] border-[#E5E7EB] rounded"
+                                            />
+                                            <label htmlFor="editVatRegistered" className="text-xs text-[#374151] font-semibold cursor-pointer select-none">
+                                                VAT Registered Status
+                                            </label>
                                         </div>
                                     </div>
 
