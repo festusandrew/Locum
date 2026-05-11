@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { toast } from 'sonner';
 import {
     ArrowLeft, User, Mail, Phone, MapPin, Briefcase, Calendar, Clock,
@@ -54,7 +54,7 @@ function buildDocuments(): ComplianceDocument[] {
             history: [
                 { action: 'Renewed', by: 'Lisa Keane', date: '2026-01-15', detail: 'Uploaded renewed IMC certificate valid until 31/03/2027.' },
                 { action: 'Verified', by: 'Omar Murphy', date: '2025-03-20', detail: 'Cross-checked against Medical Council public register.' },
-                { action: 'Uploaded', by: 'Dr. Sarah Mitchell', date: '2024-01-12', detail: 'Initial registration document uploaded at onboarding.' },
+                { action: 'Uploaded', by: 'Sarah Mitchell', date: '2024-01-12', detail: 'Initial registration document uploaded at onboarding.' },
             ],
         },
         {
@@ -75,7 +75,7 @@ function buildDocuments(): ComplianceDocument[] {
             ],
             history: [
                 { action: 'Renewed', by: 'Lisa Keane', date: '2026-01-15', detail: 'Updated GMC certificate after annual revalidation.' },
-                { action: 'Uploaded', by: 'Dr. Sarah Mitchell', date: '2023-03-15', detail: 'Initial GMC registration uploaded at onboarding.' },
+                { action: 'Uploaded', by: 'Sarah Mitchell', date: '2023-03-15', detail: 'Initial GMC registration uploaded at onboarding.' },
             ],
         },
         {
@@ -108,18 +108,18 @@ function buildDocuments(): ComplianceDocument[] {
             reference: 'MPS-IE-456789',
             mandatory: true,
             awardedBy: 'Medical Protection Society (MPS)',
-            updatedBy: 'Dr. Sarah Mitchell',
+            updatedBy: 'Sarah Mitchell',
             updatedDate: '2026-01-02',
             fileName: 'MPS_Indemnity_Certificate_2026.pdf',
             fileSize: '178 KB',
             comments: [
                 { author: 'Lisa Keane', date: '2026-01-05', text: 'Verified cover level is adequate for consultant-grade locum surgery. Cover: \u20AC10M per claim.' },
-                { author: 'Omar Murphy', date: '2025-12-15', text: 'Reminded Dr. Mitchell to renew MPS membership before 31/12/2025.' },
+                { author: 'Omar Murphy', date: '2025-12-15', text: 'Reminded Sarah Mitchell to renew MPS membership before 31/12/2025.' },
             ],
             history: [
-                { action: 'Renewed', by: 'Dr. Sarah Mitchell', date: '2026-01-02', detail: 'Renewed MPS membership certificate uploaded. Cover valid 01/01/2026 - 31/12/2026.' },
+                { action: 'Renewed', by: 'Sarah Mitchell', date: '2026-01-02', detail: 'Renewed MPS membership certificate uploaded. Cover valid 01/01/2026 - 31/12/2026.' },
                 { action: 'Verified', by: 'Lisa Keane', date: '2026-01-05', detail: 'Confirmed cover level and specialty match. Adequate for general surgery locum work.' },
-                { action: 'Uploaded', by: 'Dr. Sarah Mitchell', date: '2025-01-04', detail: 'Previous year MPS certificate uploaded.' },
+                { action: 'Uploaded', by: 'Sarah Mitchell', date: '2025-01-04', detail: 'Previous year MPS certificate uploaded.' },
             ],
         },
         {
@@ -131,7 +131,7 @@ function buildDocuments(): ComplianceDocument[] {
             reference: 'ARC-BLS-2025-1234',
             mandatory: true,
             awardedBy: 'Irish Heart Foundation / ARC',
-            updatedBy: 'Dr. Sarah Mitchell',
+            updatedBy: 'Sarah Mitchell',
             updatedDate: '2025-06-15',
             fileName: 'BLS_CPR_Cert_SMitchell_2025.pdf',
             fileSize: '156 KB',
@@ -139,8 +139,8 @@ function buildDocuments(): ComplianceDocument[] {
                 { author: 'Lisa Keane', date: '2025-06-16', text: 'BLS provider course completed. 2-year validity per IHF guidelines.' },
             ],
             history: [
-                { action: 'Renewed', by: 'Dr. Sarah Mitchell', date: '2025-06-15', detail: 'Completed BLS recertification at RCSI training centre.' },
-                { action: 'Uploaded', by: 'Dr. Sarah Mitchell', date: '2023-06-20', detail: 'Initial BLS certificate uploaded.' },
+                { action: 'Renewed', by: 'Sarah Mitchell', date: '2025-06-15', detail: 'Completed BLS recertification at RCSI training centre.' },
+                { action: 'Uploaded', by: 'Sarah Mitchell', date: '2023-06-20', detail: 'Initial BLS certificate uploaded.' },
             ],
         },
         {
@@ -152,14 +152,14 @@ function buildDocuments(): ComplianceDocument[] {
             reference: 'ARC-ACLS-2025-789',
             mandatory: true,
             awardedBy: 'Irish Heart Foundation / ARC',
-            updatedBy: 'Dr. Sarah Mitchell',
+            updatedBy: 'Sarah Mitchell',
             updatedDate: '2025-06-15',
             fileName: 'ACLS_Cert_SMitchell_2025.pdf',
             fileSize: '162 KB',
             comments: [],
             history: [
-                { action: 'Renewed', by: 'Dr. Sarah Mitchell', date: '2025-06-15', detail: 'ACLS provider course completed at Beaumont Hospital training facility.' },
-                { action: 'Uploaded', by: 'Dr. Sarah Mitchell', date: '2023-06-20', detail: 'Initial ACLS certificate uploaded at onboarding.' },
+                { action: 'Renewed', by: 'Sarah Mitchell', date: '2025-06-15', detail: 'ACLS provider course completed at Beaumont Hospital training facility.' },
+                { action: 'Uploaded', by: 'Sarah Mitchell', date: '2023-06-20', detail: 'Initial ACLS certificate uploaded at onboarding.' },
             ],
         },
         {
@@ -180,7 +180,7 @@ function buildDocuments(): ComplianceDocument[] {
             ],
             history: [
                 { action: 'Renewed', by: 'Lisa Keane', date: '2025-09-03', detail: 'Manual handling refresher completed. New cert uploaded.' },
-                { action: 'Uploaded', by: 'Dr. Sarah Mitchell', date: '2023-09-10', detail: 'Initial manual handling certificate at onboarding.' },
+                { action: 'Uploaded', by: 'Sarah Mitchell', date: '2023-09-10', detail: 'Initial manual handling certificate at onboarding.' },
             ],
         },
         {
@@ -192,14 +192,14 @@ function buildDocuments(): ComplianceDocument[] {
             reference: 'HSE-HH-2025-3456',
             mandatory: true,
             awardedBy: 'HSELanD (HSE)',
-            updatedBy: 'Dr. Sarah Mitchell',
+            updatedBy: 'Sarah Mitchell',
             updatedDate: '2025-11-30',
             fileName: 'HSELanD_HandHygiene_SMitchell_2025.pdf',
             fileSize: '89 KB',
             comments: [],
             history: [
-                { action: 'Renewed', by: 'Dr. Sarah Mitchell', date: '2025-11-30', detail: 'HSELanD hand hygiene e-learning module completed and cert downloaded.' },
-                { action: 'Uploaded', by: 'Dr. Sarah Mitchell', date: '2024-11-28', detail: 'Previous year completion uploaded.' },
+                { action: 'Renewed', by: 'Sarah Mitchell', date: '2025-11-30', detail: 'HSELanD hand hygiene e-learning module completed and cert downloaded.' },
+                { action: 'Uploaded', by: 'Sarah Mitchell', date: '2024-11-28', detail: 'Previous year completion uploaded.' },
             ],
         },
         {
@@ -211,7 +211,7 @@ function buildDocuments(): ComplianceDocument[] {
             reference: 'CF-2025-7890',
             mandatory: true,
             awardedBy: 'Tusla / DCEDIY',
-            updatedBy: 'Dr. Sarah Mitchell',
+            updatedBy: 'Sarah Mitchell',
             updatedDate: '2025-05-01',
             fileName: 'ChildrenFirst_Cert_SMitchell_2025.pdf',
             fileSize: '102 KB',
@@ -219,8 +219,8 @@ function buildDocuments(): ComplianceDocument[] {
                 { author: 'Omar Murphy', date: '2025-05-02', text: 'Children First Act 2015 e-learning completed. Required for all healthcare workers in Ireland.' },
             ],
             history: [
-                { action: 'Renewed', by: 'Dr. Sarah Mitchell', date: '2025-05-01', detail: 'Children First e-learning refresher completed via Tusla portal.' },
-                { action: 'Uploaded', by: 'Dr. Sarah Mitchell', date: '2023-05-05', detail: 'Initial completion certificate uploaded.' },
+                { action: 'Renewed', by: 'Sarah Mitchell', date: '2025-05-01', detail: 'Children First e-learning refresher completed via Tusla portal.' },
+                { action: 'Uploaded', by: 'Sarah Mitchell', date: '2023-05-05', detail: 'Initial completion certificate uploaded.' },
             ],
         },
         {
@@ -250,7 +250,7 @@ function buildDocuments(): ComplianceDocument[] {
             reference: 'IPC-2025-6789',
             mandatory: true,
             awardedBy: 'HSELanD (HSE)',
-            updatedBy: 'Dr. Sarah Mitchell',
+            updatedBy: 'Sarah Mitchell',
             updatedDate: '2025-02-28',
             fileName: 'IPC_Cert_SMitchell_2025.pdf',
             fileSize: '94 KB',
@@ -258,8 +258,8 @@ function buildDocuments(): ComplianceDocument[] {
                 { author: 'Lisa Keane', date: '2025-03-01', text: 'IPC training completed on HSELanD. Mandatory annual refresher per HSE policy.' },
             ],
             history: [
-                { action: 'Renewed', by: 'Dr. Sarah Mitchell', date: '2025-02-28', detail: 'Annual IPC refresher completed on HSELanD.' },
-                { action: 'Uploaded', by: 'Dr. Sarah Mitchell', date: '2024-03-01', detail: 'Previous year IPC cert uploaded.' },
+                { action: 'Renewed', by: 'Sarah Mitchell', date: '2025-02-28', detail: 'Annual IPC refresher completed on HSELanD.' },
+                { action: 'Uploaded', by: 'Sarah Mitchell', date: '2024-03-01', detail: 'Previous year IPC cert uploaded.' },
             ],
         },
         {
@@ -271,13 +271,13 @@ function buildDocuments(): ComplianceDocument[] {
             reference: 'HIQA-2025-1234',
             mandatory: false,
             awardedBy: 'HIQA / HSELanD',
-            updatedBy: 'Dr. Sarah Mitchell',
+            updatedBy: 'Sarah Mitchell',
             updatedDate: '2025-04-15',
             fileName: 'HIQA_Standards_Cert_SMitchell_2025.pdf',
             fileSize: '87 KB',
             comments: [],
             history: [
-                { action: 'Uploaded', by: 'Dr. Sarah Mitchell', date: '2025-04-15', detail: 'HIQA National Standards awareness e-learning completed.' },
+                { action: 'Uploaded', by: 'Sarah Mitchell', date: '2025-04-15', detail: 'HIQA National Standards awareness e-learning completed.' },
             ],
         },
         {
@@ -289,7 +289,7 @@ function buildDocuments(): ComplianceDocument[] {
             reference: 'CV-SM-2026',
             mandatory: true,
             awardedBy: 'Self',
-            updatedBy: 'Dr. Sarah Mitchell',
+            updatedBy: 'Sarah Mitchell',
             updatedDate: '2026-01-10',
             fileName: 'CV_DrSarahMitchell_Jan2026.pdf',
             fileSize: '456 KB',
@@ -297,8 +297,8 @@ function buildDocuments(): ComplianceDocument[] {
                 { author: 'Omar Murphy', date: '2026-01-12', text: 'CV reviewed. Comprehensive and up to date. Includes all relevant surgical experience.' },
             ],
             history: [
-                { action: 'Updated', by: 'Dr. Sarah Mitchell', date: '2026-01-10', detail: 'Updated CV with latest surgical positions and publications.' },
-                { action: 'Uploaded', by: 'Dr. Sarah Mitchell', date: '2023-03-15', detail: 'Initial CV uploaded during registration.' },
+                { action: 'Updated', by: 'Sarah Mitchell', date: '2026-01-10', detail: 'Updated CV with latest surgical positions and publications.' },
+                { action: 'Uploaded', by: 'Sarah Mitchell', date: '2023-03-15', detail: 'Initial CV uploaded during registration.' },
             ],
         },
         {
@@ -361,7 +361,7 @@ function buildDocuments(): ComplianceDocument[] {
             ],
             history: [
                 { action: 'Verified', by: 'Omar Murphy', date: '2023-03-12', detail: 'Phone verification completed for both referees. Satisfactory references received.' },
-                { action: 'Uploaded', by: 'Dr. Sarah Mitchell', date: '2023-03-10', detail: 'Two professional reference letters uploaded.' },
+                { action: 'Uploaded', by: 'Sarah Mitchell', date: '2023-03-10', detail: 'Two professional reference letters uploaded.' },
             ],
         },
     ];
@@ -454,7 +454,7 @@ const locumProfiles: Record<string, any> = {
         },
         notes: [
             { date: '2026-02-05', author: 'Omar Murphy', content: 'Discussed extending availability to include Saturdays for March. Dr. Mitchell agreeable.' },
-            { date: '2026-01-20', author: 'Lisa Keane', content: "Updated bank details per Dr. Mitchell's request. Verified via phone callback." },
+            { date: '2026-01-20', author: 'Lisa Keane', content: "Updated bank details per Sarah Mitchell's request. Verified via phone callback." },
             { date: '2025-12-10', author: 'Omar Murphy', content: 'Annual review completed. All compliance documents up to date. Excellent performer - consider for preferred locum panel.' },
         ],
         joinDate: '2023-03-15',
@@ -488,17 +488,17 @@ const locumProfiles: Record<string, any> = {
         compliance: {
             overall: 100,
             documents: [
-                { name: 'Medical Council of Ireland Registration', category: 'Registration', status: 'valid', expiryDate: '2027-09-30', uploadedDate: '2026-01-10', reference: 'IMC-28934', mandatory: true, awardedBy: 'Medical Council of Ireland', updatedBy: 'Lisa Keane', updatedDate: '2026-01-10', fileName: 'IMC_Registration_JHarrison_2027.pdf', fileSize: '238 KB', comments: [{ author: 'Lisa Keane', date: '2026-01-10', text: 'Annual renewal verified against IMC register.' }], history: [{ action: 'Renewed', by: 'Lisa Keane', date: '2026-01-10', detail: 'IMC certificate renewed. Valid until 30/09/2027.' }, { action: 'Uploaded', by: 'Dr. James Harrison', date: '2023-01-10', detail: 'Initial IMC registration uploaded at onboarding.' }] },
+                { name: 'Medical Council of Ireland Registration', category: 'Registration', status: 'valid', expiryDate: '2027-09-30', uploadedDate: '2026-01-10', reference: 'IMC-28934', mandatory: true, awardedBy: 'Medical Council of Ireland', updatedBy: 'Lisa Keane', updatedDate: '2026-01-10', fileName: 'IMC_Registration_JHarrison_2027.pdf', fileSize: '238 KB', comments: [{ author: 'Lisa Keane', date: '2026-01-10', text: 'Annual renewal verified against IMC register.' }], history: [{ action: 'Renewed', by: 'Lisa Keane', date: '2026-01-10', detail: 'IMC certificate renewed. Valid until 30/09/2027.' }, { action: 'Uploaded', by: 'James Harrison', date: '2023-01-10', detail: 'Initial IMC registration uploaded at onboarding.' }] },
                 { name: 'UK GMC Registration', category: 'Registration', status: 'valid', expiryDate: '2027-09-30', uploadedDate: '2026-01-10', reference: 'GMC-6543210', mandatory: false, awardedBy: 'General Medical Council (UK)', updatedBy: 'Lisa Keane', updatedDate: '2026-01-10', fileName: 'GMC_Registration_JHarrison_2027.pdf', fileSize: '205 KB', comments: [], history: [{ action: 'Renewed', by: 'Lisa Keane', date: '2026-01-10', detail: 'Updated GMC certificate.' }] },
                 { name: 'Garda Vetting Clearance (NVB)', category: 'Vetting', status: 'valid', expiryDate: '2027-11-15', uploadedDate: '2024-11-15', reference: 'NVB-2024-67890', mandatory: true, awardedBy: 'National Vetting Bureau (An Garda Siochana)', updatedBy: 'Omar Murphy', updatedDate: '2024-11-17', fileName: 'NVB_Vetting_JHarrison_2024.pdf', fileSize: '298 KB', comments: [{ author: 'Omar Murphy', date: '2024-11-17', text: 'Re-vetting completed. Clear disclosure.' }], history: [{ action: 'Re-vetted', by: 'Omar Murphy', date: '2024-11-17', detail: 'NVB re-vetting completed.' }] },
-                { name: 'Professional Indemnity Insurance', category: 'Insurance', status: 'valid', expiryDate: '2026-12-31', uploadedDate: '2026-01-05', reference: 'MDU-IE-234567', mandatory: true, awardedBy: 'Medical Defence Union (MDU)', updatedBy: 'Dr. James Harrison', updatedDate: '2026-01-05', fileName: 'MDU_Indemnity_JHarrison_2026.pdf', fileSize: '185 KB', comments: [{ author: 'Lisa Keane', date: '2026-01-06', text: 'MDU membership verified. Adequate cover for interventional cardiology.' }], history: [{ action: 'Renewed', by: 'Dr. James Harrison', date: '2026-01-05', detail: 'MDU membership renewed for 2026.' }] },
-                { name: 'BLS/CPR Certification', category: 'Training', status: 'valid', expiryDate: '2027-03-20', uploadedDate: '2025-03-20', reference: 'ARC-BLS-2025-5678', mandatory: true, awardedBy: 'Irish Heart Foundation / ARC', updatedBy: 'Dr. James Harrison', updatedDate: '2025-03-20', fileName: 'BLS_Cert_JHarrison_2025.pdf', fileSize: '148 KB', comments: [], history: [{ action: 'Renewed', by: 'Dr. James Harrison', date: '2025-03-20', detail: 'BLS recertification completed.' }] },
-                { name: 'ACLS Certification', category: 'Training', status: 'valid', expiryDate: '2027-03-20', uploadedDate: '2025-03-20', reference: 'ARC-ACLS-2025-345', mandatory: true, awardedBy: 'Irish Heart Foundation / ARC', updatedBy: 'Dr. James Harrison', updatedDate: '2025-03-20', fileName: 'ACLS_Cert_JHarrison_2025.pdf', fileSize: '155 KB', comments: [], history: [{ action: 'Renewed', by: 'Dr. James Harrison', date: '2025-03-20', detail: 'ACLS recertification completed.' }] },
+                { name: 'Professional Indemnity Insurance', category: 'Insurance', status: 'valid', expiryDate: '2026-12-31', uploadedDate: '2026-01-05', reference: 'MDU-IE-234567', mandatory: true, awardedBy: 'Medical Defence Union (MDU)', updatedBy: 'James Harrison', updatedDate: '2026-01-05', fileName: 'MDU_Indemnity_JHarrison_2026.pdf', fileSize: '185 KB', comments: [{ author: 'Lisa Keane', date: '2026-01-06', text: 'MDU membership verified. Adequate cover for interventional cardiology.' }], history: [{ action: 'Renewed', by: 'James Harrison', date: '2026-01-05', detail: 'MDU membership renewed for 2026.' }] },
+                { name: 'BLS/CPR Certification', category: 'Training', status: 'valid', expiryDate: '2027-03-20', uploadedDate: '2025-03-20', reference: 'ARC-BLS-2025-5678', mandatory: true, awardedBy: 'Irish Heart Foundation / ARC', updatedBy: 'James Harrison', updatedDate: '2025-03-20', fileName: 'BLS_Cert_JHarrison_2025.pdf', fileSize: '148 KB', comments: [], history: [{ action: 'Renewed', by: 'James Harrison', date: '2025-03-20', detail: 'BLS recertification completed.' }] },
+                { name: 'ACLS Certification', category: 'Training', status: 'valid', expiryDate: '2027-03-20', uploadedDate: '2025-03-20', reference: 'ARC-ACLS-2025-345', mandatory: true, awardedBy: 'Irish Heart Foundation / ARC', updatedBy: 'James Harrison', updatedDate: '2025-03-20', fileName: 'ACLS_Cert_JHarrison_2025.pdf', fileSize: '155 KB', comments: [], history: [{ action: 'Renewed', by: 'James Harrison', date: '2025-03-20', detail: 'ACLS recertification completed.' }] },
                 { name: 'Manual Handling Certificate', category: 'Training', status: 'valid', expiryDate: '2027-07-15', uploadedDate: '2025-07-15', reference: 'MH-2025-9012', mandatory: true, awardedBy: 'HSE / Approved QQI Provider', updatedBy: 'Lisa Keane', updatedDate: '2025-07-16', fileName: 'ManualHandling_JHarrison_2025.pdf', fileSize: '130 KB', comments: [], history: [{ action: 'Renewed', by: 'Lisa Keane', date: '2025-07-16', detail: 'Manual handling refresher completed.' }] },
-                { name: 'Hand Hygiene Training (HSELanD)', category: 'Training', status: 'valid', expiryDate: '2026-10-20', uploadedDate: '2025-10-20', reference: 'HSE-HH-2025-7890', mandatory: true, awardedBy: 'HSELanD (HSE)', updatedBy: 'Dr. James Harrison', updatedDate: '2025-10-20', fileName: 'HSELanD_HH_JHarrison_2025.pdf', fileSize: '86 KB', comments: [], history: [{ action: 'Renewed', by: 'Dr. James Harrison', date: '2025-10-20', detail: 'Annual hand hygiene refresher completed on HSELanD.' }] },
-                { name: 'Children First E-Learning', category: 'Training', status: 'valid', expiryDate: '2027-08-01', uploadedDate: '2025-08-01', reference: 'CF-2025-4567', mandatory: true, awardedBy: 'Tusla / DCEDIY', updatedBy: 'Dr. James Harrison', updatedDate: '2025-08-01', fileName: 'ChildrenFirst_JHarrison_2025.pdf', fileSize: '98 KB', comments: [], history: [{ action: 'Renewed', by: 'Dr. James Harrison', date: '2025-08-01', detail: 'Children First e-learning refresher completed.' }] },
-                { name: 'Infection Prevention & Control', category: 'Training', status: 'valid', expiryDate: '2027-01-15', uploadedDate: '2025-01-15', reference: 'IPC-2025-3456', mandatory: true, awardedBy: 'HSELanD (HSE)', updatedBy: 'Dr. James Harrison', updatedDate: '2025-01-15', fileName: 'IPC_Cert_JHarrison_2025.pdf', fileSize: '91 KB', comments: [], history: [{ action: 'Renewed', by: 'Dr. James Harrison', date: '2025-01-15', detail: 'IPC annual refresher completed.' }] },
-                { name: 'CV / Curriculum Vitae', category: 'Documentation', status: 'valid', expiryDate: 'N/A', uploadedDate: '2026-01-08', reference: 'CV-JH-2026', mandatory: true, awardedBy: 'Self', updatedBy: 'Dr. James Harrison', updatedDate: '2026-01-08', fileName: 'CV_DrJamesHarrison_2026.pdf', fileSize: '512 KB', comments: [], history: [{ action: 'Updated', by: 'Dr. James Harrison', date: '2026-01-08', detail: 'CV updated with latest publications and PCI data.' }] },
+                { name: 'Hand Hygiene Training (HSELanD)', category: 'Training', status: 'valid', expiryDate: '2026-10-20', uploadedDate: '2025-10-20', reference: 'HSE-HH-2025-7890', mandatory: true, awardedBy: 'HSELanD (HSE)', updatedBy: 'James Harrison', updatedDate: '2025-10-20', fileName: 'HSELanD_HH_JHarrison_2025.pdf', fileSize: '86 KB', comments: [], history: [{ action: 'Renewed', by: 'James Harrison', date: '2025-10-20', detail: 'Annual hand hygiene refresher completed on HSELanD.' }] },
+                { name: 'Children First E-Learning', category: 'Training', status: 'valid', expiryDate: '2027-08-01', uploadedDate: '2025-08-01', reference: 'CF-2025-4567', mandatory: true, awardedBy: 'Tusla / DCEDIY', updatedBy: 'James Harrison', updatedDate: '2025-08-01', fileName: 'ChildrenFirst_JHarrison_2025.pdf', fileSize: '98 KB', comments: [], history: [{ action: 'Renewed', by: 'James Harrison', date: '2025-08-01', detail: 'Children First e-learning refresher completed.' }] },
+                { name: 'Infection Prevention & Control', category: 'Training', status: 'valid', expiryDate: '2027-01-15', uploadedDate: '2025-01-15', reference: 'IPC-2025-3456', mandatory: true, awardedBy: 'HSELanD (HSE)', updatedBy: 'James Harrison', updatedDate: '2025-01-15', fileName: 'IPC_Cert_JHarrison_2025.pdf', fileSize: '91 KB', comments: [], history: [{ action: 'Renewed', by: 'James Harrison', date: '2025-01-15', detail: 'IPC annual refresher completed.' }] },
+                { name: 'CV / Curriculum Vitae', category: 'Documentation', status: 'valid', expiryDate: 'N/A', uploadedDate: '2026-01-08', reference: 'CV-JH-2026', mandatory: true, awardedBy: 'Self', updatedBy: 'James Harrison', updatedDate: '2026-01-08', fileName: 'CV_DrJamesHarrison_2026.pdf', fileSize: '512 KB', comments: [], history: [{ action: 'Updated', by: 'James Harrison', date: '2026-01-08', detail: 'CV updated with latest publications and PCI data.' }] },
                 { name: 'Photo ID (Passport)', category: 'Identity', status: 'valid', expiryDate: '2030-04-22', uploadedDate: '2025-04-22', reference: 'PP-IE-654321', mandatory: true, awardedBy: 'Department of Foreign Affairs (Ireland)', updatedBy: 'Lisa Keane', updatedDate: '2025-04-23', fileName: 'Passport_JHarrison_2025.pdf', fileSize: '1.1 MB', comments: [], history: [{ action: 'Uploaded', by: 'Lisa Keane', date: '2025-04-23', detail: 'Irish passport scan uploaded.' }] },
                 { name: 'Right to Work Verification', category: 'Identity', status: 'valid', expiryDate: 'N/A', uploadedDate: '2023-01-10', reference: 'RTW-IE-DUAL', mandatory: true, awardedBy: 'Mployus Internal Verification', updatedBy: 'Lisa Keane', updatedDate: '2023-01-10', fileName: 'RTW_JHarrison.pdf', fileSize: '72 KB', comments: [{ author: 'Lisa Keane', date: '2023-01-10', text: 'Dual British/Irish citizen. CTA rights confirmed.' }], history: [{ action: 'Verified', by: 'Lisa Keane', date: '2023-01-10', detail: 'Right to work confirmed under CTA.' }] },
                 { name: 'Two Professional References', category: 'Documentation', status: 'valid', expiryDate: 'N/A', uploadedDate: '2023-01-08', reference: 'REF-JH-001', mandatory: true, awardedBy: 'Previous Employers', updatedBy: 'Omar Murphy', updatedDate: '2023-01-10', fileName: 'References_JHarrison.pdf', fileSize: '218 KB', comments: [{ author: 'Omar Murphy', date: '2023-01-10', text: 'Both referees contacted. Excellent references from CUH and Kings College Hospital London.' }], history: [{ action: 'Verified', by: 'Omar Murphy', date: '2023-01-10', detail: 'Phone verification completed. Satisfactory.' }] },
@@ -535,7 +535,7 @@ const locumProfiles: Record<string, any> = {
             incidents: []
         },
         notes: [
-            { date: '2026-01-15', author: 'Omar Murphy', content: 'Dr. Harrison confirmed for CUH cardiology panel for Q1 2026.' },
+            { date: '2026-01-15', author: 'Omar Murphy', content: 'James Harrison confirmed for CUH cardiology panel for Q1 2026.' },
         ],
         joinDate: '2023-01-10',
     },
@@ -557,6 +557,19 @@ export function LocumProfilePage({ locumId, onBack }: LocumProfilePageProps) {
         }
         return copied;
     });
+
+    const [showActionsDropdown, setShowActionsDropdown] = useState(false);
+    const actionsDropdownRef = useRef<HTMLDivElement>(null);
+
+    useEffect(() => {
+        function handleClickOutside(event: MouseEvent) {
+            if (actionsDropdownRef.current && !actionsDropdownRef.current.contains(event.target as Node)) {
+                setShowActionsDropdown(false);
+            }
+        }
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => document.removeEventListener('mousedown', handleClickOutside);
+    }, []);
 
     // Edit Profile Modal States
     const [showEditModal, setShowEditModal] = useState(false);
@@ -732,6 +745,221 @@ export function LocumProfilePage({ locumId, onBack }: LocumProfilePageProps) {
         toast.success("Profile records exported successfully!");
     };
 
+    const handleCopyId = () => {
+        navigator.clipboard.writeText(profile.id);
+        toast.success("Profile ID copied to clipboard!");
+        setShowActionsDropdown(false);
+    };
+
+    const handleExportCSV = () => {
+        const escapeCSVValue = (val: any) => {
+            if (val === undefined || val === null) return "";
+            let str = String(val);
+            if (str.includes(",") || str.includes('"') || str.includes("\n") || str.includes("\r")) {
+                return `"${str.replace(/"/g, '""')}"`;
+            }
+            return str;
+        };
+
+        let csvContent = "";
+
+        // 1. Title
+        csvContent += "LOCUM PROFILE COMPREHENSIVE REPORT\n\n";
+
+        // 2. Personal Info
+        csvContent += "PERSONAL INFORMATION\n";
+        csvContent += "Locum ID,Full Name,Date of Birth,Gender,Nationality,PPSN,Eircode,Address,Email,Phone,Mobile,Joined Date\n";
+        csvContent += [
+            escapeCSVValue(profile.id),
+            escapeCSVValue(profile.name),
+            escapeCSVValue(profile.personal.dob),
+            escapeCSVValue(profile.personal.gender),
+            escapeCSVValue(profile.personal.nationality),
+            escapeCSVValue(profile.personal.ppsn),
+            escapeCSVValue(profile.personal.eircode),
+            escapeCSVValue(profile.personal.address),
+            escapeCSVValue(profile.personal.email),
+            escapeCSVValue(profile.personal.phone),
+            escapeCSVValue(profile.personal.mobile),
+            escapeCSVValue(profile.joinDate)
+        ].join(",") + "\n\n";
+
+        // 3. Emergency Contacts
+        csvContent += "EMERGENCY CONTACTS\n";
+        csvContent += "Primary Emergency Contact,Emergency Phone\n";
+        csvContent += [
+            escapeCSVValue(profile.personal.emergencyContact),
+            escapeCSVValue(profile.personal.emergencyPhone)
+        ].join(",") + "\n\n";
+
+        // 4. Professional Registration & Details
+        csvContent += "PROFESSIONAL REGISTRATION & DETAILS\n";
+        csvContent += "IMC Number,IMC Expiry,IMC Status,Specialist Register,GMC Number,GMC Expiry,GMC Status,Grade,Specialty,Sub-Specialty,Experience\n";
+        csvContent += [
+            escapeCSVValue(profile.professional.imcNumber),
+            escapeCSVValue(profile.professional.imcExpiry),
+            escapeCSVValue(profile.professional.imcStatus),
+            escapeCSVValue(profile.professional.specialistRegister),
+            escapeCSVValue(profile.professional.gmcNumber || "N/A"),
+            escapeCSVValue(profile.professional.gmcExpiry || "N/A"),
+            escapeCSVValue(profile.professional.gmcStatus || "N/A"),
+            escapeCSVValue(profile.professional.grade),
+            escapeCSVValue(profile.professional.specialty),
+            escapeCSVValue(profile.professional.subSpecialty || "N/A"),
+            escapeCSVValue(profile.professional.experience)
+        ].join(",") + "\n\n";
+
+        // Qualifications list
+        csvContent += "ACADEMIC & PROFESSIONAL QUALIFICATIONS\n";
+        csvContent += "Qualification Name,Institution,Year Awarded\n";
+        profile.professional.qualifications.forEach((qual: any) => {
+            csvContent += [
+                escapeCSVValue(qual.name),
+                escapeCSVValue(qual.institution),
+                escapeCSVValue(qual.year)
+            ].join(",") + "\n";
+        });
+        csvContent += "\n";
+
+        // 5. Work Preferences & Rates
+        csvContent += "WORK PREFERENCES & FINANCIAL RATES\n";
+        csvContent += "Preferred Locations,Preferred Shifts,Max Weekly Hours,Standard Day Rate,Standard Night Rate,Weekend Rate,On-Call Rate,Tax Status,Revenue Registered,VAT Registered\n";
+        csvContent += [
+            escapeCSVValue(profile.professional.preferredLocations.join("; ")),
+            escapeCSVValue(profile.professional.preferredShifts.join("; ")),
+            escapeCSVValue(profile.professional.maxWeeklyHours),
+            escapeCSVValue(`EUR ${profile.financial.standardDayRate}`),
+            escapeCSVValue(`EUR ${profile.financial.standardNightRate}`),
+            escapeCSVValue(`EUR ${profile.financial.weekendRate}`),
+            escapeCSVValue(`EUR ${profile.financial.oncallRate}`),
+            escapeCSVValue(profile.financial.taxStatus),
+            escapeCSVValue(profile.financial.revenueRegistered ? "Yes" : "No"),
+            escapeCSVValue(profile.financial.vatRegistered ? "Yes" : "No")
+        ].join(",") + "\n\n";
+
+        // 6. Compliance Summary & Document Registry
+        csvContent += "COMPLIANCE & DOCUMENTS REGISTRY\n";
+        csvContent += "Document Name,Category,Status,Expiry Date,Reference,Mandatory,Awarded By,File Name,File Size,Uploaded Date,Last Updated By,Last Updated Date\n";
+        
+        const allDocs = [
+            ...profile.compliance.documents,
+            ...(profile.compliance.optionalDocuments || [])
+        ];
+        allDocs.forEach((doc: any) => {
+            csvContent += [
+                escapeCSVValue(doc.name),
+                escapeCSVValue(doc.category),
+                escapeCSVValue(doc.status),
+                escapeCSVValue(doc.expiryDate),
+                escapeCSVValue(doc.reference),
+                escapeCSVValue(doc.mandatory ? "Yes" : "No"),
+                escapeCSVValue(doc.awardedBy),
+                escapeCSVValue(doc.fileName),
+                escapeCSVValue(doc.fileSize),
+                escapeCSVValue(doc.uploadedDate),
+                escapeCSVValue(doc.updatedBy),
+                escapeCSVValue(doc.updatedDate)
+            ].join(",") + "\n";
+        });
+        csvContent += "\n";
+
+        // 7. Shifts History
+        csvContent += "UPCOMING SHIFTS SCHEDULE\n";
+        csvContent += "Shift ID,Facility,Department,Date,Time,Hours,Rate,Status\n";
+        profile.shifts.upcomingShifts.forEach((shift: any) => {
+            csvContent += [
+                escapeCSVValue(shift.id),
+                escapeCSVValue(shift.facility),
+                escapeCSVValue(shift.department),
+                escapeCSVValue(shift.date),
+                escapeCSVValue(shift.time),
+                escapeCSVValue(shift.hours),
+                escapeCSVValue(shift.rate),
+                escapeCSVValue(shift.status)
+            ].join(",") + "\n";
+        });
+        csvContent += "\n";
+
+        csvContent += "COMPLETED SHIFTS RECORDS\n";
+        csvContent += "Shift ID,Facility,Department,Date,Time,Hours,Rate,Status\n";
+        profile.shifts.recentShifts.forEach((shift: any) => {
+            csvContent += [
+                escapeCSVValue(shift.id),
+                escapeCSVValue(shift.facility),
+                escapeCSVValue(shift.department),
+                escapeCSVValue(shift.date),
+                escapeCSVValue(shift.time),
+                escapeCSVValue(shift.hours),
+                escapeCSVValue(shift.rate),
+                escapeCSVValue(shift.status)
+            ].join(",") + "\n";
+        });
+        csvContent += "\n";
+
+        // 8. Payment Logs
+        csvContent += "FINANCIAL TRANSACTION LOGS\n";
+        csvContent += "Payment ID,Date,Description,Facility,Amount,Status\n";
+        profile.financial.payments.forEach((pay: any) => {
+            csvContent += [
+                escapeCSVValue(pay.id),
+                escapeCSVValue(pay.date),
+                escapeCSVValue(pay.description),
+                escapeCSVValue(pay.facility),
+                escapeCSVValue(`EUR ${pay.amount}`),
+                escapeCSVValue(pay.status)
+            ].join(",") + "\n";
+        });
+        csvContent += "\n";
+
+        // 9. Performance Summary & Ratings
+        csvContent += "PERFORMANCE RATING & SERVICE RECORD\n";
+        csvContent += "Average Rating,Total Reviews,Recommend Rate,Completed Shifts count,Cancelled Shifts count,Declined Shifts count,No-Show count\n";
+        csvContent += [
+            escapeCSVValue(profile.performance.avgRating),
+            escapeCSVValue(profile.performance.totalReviews),
+            escapeCSVValue(`${profile.performance.recommendRate}%`),
+            escapeCSVValue(profile.shifts.totalCompleted),
+            escapeCSVValue(profile.shifts.totalCancelled),
+            escapeCSVValue(profile.shifts.totalDeclined),
+            escapeCSVValue(profile.shifts.noShows)
+        ].join(",") + "\n\n";
+
+        csvContent += "RECENT FEEDBACK ENTRIES\n";
+        csvContent += "Review Date,Author,Facility,Rating,Comment\n";
+        profile.performance.recentFeedback.forEach((review: any) => {
+            csvContent += [
+                escapeCSVValue(review.date),
+                escapeCSVValue(review.author),
+                escapeCSVValue(review.facility),
+                escapeCSVValue(`${review.rating}/5`),
+                escapeCSVValue(review.comment)
+            ].join(",") + "\n";
+        });
+        csvContent += "\n";
+
+        // 10. Notes
+        csvContent += "ADMINISTRATIVE RECORD NOTES\n";
+        csvContent += "Date,Author,Note Text\n";
+        profile.notes.forEach((note: any) => {
+            csvContent += [
+                escapeCSVValue(note.date),
+                escapeCSVValue(note.author),
+                escapeCSVValue(note.text)
+            ].join(",") + "\n";
+        });
+
+        const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement("a");
+        link.setAttribute("href", url);
+        link.setAttribute("download", `Locum_Profile_${profile.id.replace('#', '')}.csv`);
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        toast.success("Profile record downloaded successfully as CSV!");
+        setShowActionsDropdown(false);
+    };
+
     const [activeTab, setActiveTab] = useState<'overview' | 'registration' | 'compliance' | 'shifts' | 'financial' | 'performance' | 'notes'>('overview');
     const [shiftFilter, setShiftFilter] = useState('all');
     const [paymentFilter, setPaymentFilter] = useState('all');
@@ -827,22 +1055,54 @@ export function LocumProfilePage({ locumId, onBack }: LocumProfilePageProps) {
                     </div>
                     <p className="text-sm text-[#6B7280]">Comprehensive locum information and compliance records</p>
                 </div>
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 relative" ref={actionsDropdownRef}>
                     <button 
                         onClick={handleOpenEdit}
-                        className="flex items-center gap-1.5 px-3 py-2 text-sm border border-[#E5E7EB] rounded-lg hover:bg-[#F9FAFB]"
+                        className="flex items-center gap-1.5 px-3 py-2 text-sm border border-[#E5E7EB] rounded-lg hover:bg-[#F9FAFB] transition-colors"
                     >
                         <Edit className="w-3.5 h-3.5" /> Edit Profile
                     </button>
                     <button 
-                        onClick={handleExportProfile}
-                        className="flex items-center gap-1.5 px-3 py-2 text-sm border border-[#E5E7EB] rounded-lg hover:bg-[#F9FAFB]"
+                        onClick={handleExportCSV}
+                        className="flex items-center gap-1.5 px-3 py-2 text-sm border border-[#E5E7EB] rounded-lg hover:bg-[#F9FAFB] transition-colors"
                     >
                         <Download className="w-3.5 h-3.5" /> Export
                     </button>
-                    <button className="p-2 border border-[#E5E7EB] rounded-lg hover:bg-[#F9FAFB]">
+                    <button 
+                        onClick={() => setShowActionsDropdown(!showActionsDropdown)}
+                        className={`p-2 border border-[#E5E7EB] rounded-lg hover:bg-[#F9FAFB] transition-all ${showActionsDropdown ? 'bg-[#F3F4F6] text-[#1F2937]' : ''}`}
+                    >
                         <MoreHorizontal className="w-4 h-4 text-[#6B7280]" />
                     </button>
+
+                    {showActionsDropdown && (
+                        <div className="absolute right-0 top-full mt-1 bg-white border border-[#E5E7EB] rounded-lg shadow-lg z-50 w-48 py-1">
+                            <button
+                                onClick={handleExportCSV}
+                                className="w-full flex items-center gap-2 px-4 py-2 text-sm text-[#1F2937] hover:bg-[#F9FAFB] text-left transition-colors"
+                            >
+                                <FileText className="w-4 h-4 text-[#6B7280]" />
+                                Export as CSV
+                            </button>
+                            <button
+                                onClick={() => {
+                                    handleExportProfile();
+                                    setShowActionsDropdown(false);
+                                }}
+                                className="w-full flex items-center gap-2 px-4 py-2 text-sm text-[#1F2937] hover:bg-[#F9FAFB] text-left transition-colors"
+                            >
+                                <FileText className="w-4 h-4 text-[#6B7280]" />
+                                Export as JSON
+                            </button>
+                            <button
+                                onClick={handleCopyId}
+                                className="w-full flex items-center gap-2 px-4 py-2 text-sm text-[#1F2937] hover:bg-[#F9FAFB] text-left transition-colors"
+                            >
+                                <Hash className="w-4 h-4 text-[#6B7280]" />
+                                Copy Profile ID
+                            </button>
+                        </div>
+                    )}
                 </div>
             </div>
 

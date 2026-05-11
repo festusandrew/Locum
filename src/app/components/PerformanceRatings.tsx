@@ -36,12 +36,12 @@ interface ClientPerformance {
 }
 
 const locumPerformances: LocumPerformance[] = [
-    { id: 'LP-001', name: 'Dr. Sarah Mitchell', specialty: 'General Surgery', avgRating: 4.9, totalShifts: 145, completionRate: 99.3, onTimeRate: 97.2, clientFeedback: 4.8, reliability: 98, trend: 'up' },
-    { id: 'LP-002', name: 'Dr. James Harrison', specialty: 'Cardiology', avgRating: 4.8, totalShifts: 128, completionRate: 97.7, onTimeRate: 95.3, clientFeedback: 4.7, reliability: 96, trend: 'stable' },
-    { id: 'LP-003', name: 'Dr. Emily Chen', specialty: 'Anesthesiology', avgRating: 4.9, totalShifts: 162, completionRate: 99.4, onTimeRate: 98.1, clientFeedback: 4.9, reliability: 99, trend: 'up' },
-    { id: 'LP-004', name: 'Dr. Michael Brooks', specialty: 'Emergency Medicine', avgRating: 4.5, totalShifts: 98, completionRate: 93.9, onTimeRate: 88.8, clientFeedback: 4.3, reliability: 91, trend: 'down' },
-    { id: 'LP-005', name: 'Dr. Rachel Martinez', specialty: 'Pediatrics', avgRating: 4.7, totalShifts: 134, completionRate: 96.3, onTimeRate: 94.0, clientFeedback: 4.6, reliability: 95, trend: 'up' },
-    { id: 'LP-006', name: 'Dr. David Thompson', specialty: 'Orthopedics', avgRating: 4.4, totalShifts: 86, completionRate: 94.2, onTimeRate: 90.7, clientFeedback: 4.2, reliability: 92, trend: 'down' },
+    { id: 'LP-001', name: 'Sarah Mitchell', specialty: 'General Surgery', avgRating: 4.9, totalShifts: 145, completionRate: 99.3, onTimeRate: 97.2, clientFeedback: 4.8, reliability: 98, trend: 'up' },
+    { id: 'LP-002', name: 'James Harrison', specialty: 'Cardiology', avgRating: 4.8, totalShifts: 128, completionRate: 97.7, onTimeRate: 95.3, clientFeedback: 4.7, reliability: 96, trend: 'stable' },
+    { id: 'LP-003', name: 'Emily Chen', specialty: 'Anesthesiology', avgRating: 4.9, totalShifts: 162, completionRate: 99.4, onTimeRate: 98.1, clientFeedback: 4.9, reliability: 99, trend: 'up' },
+    { id: 'LP-004', name: 'Michael Brooks', specialty: 'Emergency Medicine', avgRating: 4.5, totalShifts: 98, completionRate: 93.9, onTimeRate: 88.8, clientFeedback: 4.3, reliability: 91, trend: 'down' },
+    { id: 'LP-005', name: 'Rachel Martinez', specialty: 'Pediatrics', avgRating: 4.7, totalShifts: 134, completionRate: 96.3, onTimeRate: 94.0, clientFeedback: 4.6, reliability: 95, trend: 'up' },
+    { id: 'LP-006', name: 'David Thompson', specialty: 'Orthopedics', avgRating: 4.4, totalShifts: 86, completionRate: 94.2, onTimeRate: 90.7, clientFeedback: 4.2, reliability: 92, trend: 'down' },
 ];
 
 const clientPerformances: ClientPerformance[] = [

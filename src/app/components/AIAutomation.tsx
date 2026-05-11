@@ -10,10 +10,10 @@ import {
 } from 'recharts';
 
 const matchingSuggestions = [
-    { id: 1, shift: 'Emergency Medicine Night Shift', facility: 'Beaumont Hospital', date: '10 Feb 20:00-08:00', locum: 'Dr. Rachel Martinez', matchScore: 94, reasons: ['Specialty match', 'Available', '15 min from facility', '4.7 rating'] },
-    { id: 2, shift: 'Anesthesiology Day Shift', facility: 'University Hospital Galway', date: '11 Feb 07:00-19:00', locum: 'Dr. Emily Chen', matchScore: 91, reasons: ['Specialty match', 'Preferred locum', 'All compliance docs valid'] },
-    { id: 3, shift: 'Pediatrics Day Shift', facility: 'Mater Hospital', date: '11 Feb 08:00-20:00', locum: 'Dr. Rachel Martinez', matchScore: 88, reasons: ['Specialty match', 'Available', 'Client preference', '96.3% completion'] },
-    { id: 4, shift: 'General Surgery', facility: 'Galway Clinic', date: '13 Feb 08:00-16:00', locum: 'Dr. Sarah Mitchell', matchScore: 96, reasons: ['Perfect specialty match', 'Top performer', '99.3% completion rate', 'Client favorite'] },
+    { id: 1, shift: 'Emergency Medicine Night Shift', facility: 'Beaumont Hospital', date: '10 Feb 20:00-08:00', locum: 'Rachel Martinez', matchScore: 94, reasons: ['Specialty match', 'Available', '15 min from facility', '4.7 rating'] },
+    { id: 2, shift: 'Anesthesiology Day Shift', facility: 'University Hospital Galway', date: '11 Feb 07:00-19:00', locum: 'Emily Chen', matchScore: 91, reasons: ['Specialty match', 'Preferred locum', 'All compliance docs valid'] },
+    { id: 3, shift: 'Pediatrics Day Shift', facility: 'Mater Hospital', date: '11 Feb 08:00-20:00', locum: 'Rachel Martinez', matchScore: 88, reasons: ['Specialty match', 'Available', 'Client preference', '96.3% completion'] },
+    { id: 4, shift: 'General Surgery', facility: 'Galway Clinic', date: '13 Feb 08:00-16:00', locum: 'Sarah Mitchell', matchScore: 96, reasons: ['Perfect specialty match', 'Top performer', '99.3% completion rate', 'Client favorite'] },
 ];
 
 const demandForecast = [
@@ -26,10 +26,10 @@ const demandForecast = [
 ];
 
 const complianceReminders = [
-    { locum: 'Dr. David Thompson', document: 'Medical License', daysUntilExpiry: 3, action: 'Renewal reminder sent', autoSent: true },
-    { locum: 'Dr. Rachel Martinez', document: 'CPR Training', daysUntilExpiry: 18, action: 'Scheduled for 25 Feb', autoSent: false },
-    { locum: 'Dr. James Harrison', document: 'Garda Vetting', daysUntilExpiry: 45, action: 'Auto-reminder queued for Day 30', autoSent: false },
-    { locum: 'Dr. Sarah Mitchell', document: 'Indemnity Insurance', daysUntilExpiry: 60, action: 'No action needed yet', autoSent: false },
+    { locum: 'David Thompson', document: 'Medical License', daysUntilExpiry: 3, action: 'Renewal reminder sent', autoSent: true },
+    { locum: 'Rachel Martinez', document: 'CPR Training', daysUntilExpiry: 18, action: 'Scheduled for 25 Feb', autoSent: false },
+    { locum: 'James Harrison', document: 'Garda Vetting', daysUntilExpiry: 45, action: 'Auto-reminder queued for Day 30', autoSent: false },
+    { locum: 'Sarah Mitchell', document: 'Indemnity Insurance', daysUntilExpiry: 60, action: 'No action needed yet', autoSent: false },
 ];
 
 const predictiveInsights = [

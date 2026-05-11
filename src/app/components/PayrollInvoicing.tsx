@@ -35,12 +35,12 @@ interface Invoice {
 }
 
 const payrollItems: PayrollItem[] = [
-    { id: 'PAY-001', locum: 'Dr. Sarah Mitchell', period: 'Feb 1-15, 2026', shifts: 6, hours: 52, baseRate: 55, grossPay: 2860, tax: 572, prsi: 114.40, netPay: 2173.60, status: 'processed', payDate: '2026-02-20' },
-    { id: 'PAY-002', locum: 'Dr. James Harrison', period: 'Feb 1-15, 2026', shifts: 5, hours: 56, baseRate: 60, grossPay: 3360, tax: 672, prsi: 134.40, netPay: 2553.60, status: 'processed', payDate: '2026-02-20' },
-    { id: 'PAY-003', locum: 'Dr. Emily Chen', period: 'Feb 1-15, 2026', shifts: 4, hours: 40, baseRate: 58, grossPay: 2320, tax: 464, prsi: 92.80, netPay: 1763.20, status: 'pending', payDate: '2026-02-20' },
-    { id: 'PAY-004', locum: 'Dr. Michael Brooks', period: 'Feb 1-15, 2026', shifts: 3, hours: 36, baseRate: 52, grossPay: 1872, tax: 374.40, prsi: 74.88, netPay: 1422.72, status: 'on_hold', payDate: '2026-02-20' },
-    { id: 'PAY-005', locum: 'Dr. Rachel Martinez', period: 'Feb 1-15, 2026', shifts: 5, hours: 48, baseRate: 55, grossPay: 2640, tax: 528, prsi: 105.60, netPay: 2006.40, status: 'pending', payDate: '2026-02-20' },
-    { id: 'PAY-006', locum: 'Dr. David Thompson', period: 'Feb 1-15, 2026', shifts: 4, hours: 40, baseRate: 52, grossPay: 2080, tax: 416, prsi: 83.20, netPay: 1580.80, status: 'processed', payDate: '2026-02-20' },
+    { id: 'PAY-001', locum: 'Sarah Mitchell', period: 'Feb 1-15, 2026', shifts: 6, hours: 52, baseRate: 55, grossPay: 2860, tax: 572, prsi: 114.40, netPay: 2173.60, status: 'processed', payDate: '2026-02-20' },
+    { id: 'PAY-002', locum: 'James Harrison', period: 'Feb 1-15, 2026', shifts: 5, hours: 56, baseRate: 60, grossPay: 3360, tax: 672, prsi: 134.40, netPay: 2553.60, status: 'processed', payDate: '2026-02-20' },
+    { id: 'PAY-003', locum: 'Emily Chen', period: 'Feb 1-15, 2026', shifts: 4, hours: 40, baseRate: 58, grossPay: 2320, tax: 464, prsi: 92.80, netPay: 1763.20, status: 'pending', payDate: '2026-02-20' },
+    { id: 'PAY-004', locum: 'Michael Brooks', period: 'Feb 1-15, 2026', shifts: 3, hours: 36, baseRate: 52, grossPay: 1872, tax: 374.40, prsi: 74.88, netPay: 1422.72, status: 'on_hold', payDate: '2026-02-20' },
+    { id: 'PAY-005', locum: 'Rachel Martinez', period: 'Feb 1-15, 2026', shifts: 5, hours: 48, baseRate: 55, grossPay: 2640, tax: 528, prsi: 105.60, netPay: 2006.40, status: 'pending', payDate: '2026-02-20' },
+    { id: 'PAY-006', locum: 'David Thompson', period: 'Feb 1-15, 2026', shifts: 4, hours: 40, baseRate: 52, grossPay: 2080, tax: 416, prsi: 83.20, netPay: 1580.80, status: 'processed', payDate: '2026-02-20' },
 ];
 
 const invoices: Invoice[] = [
@@ -424,10 +424,10 @@ export function PayrollInvoicing() {
                                                 className="w-full px-4 py-2.5 text-sm border border-[#E5E7EB] rounded-lg focus:ring-2 focus:ring-[#10B981] outline-none transition-all"
                                             >
                                                 <option value="">Select Locum...</option>
-                                                <option value="Dr. Sarah Mitchell">Dr. Sarah Mitchell</option>
-                                                <option value="Dr. James Harrison">Dr. James Harrison</option>
-                                                <option value="Dr. Emily Chen">Dr. Emily Chen</option>
-                                                <option value="Dr. Michael Brooks">Dr. Michael Brooks</option>
+                                                <option value="Sarah Mitchell">Sarah Mitchell</option>
+                                                <option value="James Harrison">James Harrison</option>
+                                                <option value="Emily Chen">Emily Chen</option>
+                                                <option value="Michael Brooks">Michael Brooks</option>
                                             </select>
                                         </div>
                                         <div className="grid grid-cols-2 gap-4">

@@ -51,7 +51,7 @@ interface Ticket {
 const conversations: Conversation[] = [
     {
         id: '1',
-        user: 'Dr. Sarah Mitchell',
+        user: 'Sarah Mitchell',
         lastMessage: 'Thanks for the quick response!',
         timestamp: '2 min ago',
         unread: 0,
@@ -59,7 +59,7 @@ const conversations: Conversation[] = [
     },
     {
         id: '2',
-        user: 'Dr. James Harrison',
+        user: 'James Harrison',
         lastMessage: 'I need help with my shift schedule',
         timestamp: '15 min ago',
         unread: 3,
@@ -67,7 +67,7 @@ const conversations: Conversation[] = [
     },
     {
         id: '3',
-        user: 'Dr. Emily Chen',
+        user: 'Emily Chen',
         lastMessage: 'When will the payment be processed?',
         timestamp: '1 hour ago',
         unread: 1,
@@ -75,7 +75,7 @@ const conversations: Conversation[] = [
     },
     {
         id: '4',
-        user: 'Dr. Michael Brooks',
+        user: 'Michael Brooks',
         lastMessage: 'My compliance documents are uploaded',
         timestamp: '3 hours ago',
         unread: 0,
@@ -83,7 +83,7 @@ const conversations: Conversation[] = [
     },
     {
         id: '5',
-        user: 'Dr. Rachel Martinez',
+        user: 'Rachel Martinez',
         lastMessage: 'Thank you for your assistance',
         timestamp: 'Yesterday',
         unread: 0,
@@ -102,7 +102,7 @@ const currentMessages: Message[] = [
     {
         id: '2',
         sender: 'agent',
-        content: 'Hello Dr. Harrison! I\'d be happy to help you with your shift schedule. What specific issue are you experiencing?',
+        content: 'Hello James Harrison! I\'d be happy to help you with your shift schedule. What specific issue are you experiencing?',
         timestamp: '10:31 AM',
         type: 'text'
     },

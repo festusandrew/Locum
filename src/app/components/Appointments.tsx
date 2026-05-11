@@ -5,7 +5,7 @@ const appointments = [
     {
         id: 1,
         time: '09:00 AM',
-        locum: 'Dr. Sarah Mitchell',
+        locum: 'Sarah Mitchell',
         facility: 'City General Hospital',
         department: 'General Surgery',
         type: 'Consultation',
@@ -15,7 +15,7 @@ const appointments = [
     {
         id: 2,
         time: '11:30 AM',
-        locum: 'Dr. James Harrison',
+        locum: 'James Harrison',
         facility: 'St. Mary\'s Medical Center',
         department: 'Cardiology',
         type: 'Follow-up',
@@ -25,7 +25,7 @@ const appointments = [
     {
         id: 3,
         time: '02:00 PM',
-        locum: 'Dr. Emily Chen',
+        locum: 'Emily Chen',
         facility: 'Regional Medical Center',
         department: 'Anesthesiology',
         type: 'Surgery',
@@ -35,7 +35,7 @@ const appointments = [
     {
         id: 4,
         time: '04:30 PM',
-        locum: 'Dr. Michael Brooks',
+        locum: 'Michael Brooks',
         facility: 'Parkview Hospital',
         department: 'Emergency Medicine',
         type: 'Emergency',

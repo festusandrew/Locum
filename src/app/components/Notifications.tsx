@@ -49,7 +49,7 @@ const notifications: Notification[] = [
         id: '2',
         type: 'compliance',
         title: 'Document Expiring Soon',
-        message: 'Dr. Sarah Mitchell\'s Medical Council registration expires in 15 days',
+        message: 'Sarah Mitchell\'s Medical Council registration expires in 15 days',
         timestamp: '2024-12-11T09:30:00',
         read: false,
         priority: 'high'
@@ -58,7 +58,7 @@ const notifications: Notification[] = [
         id: '3',
         type: 'shift',
         title: 'Shift Confirmed',
-        message: 'Dr. James Harrison confirmed for Thursday 14 Dec at Cork University Hospital',
+        message: 'James Harrison confirmed for Thursday 14 Dec at Cork University Hospital',
         timestamp: '2024-12-11T08:45:00',
         read: true,
         priority: 'medium'
@@ -76,7 +76,7 @@ const notifications: Notification[] = [
         id: '5',
         type: 'locum',
         title: 'New Locum Registration',
-        message: 'Dr. Rachel O\'Brien has registered and uploaded all compliance documents',
+        message: 'Rachel O\'Brien has registered and uploaded all compliance documents',
         timestamp: '2024-12-10T16:20:00',
         read: true,
         priority: 'low'

@@ -48,7 +48,7 @@ interface ComplianceRecord {
 const complianceData: ComplianceRecord[] = [
     {
         id: '#GS234FS',
-        locumName: 'Dr. Sarah Mitchell',
+        locumName: 'Sarah Mitchell',
         avatar: '👩‍⚕️',
         specialty: 'General Surgery',
         overallCompliance: 100,
@@ -61,7 +61,7 @@ const complianceData: ComplianceRecord[] = [
     },
     {
         id: '#EC0125D',
-        locumName: 'Dr. James Harrison',
+        locumName: 'James Harrison',
         avatar: '👨‍⚕️',
         specialty: 'Cardiology',
         overallCompliance: 75,
@@ -74,7 +74,7 @@ const complianceData: ComplianceRecord[] = [
     },
     {
         id: '#MK4521A',
-        locumName: 'Dr. Emily Chen',
+        locumName: 'Emily Chen',
         avatar: '👩‍⚕️',
         specialty: 'Anesthesiology',
         overallCompliance: 50,
@@ -87,7 +87,7 @@ const complianceData: ComplianceRecord[] = [
     },
     {
         id: '#LW9872P',
-        locumName: 'Dr. Michael Brooks',
+        locumName: 'Michael Brooks',
         avatar: '👨‍⚕️',
         specialty: 'Emergency Medicine',
         overallCompliance: 100,
@@ -100,7 +100,7 @@ const complianceData: ComplianceRecord[] = [
     },
     {
         id: '#PM6543K',
-        locumName: 'Dr. Rachel Martinez',
+        locumName: 'Rachel Martinez',
         avatar: '👩‍⚕️',
         specialty: 'Pediatrics',
         overallCompliance: 75,
@@ -113,7 +113,7 @@ const complianceData: ComplianceRecord[] = [
     },
     {
         id: '#RT8765N',
-        locumName: 'Dr. David Thompson',
+        locumName: 'David Thompson',
         avatar: '👨‍⚕️',
         specialty: 'Orthopedics',
         overallCompliance: 25,

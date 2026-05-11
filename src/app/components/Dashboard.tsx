@@ -25,7 +25,7 @@ const admissionDischargeData = [
 const locumsList = [
     {
         id: '#GS234FS',
-        name: 'Dr. Sarah Mitchell',
+        name: 'Sarah Mitchell',
         gender: 'Female',
         age: '32 years old',
         date: 'Nov, 28-2024',
@@ -35,7 +35,7 @@ const locumsList = [
     },
     {
         id: '#EC0125D',
-        name: 'Dr. James Harrison',
+        name: 'James Harrison',
         gender: 'Male',
         age: '45 years old',
         date: 'Nov, 28-2024',
@@ -45,7 +45,7 @@ const locumsList = [
     },
     {
         id: '#MK4521A',
-        name: 'Dr. Emily Chen',
+        name: 'Emily Chen',
         gender: 'Female',
         age: '38 years old',
         date: 'Nov, 29-2024',
@@ -55,7 +55,7 @@ const locumsList = [
     },
     {
         id: '#LW9872P',
-        name: 'Dr. Michael Brooks',
+        name: 'Michael Brooks',
         gender: 'Male',
         age: '41 years old',
         date: 'Nov, 29-2024',
@@ -66,9 +66,9 @@ const locumsList = [
 ];
 
 const doctorSchedule = [
-    { name: 'Dr. Sarah Mitchell', specialty: 'Anesthesiology', status: 'available', available: 72, unavailable: 24, leave: 16 },
-    { name: 'Dr. James Harrison', specialty: 'Dermatology', status: 'unavailable', available: 68, unavailable: 28, leave: 14 },
-    { name: 'Dr. Emily Chen', specialty: 'General Surgery', status: 'available', available: 75, unavailable: 20, leave: 15 },
+    { name: 'Sarah Mitchell', specialty: 'Anesthesiology', status: 'available', available: 72, unavailable: 24, leave: 16 },
+    { name: 'James Harrison', specialty: 'Dermatology', status: 'unavailable', available: 68, unavailable: 28, leave: 14 },
+    { name: 'Emily Chen', specialty: 'General Surgery', status: 'available', available: 75, unavailable: 20, leave: 15 },
 ];
 
 export function Dashboard() {

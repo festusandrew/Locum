@@ -15,9 +15,11 @@ import {
     ChevronRight,
     CreditCard,
     Search,
-    SlidersHorizontal
+    SlidersHorizontal,
+    MoreVertical,
+    Download
 } from 'lucide-react';
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 
 interface LocumProfileProps {
     locum: {
@@ -61,6 +63,105 @@ const mockScheduleEvents = [
 
 export function LocumProfile({ locum, onClose }: LocumProfileProps) {
     const [activeTab, setActiveTab] = useState<'information' | 'schedule' | 'compliance' | 'shifts' | 'payments'>('information');
+    const [showDropdown, setShowDropdown] = useState(false);
+    const dropdownRef = useRef<HTMLDivElement>(null);
+
+    useEffect(() => {
+        function handleClickOutside(event: MouseEvent) {
+            if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+                setShowDropdown(false);
+            }
+        }
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => document.removeEventListener('mousedown', handleClickOutside);
+    }, []);
+
+    const handleExportCSV = () => {
+        const escapeCSVValue = (val: any) => {
+            if (val === undefined || val === null) return "";
+            let str = String(val);
+            if (str.includes(",") || str.includes('"') || str.includes("\n") || str.includes("\r")) {
+                return `"${str.replace(/"/g, '""')}"`;
+            }
+            return str;
+        };
+
+        let csvContent = "";
+
+        csvContent += "LOCUM PROFILE REPORT\n\n";
+        csvContent += "GENERAL INFORMATION\n";
+        csvContent += "Locum ID,Full Name,Specialty,Compliance Score,Email,Phone,Address,Experience,Status\n";
+        csvContent += [
+            escapeCSVValue(locum.id),
+            escapeCSVValue(locum.locumName),
+            escapeCSVValue(locum.specialty),
+            escapeCSVValue(`${locum.overallCompliance}%`),
+            escapeCSVValue("sarah.mitchell@email.ie"),
+            escapeCSVValue("+353 87 123 4567"),
+            escapeCSVValue("Dublin 2, Ireland"),
+            escapeCSVValue("8 years"),
+            escapeCSVValue("Active")
+        ].join(",") + "\n\n";
+
+        csvContent += "COMPLIANCE DOCUMENTS\n";
+        csvContent += "Document Name,Status,Expiry Date,Uploaded Date\n";
+        
+        const docs = [
+            { name: "Medical Council of Ireland License", ...locum.documents.medicalLicense },
+            { name: "Garda Vetting Clearance", ...locum.documents.garda },
+            { name: "Professional Indemnity Insurance", ...locum.documents.indemnityInsurance },
+            { name: "CPR & First Aid Certification", ...locum.documents.cprTraining }
+        ];
+        
+        docs.forEach(doc => {
+            csvContent += [
+                escapeCSVValue(doc.name),
+                escapeCSVValue(doc.status),
+                escapeCSVValue(doc.expiryDate),
+                escapeCSVValue(doc.uploadedDate)
+            ].join(",") + "\n";
+        });
+        csvContent += "\n";
+
+        csvContent += "SHIFTS HISTORY\n";
+        csvContent += "Shift ID,Facility,Date,Time,Status,Hours,Rate (EUR/hr),Total Payment (EUR)\n";
+        mockShifts.forEach(shift => {
+            csvContent += [
+                escapeCSVValue(shift.id),
+                escapeCSVValue(shift.facility),
+                escapeCSVValue(shift.date),
+                escapeCSVValue(shift.time),
+                escapeCSVValue(shift.status),
+                escapeCSVValue(shift.hours),
+                escapeCSVValue(shift.rate),
+                escapeCSVValue(shift.hours * shift.rate)
+            ].join(",") + "\n";
+        });
+        csvContent += "\n";
+
+        csvContent += "PAYMENT HISTORY\n";
+        csvContent += "Payment ID,Date,Description,Facility,Amount (EUR),Status\n";
+        mockPayments.forEach(pay => {
+            csvContent += [
+                escapeCSVValue(pay.id),
+                escapeCSVValue(pay.date),
+                escapeCSVValue(pay.description),
+                escapeCSVValue(pay.facility),
+                escapeCSVValue(pay.amount),
+                escapeCSVValue(pay.status)
+            ].join(",") + "\n";
+        });
+
+        const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement("a");
+        link.setAttribute("href", url);
+        link.setAttribute("download", `Locum_Profile_${locum.id.replace('#', '')}.csv`);
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        setShowDropdown(false);
+    };
     const [scheduleSubView, setScheduleSubView] = useState<'month' | 'week' | 'day'>('month');
     const [scheduleAnchorDate, setScheduleAnchorDate] = useState<Date>(new Date(2024, 11, 15)); // Dec 15, 2024
 
@@ -244,12 +345,34 @@ export function LocumProfile({ locum, onClose }: LocumProfileProps) {
                                 </div>
                             </div>
                         </div>
-                        <button
-                            onClick={onClose}
-                            className="w-8 h-8 flex items-center justify-center text-[#6B7280] hover:text-[#EF4444] hover:bg-[#FEE2E2] rounded-lg"
-                        >
-                            <X className="w-5 h-5" />
-                        </button>
+                        <div className="flex items-center gap-2 relative" ref={dropdownRef}>
+                            <button
+                                onClick={() => setShowDropdown(!showDropdown)}
+                                className={`w-8 h-8 flex items-center justify-center text-[#6B7280] hover:text-[#1F2937] hover:bg-[#F3F4F6] rounded-lg transition-all ${showDropdown ? 'bg-[#F3F4F6] text-[#1F2937]' : ''}`}
+                                title="More actions"
+                            >
+                                <MoreVertical className="w-5 h-5" />
+                            </button>
+                            
+                            {showDropdown && (
+                                <div className="absolute right-0 top-full mt-1 bg-white border border-[#E5E7EB] rounded-lg shadow-lg z-50 w-48 py-1">
+                                    <button
+                                        onClick={handleExportCSV}
+                                        className="w-full flex items-center gap-2 px-4 py-2 text-sm text-[#1F2937] hover:bg-[#F9FAFB] text-left transition-colors"
+                                    >
+                                        <Download className="w-4 h-4 text-[#6B7280]" />
+                                        Export as CSV
+                                    </button>
+                                </div>
+                            )}
+
+                            <button
+                                onClick={onClose}
+                                className="w-8 h-8 flex items-center justify-center text-[#6B7280] hover:text-[#EF4444] hover:bg-[#FEE2E2] rounded-lg transition-all"
+                            >
+                                <X className="w-5 h-5" />
+                            </button>
+                        </div>
                     </div>
 
                     {/* Tabs */}

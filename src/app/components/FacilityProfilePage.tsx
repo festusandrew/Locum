@@ -111,12 +111,12 @@ const facilityProfiles: Record<string, any> = {
             completionRate: 96, cancellationRate: 2.8,
             preferredLocums: 15,
             recentBookings: [
-                { id: 'BK-3401', locum: 'Dr. Sarah Mitchell', department: 'General Surgery', date: '2026-02-12', time: '08:00-18:00', status: 'confirmed' },
-                { id: 'BK-3398', locum: 'Dr. Emily Chen', department: 'Anesthesiology', date: '2026-02-12', time: '08:00-16:00', status: 'confirmed' },
-                { id: 'BK-3395', locum: 'Dr. Sarah Mitchell', department: 'Surgical On-Call', date: '2026-02-14', time: '20:00-08:00', status: 'confirmed' },
+                { id: 'BK-3401', locum: 'Sarah Mitchell', department: 'General Surgery', date: '2026-02-12', time: '08:00-18:00', status: 'confirmed' },
+                { id: 'BK-3398', locum: 'Emily Chen', department: 'Anesthesiology', date: '2026-02-12', time: '08:00-16:00', status: 'confirmed' },
+                { id: 'BK-3395', locum: 'Sarah Mitchell', department: 'Surgical On-Call', date: '2026-02-14', time: '20:00-08:00', status: 'confirmed' },
                 { id: 'BK-3390', locum: 'TBC', department: 'Emergency Medicine', date: '2026-02-15', time: '08:00-20:00', status: 'pending' },
-                { id: 'BK-3385', locum: 'Dr. Rachel Martinez', department: 'Pediatrics', date: '2026-02-13', time: '09:00-17:00', status: 'confirmed' },
-                { id: 'BK-3380', locum: 'Dr. James Harrison', department: 'Cardiology', date: '2026-02-10', time: '08:00-18:00', status: 'completed' },
+                { id: 'BK-3385', locum: 'Rachel Martinez', department: 'Pediatrics', date: '2026-02-13', time: '09:00-17:00', status: 'confirmed' },
+                { id: 'BK-3380', locum: 'James Harrison', department: 'Cardiology', date: '2026-02-10', time: '08:00-18:00', status: 'completed' },
             ],
         },
         ratings: {
@@ -130,10 +130,10 @@ const facilityProfiles: Record<string, any> = {
                 'Overall Satisfaction': 4.8,
             },
             recentFeedback: [
-                { locum: 'Dr. Sarah Mitchell', rating: 5, date: '2026-02-08', comment: 'Excellent theatre facilities. Nursing staff very supportive and professional. Great hospital to work in.' },
-                { locum: 'Dr. Emily Chen', rating: 5, date: '2026-02-05', comment: 'Well-organized anaesthetics department. Clear protocols. Always happy to locum here.' },
-                { locum: 'Dr. Michael Brooks', rating: 4, date: '2026-02-01', comment: 'Good ED setup but can get overwhelmed at peak times. Staff are great though.' },
-                { locum: 'Dr. Rachel Martinez', rating: 5, date: '2026-01-28', comment: 'Fantastic paeds department. Very welcoming to locums.' },
+                { locum: 'Sarah Mitchell', rating: 5, date: '2026-02-08', comment: 'Excellent theatre facilities. Nursing staff very supportive and professional. Great hospital to work in.' },
+                { locum: 'Emily Chen', rating: 5, date: '2026-02-05', comment: 'Well-organized anaesthetics department. Clear protocols. Always happy to locum here.' },
+                { locum: 'Michael Brooks', rating: 4, date: '2026-02-01', comment: 'Good ED setup but can get overwhelmed at peak times. Staff are great though.' },
+                { locum: 'Rachel Martinez', rating: 5, date: '2026-01-28', comment: 'Fantastic paeds department. Very welcoming to locums.' },
             ],
         },
         notes: [
@@ -226,7 +226,7 @@ const facilityProfiles: Record<string, any> = {
         bookings: {
             totalBookings: 256, activeShifts: 8, pendingBookings: 3, completionRate: 95, cancellationRate: 3.1, preferredLocums: 10,
             recentBookings: [
-                { id: 'BK-2801', locum: 'Dr. James Harrison', department: 'Cardiology', date: '2026-02-12', time: '08:00-18:00', status: 'confirmed' },
+                { id: 'BK-2801', locum: 'James Harrison', department: 'Cardiology', date: '2026-02-12', time: '08:00-18:00', status: 'confirmed' },
                 { id: 'BK-2798', locum: 'TBC', department: 'Emergency Medicine', date: '2026-02-13', time: '08:00-20:00', status: 'pending' },
             ],
         },
@@ -234,8 +234,8 @@ const facilityProfiles: Record<string, any> = {
             avgRating: 4.6, totalReviews: 52,
             categories: { 'Working Environment': 4.7, 'Staff Friendliness': 4.6, 'Facilities & Equipment': 4.4, 'Communication': 4.6, 'Payment Timeliness': 4.7, 'Overall Satisfaction': 4.6 },
             recentFeedback: [
-                { locum: 'Dr. James Harrison', rating: 5, date: '2026-02-07', comment: 'Great cardiology department. State-of-the-art cath lab.' },
-                { locum: 'Dr. Michael Brooks', rating: 4, date: '2026-02-02', comment: 'Busy ED but well-managed. Supportive senior staff.' },
+                { locum: 'James Harrison', rating: 5, date: '2026-02-07', comment: 'Great cardiology department. State-of-the-art cath lab.' },
+                { locum: 'Michael Brooks', rating: 4, date: '2026-02-02', comment: 'Busy ED but well-managed. Supportive senior staff.' },
             ],
         },
         notes: [
@@ -265,20 +265,73 @@ export function FacilityProfilePage({ facilityId, onBack }: FacilityProfilePageP
     const [showEditModal, setShowEditModal] = useState(false);
     const [showAddNoteModal, setShowAddNoteModal] = useState(false);
     const [showMoreMenu, setShowMoreMenu] = useState(false);
+    const [modalTab, setModalTab] = useState<'overview' | 'location' | 'contacts' | 'contract'>('overview');
 
     // Form states
     const [editForm, setEditForm] = useState({
         name: profile.name,
-        description: profile.overview.description,
-        address: profile.overview.address,
-        eircode: profile.overview.eircode,
-        phone: profile.overview.phone,
-        email: profile.overview.email,
-        website: profile.overview.website,
-        established: profile.overview.established,
-        beds: profile.overview.beds,
-        ownership: profile.overview.ownership,
-        status: profile.status
+        type: profile.type || 'hospital',
+        status: profile.status,
+        description: profile.overview?.description || '',
+        address: profile.overview?.address || '',
+        eircode: profile.overview?.eircode || '',
+        phone: profile.overview?.phone || '',
+        fax: profile.overview?.fax || '',
+        email: profile.overview?.email || '',
+        website: profile.overview?.website || '',
+        hseRegion: profile.overview?.hseRegion || '',
+        hseArea: profile.overview?.hseArea || '',
+        beds: profile.overview?.beds || 0,
+        established: profile.overview?.established || 0,
+        ownership: profile.overview?.ownership || '',
+        hiqaRegistration: profile.overview?.hiqaRegistration || '',
+        hiqaLastInspection: profile.overview?.hiqaLastInspection || '',
+        hiqaStatus: profile.overview?.hiqaStatus || 'Compliant',
+        jciAccredited: profile.overview?.jciAccredited || false,
+
+        // Contacts
+        primaryContactName: profile.contacts?.primary?.name || '',
+        primaryContactRole: profile.contacts?.primary?.role || '',
+        primaryContactPhone: profile.contacts?.primary?.phone || '',
+        primaryContactEmail: profile.contacts?.primary?.email || '',
+        primaryContactMobile: profile.contacts?.primary?.mobile || '',
+
+        secondaryContactName: profile.contacts?.secondary?.name || '',
+        secondaryContactRole: profile.contacts?.secondary?.role || '',
+        secondaryContactPhone: profile.contacts?.secondary?.phone || '',
+        secondaryContactEmail: profile.contacts?.secondary?.email || '',
+        secondaryContactMobile: profile.contacts?.secondary?.mobile || '',
+
+        financeContactName: profile.contacts?.finance?.name || '',
+        financeContactRole: profile.contacts?.finance?.role || '',
+        financeContactPhone: profile.contacts?.finance?.phone || '',
+        financeContactEmail: profile.contacts?.finance?.email || '',
+        financeContactMobile: profile.contacts?.finance?.mobile || '',
+
+        nursingContactName: profile.contacts?.nursing?.name || '',
+        nursingContactRole: profile.contacts?.nursing?.role || '',
+        nursingContactPhone: profile.contacts?.nursing?.phone || '',
+        nursingContactEmail: profile.contacts?.nursing?.email || '',
+        nursingContactMobile: profile.contacts?.nursing?.mobile || '',
+
+        escalationContactName: profile.contacts?.escalation?.name || '',
+        escalationContactRole: profile.contacts?.escalation?.role || '',
+        escalationContactPhone: profile.contacts?.escalation?.phone || '',
+        escalationContactEmail: profile.contacts?.escalation?.email || '',
+        escalationContactMobile: profile.contacts?.escalation?.mobile || '',
+
+        // Contract
+        frameworkType: profile.contract?.frameworkType || 'HSE National Framework Agreement',
+        contractRef: profile.contract?.contractRef || '',
+        contractStartDate: profile.contract?.startDate || '',
+        contractEndDate: profile.contract?.endDate || '',
+        autoRenewal: profile.contract?.autoRenewal || false,
+        paymentTerms: profile.contract?.paymentTerms || 'Net 30 days',
+        invoiceFrequency: profile.contract?.invoiceFrequency || 'Fortnightly',
+        poRequired: profile.contract?.poRequired || false,
+        agencyMargin: profile.contract?.agencyMargin || '15%',
+        vatApplicable: profile.contract?.vatApplicable || false,
+        vatRate: profile.contract?.vatRate || '23%'
     });
 
     const [newNoteAuthor, setNewNoteAuthor] = useState('');
@@ -290,22 +343,169 @@ export function FacilityProfilePage({ facilityId, onBack }: FacilityProfilePageP
         setProfile(currentProfile);
         setEditForm({
             name: currentProfile.name,
-            description: currentProfile.overview.description,
-            address: currentProfile.overview.address,
-            eircode: currentProfile.overview.eircode,
-            phone: currentProfile.overview.phone,
-            email: currentProfile.overview.email,
-            website: currentProfile.overview.website,
-            established: currentProfile.overview.established,
-            beds: currentProfile.overview.beds,
-            ownership: currentProfile.overview.ownership,
-            status: currentProfile.status
+            type: currentProfile.type || 'hospital',
+            status: currentProfile.status,
+            description: currentProfile.overview?.description || '',
+            address: currentProfile.overview?.address || '',
+            eircode: currentProfile.overview?.eircode || '',
+            phone: currentProfile.overview?.phone || '',
+            fax: currentProfile.overview?.fax || '',
+            email: currentProfile.overview?.email || '',
+            website: currentProfile.overview?.website || '',
+            hseRegion: currentProfile.overview?.hseRegion || '',
+            hseArea: currentProfile.overview?.hseArea || '',
+            beds: currentProfile.overview?.beds || 0,
+            established: currentProfile.overview?.established || 0,
+            ownership: currentProfile.overview?.ownership || '',
+            hiqaRegistration: currentProfile.overview?.hiqaRegistration || '',
+            hiqaLastInspection: currentProfile.overview?.hiqaLastInspection || '',
+            hiqaStatus: currentProfile.overview?.hiqaStatus || 'Compliant',
+            jciAccredited: currentProfile.overview?.jciAccredited || false,
+
+            // Contacts
+            primaryContactName: currentProfile.contacts?.primary?.name || '',
+            primaryContactRole: currentProfile.contacts?.primary?.role || '',
+            primaryContactPhone: currentProfile.contacts?.primary?.phone || '',
+            primaryContactEmail: currentProfile.contacts?.primary?.email || '',
+            primaryContactMobile: currentProfile.contacts?.primary?.mobile || '',
+
+            secondaryContactName: currentProfile.contacts?.secondary?.name || '',
+            secondaryContactRole: currentProfile.contacts?.secondary?.role || '',
+            secondaryContactPhone: currentProfile.contacts?.secondary?.phone || '',
+            secondaryContactEmail: currentProfile.contacts?.secondary?.email || '',
+            secondaryContactMobile: currentProfile.contacts?.secondary?.mobile || '',
+
+            financeContactName: currentProfile.contacts?.finance?.name || '',
+            financeContactRole: currentProfile.contacts?.finance?.role || '',
+            financeContactPhone: currentProfile.contacts?.finance?.phone || '',
+            financeContactEmail: currentProfile.contacts?.finance?.email || '',
+            financeContactMobile: currentProfile.contacts?.finance?.mobile || '',
+
+            nursingContactName: currentProfile.contacts?.nursing?.name || '',
+            nursingContactRole: currentProfile.contacts?.nursing?.role || '',
+            nursingContactPhone: currentProfile.contacts?.nursing?.phone || '',
+            nursingContactEmail: currentProfile.contacts?.nursing?.email || '',
+            nursingContactMobile: currentProfile.contacts?.nursing?.mobile || '',
+
+            escalationContactName: currentProfile.contacts?.escalation?.name || '',
+            escalationContactRole: currentProfile.contacts?.escalation?.role || '',
+            escalationContactPhone: currentProfile.contacts?.escalation?.phone || '',
+            escalationContactEmail: currentProfile.contacts?.escalation?.email || '',
+            escalationContactMobile: currentProfile.contacts?.escalation?.mobile || '',
+
+            // Contract
+            frameworkType: currentProfile.contract?.frameworkType || 'HSE National Framework Agreement',
+            contractRef: currentProfile.contract?.contractRef || '',
+            contractStartDate: currentProfile.contract?.startDate || '',
+            contractEndDate: currentProfile.contract?.endDate || '',
+            autoRenewal: currentProfile.contract?.autoRenewal || false,
+            paymentTerms: currentProfile.contract?.paymentTerms || 'Net 30 days',
+            invoiceFrequency: currentProfile.contract?.invoiceFrequency || 'Fortnightly',
+            poRequired: currentProfile.contract?.poRequired || false,
+            agencyMargin: currentProfile.contract?.agencyMargin || '15%',
+            vatApplicable: currentProfile.contract?.vatApplicable || false,
+            vatRate: currentProfile.contract?.vatRate || '23%'
         });
     }, [facilityId]);
 
     const updateProfile = (updated: any) => {
         setProfile(updated);
         localStorage.setItem(`mployus_facility_profile_${facilityId}`, JSON.stringify(updated));
+
+        // Sync with central clients database list
+        const storedClientsStr = localStorage.getItem('mployus_clients');
+        if (storedClientsStr) {
+            try {
+                const clients = JSON.parse(storedClientsStr);
+                const updatedClients = clients.map((c: any) => {
+                    if (c.id === facilityId) {
+                        return {
+                            ...c,
+                            name: updated.name,
+                            status: updated.status === 'active' ? 'active' : 'inactive',
+                            address: updated.overview?.address || c.address,
+                            contactEmail: updated.overview?.email || c.contactEmail,
+                            contactPhone: updated.overview?.phone || c.contactPhone,
+                            type: updated.type || c.type
+                        };
+                    }
+                    return c;
+                });
+                localStorage.setItem('mployus_clients', JSON.stringify(updatedClients));
+            } catch (err) {
+                console.error("Error syncing central client update:", err);
+            }
+        }
+    };
+
+    const handleOpenEdit = () => {
+        setEditForm({
+            name: profile.name,
+            type: profile.type || 'hospital',
+            status: profile.status,
+            description: profile.overview?.description || '',
+            address: profile.overview?.address || '',
+            eircode: profile.overview?.eircode || '',
+            phone: profile.overview?.phone || '',
+            fax: profile.overview?.fax || '',
+            email: profile.overview?.email || '',
+            website: profile.overview?.website || '',
+            hseRegion: profile.overview?.hseRegion || '',
+            hseArea: profile.overview?.hseArea || '',
+            beds: profile.overview?.beds || 0,
+            established: profile.overview?.established || 0,
+            ownership: profile.overview?.ownership || '',
+            hiqaRegistration: profile.overview?.hiqaRegistration || '',
+            hiqaLastInspection: profile.overview?.hiqaLastInspection || '',
+            hiqaStatus: profile.overview?.hiqaStatus || 'Compliant',
+            jciAccredited: profile.overview?.jciAccredited || false,
+
+            // Contacts
+            primaryContactName: profile.contacts?.primary?.name || '',
+            primaryContactRole: profile.contacts?.primary?.role || '',
+            primaryContactPhone: profile.contacts?.primary?.phone || '',
+            primaryContactEmail: profile.contacts?.primary?.email || '',
+            primaryContactMobile: profile.contacts?.primary?.mobile || '',
+
+            secondaryContactName: profile.contacts?.secondary?.name || '',
+            secondaryContactRole: profile.contacts?.secondary?.role || '',
+            secondaryContactPhone: profile.contacts?.secondary?.phone || '',
+            secondaryContactEmail: profile.contacts?.secondary?.email || '',
+            secondaryContactMobile: profile.contacts?.secondary?.mobile || '',
+
+            financeContactName: profile.contacts?.finance?.name || '',
+            financeContactRole: profile.contacts?.finance?.role || '',
+            financeContactPhone: profile.contacts?.finance?.phone || '',
+            financeContactEmail: profile.contacts?.finance?.email || '',
+            financeContactMobile: profile.contacts?.finance?.mobile || '',
+
+            nursingContactName: profile.contacts?.nursing?.name || '',
+            nursingContactRole: profile.contacts?.nursing?.role || '',
+            nursingContactPhone: profile.contacts?.nursing?.phone || '',
+            nursingContactEmail: profile.contacts?.nursing?.email || '',
+            nursingContactMobile: profile.contacts?.nursing?.mobile || '',
+
+            escalationContactName: profile.contacts?.escalation?.name || '',
+            escalationContactRole: profile.contacts?.escalation?.role || '',
+            escalationContactPhone: profile.contacts?.escalation?.phone || '',
+            escalationContactEmail: profile.contacts?.escalation?.email || '',
+            escalationContactMobile: profile.contacts?.escalation?.mobile || '',
+
+            // Contract
+            frameworkType: profile.contract?.frameworkType || 'HSE National Framework Agreement',
+            contractRef: profile.contract?.contractRef || '',
+            contractStartDate: profile.contract?.startDate || '',
+            contractEndDate: profile.contract?.endDate || '',
+            autoRenewal: profile.contract?.autoRenewal || false,
+            paymentTerms: profile.contract?.paymentTerms || 'Net 30 days',
+            invoiceFrequency: profile.contract?.invoiceFrequency || 'Fortnightly',
+            poRequired: profile.contract?.poRequired || false,
+            agencyMargin: profile.contract?.agencyMargin || '15%',
+            vatApplicable: profile.contract?.vatApplicable || false,
+            vatRate: profile.contract?.vatRate || '23%'
+        });
+        setModalTab('overview');
+        setShowEditModal(true);
     };
 
     const handleEditSubmit = (e: React.FormEvent) => {
@@ -313,6 +513,7 @@ export function FacilityProfilePage({ facilityId, onBack }: FacilityProfilePageP
         const updated = {
             ...profile,
             name: editForm.name,
+            type: editForm.type,
             status: editForm.status,
             overview: {
                 ...profile.overview,
@@ -320,11 +521,70 @@ export function FacilityProfilePage({ facilityId, onBack }: FacilityProfilePageP
                 address: editForm.address,
                 eircode: editForm.eircode,
                 phone: editForm.phone,
+                fax: editForm.fax,
                 email: editForm.email,
                 website: editForm.website,
                 established: editForm.established,
                 beds: editForm.beds,
-                ownership: editForm.ownership
+                ownership: editForm.ownership,
+                hseRegion: editForm.hseRegion,
+                hseArea: editForm.hseArea,
+                hiqaRegistration: editForm.hiqaRegistration,
+                hiqaLastInspection: editForm.hiqaLastInspection,
+                hiqaStatus: editForm.hiqaStatus,
+                jciAccredited: editForm.jciAccredited,
+            },
+            contacts: {
+                ...profile.contacts,
+                primary: {
+                    name: editForm.primaryContactName,
+                    role: editForm.primaryContactRole,
+                    phone: editForm.primaryContactPhone,
+                    email: editForm.primaryContactEmail,
+                    mobile: editForm.primaryContactMobile,
+                },
+                secondary: {
+                    name: editForm.secondaryContactName,
+                    role: editForm.secondaryContactRole,
+                    phone: editForm.secondaryContactPhone,
+                    email: editForm.secondaryContactEmail,
+                    mobile: editForm.secondaryContactMobile,
+                },
+                finance: {
+                    name: editForm.financeContactName,
+                    role: editForm.financeContactRole,
+                    phone: editForm.financeContactPhone,
+                    email: editForm.financeContactEmail,
+                    mobile: editForm.financeContactMobile,
+                },
+                nursing: {
+                    name: editForm.nursingContactName,
+                    role: editForm.nursingContactRole,
+                    phone: editForm.nursingContactPhone,
+                    email: editForm.nursingContactEmail,
+                    mobile: editForm.nursingContactMobile,
+                },
+                escalation: {
+                    name: editForm.escalationContactName,
+                    role: editForm.escalationContactRole,
+                    phone: editForm.escalationContactPhone,
+                    email: editForm.escalationContactEmail,
+                    mobile: editForm.escalationContactMobile,
+                },
+            },
+            contract: {
+                ...profile.contract,
+                frameworkType: editForm.frameworkType,
+                contractRef: editForm.contractRef,
+                startDate: editForm.contractStartDate,
+                endDate: editForm.contractEndDate,
+                autoRenewal: editForm.autoRenewal,
+                paymentTerms: editForm.paymentTerms,
+                invoiceFrequency: editForm.invoiceFrequency,
+                poRequired: editForm.poRequired,
+                agencyMargin: editForm.agencyMargin,
+                vatApplicable: editForm.vatApplicable,
+                vatRate: editForm.vatRate,
             }
         };
         updateProfile(updated);
@@ -412,7 +672,7 @@ export function FacilityProfilePage({ facilityId, onBack }: FacilityProfilePageP
                     <p className="text-sm text-[#6B7280]">Comprehensive facility information, contracts, and booking history</p>
                 </div>
                 <div className="flex items-center gap-2 relative">
-                    <button onClick={() => setShowEditModal(true)} className="flex items-center gap-1.5 px-3 py-2 text-sm border border-[#E5E7EB] rounded-lg hover:bg-[#F9FAFB] transition-colors"><Edit className="w-3.5 h-3.5" /> Edit</button>
+                    <button onClick={handleOpenEdit} className="flex items-center gap-1.5 px-3 py-2 text-sm border border-[#E5E7EB] rounded-lg hover:bg-[#F9FAFB] transition-colors"><Edit className="w-3.5 h-3.5" /> Edit</button>
                     <button onClick={handleExport} className="flex items-center gap-1.5 px-3 py-2 text-sm border border-[#E5E7EB] rounded-lg hover:bg-[#F9FAFB] transition-colors"><Download className="w-3.5 h-3.5" /> Export</button>
                     <button onClick={() => setShowMoreMenu(!showMoreMenu)} className="p-2 border border-[#E5E7EB] rounded-lg hover:bg-[#F9FAFB] transition-colors"><MoreHorizontal className="w-4 h-4 text-[#6B7280]" /></button>
                     
@@ -853,127 +1113,637 @@ export function FacilityProfilePage({ facilityId, onBack }: FacilityProfilePageP
             {/* Edit Facility Profile Modal */}
             {showEditModal && (
                 <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-6 animate-in fade-in duration-200">
-                    <div className="bg-white rounded-xl w-full max-w-2xl shadow-2xl animate-in fade-in zoom-in-95 duration-200 overflow-hidden">
-                        <div className="p-5 border-b border-[#E5E7EB] flex items-center justify-between bg-white">
+                    <div className="bg-white rounded-xl w-full max-w-2xl shadow-2xl animate-in fade-in zoom-in-95 duration-200 overflow-hidden flex flex-col max-h-[90vh]">
+                        <div className="p-5 border-b border-[#E5E7EB] flex items-center justify-between bg-white flex-shrink-0">
                             <h3 className="text-lg font-semibold text-[#1F2937]">Edit Facility Profile</h3>
                             <button onClick={() => setShowEditModal(false)} className="text-[#9CA3AF] hover:text-[#6B7280] p-1.5 rounded-lg hover:bg-[#F3F4F6] transition-colors">
                                 <X className="w-5 h-5" />
                             </button>
                         </div>
-                        <form onSubmit={handleEditSubmit}>
-                            <div className="p-6 space-y-4 max-h-[70vh] overflow-y-auto">
-                                <div className="grid grid-cols-2 gap-4">
-                                    <div>
-                                        <label className="block text-xs text-[#6B7280] font-medium mb-1">Facility Name</label>
-                                        <input
-                                            type="text"
-                                            required
-                                            value={editForm.name}
-                                            onChange={e => setEditForm({ ...editForm, name: e.target.value })}
-                                            className="w-full px-3 py-2 border border-[#E5E7EB] rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#10B981] focus:border-transparent bg-white text-[#1F2937]"
-                                        />
+
+                        {/* Modal Tab Headers */}
+                        <div className="flex border-b border-[#E5E7EB] px-6 bg-[#F9FAFB] flex-shrink-0 overflow-x-auto">
+                            {[
+                                { id: 'overview' as const, label: '1. Overview & HIQA' },
+                                { id: 'location' as const, label: '2. Location & HSE' },
+                                { id: 'contacts' as const, label: '3. Contacts' },
+                                { id: 'contract' as const, label: '4. Contract Terms' },
+                            ].map(tab => (
+                                <button
+                                    key={tab.id}
+                                    type="button"
+                                    onClick={() => setModalTab(tab.id)}
+                                    className={`py-3 px-4 text-xs font-semibold border-b-2 transition-all whitespace-nowrap ${
+                                        modalTab === tab.id
+                                            ? 'border-[#10B981] text-[#10B981]'
+                                            : 'border-transparent text-[#6B7280] hover:text-[#1F2937]'
+                                    }`}
+                                >
+                                    {tab.label}
+                                </button>
+                            ))}
+                        </div>
+
+                        <form onSubmit={handleEditSubmit} className="flex flex-col flex-1 overflow-hidden">
+                            <div className="p-6 space-y-4 overflow-y-auto flex-1">
+                                {modalTab === 'overview' && (
+                                    <div className="space-y-4">
+                                        <div className="grid grid-cols-2 gap-4">
+                                            <div>
+                                                <label className="block text-xs text-[#6B7280] font-medium mb-1">Facility Name <span className="text-[#EF4444]">*</span></label>
+                                                <input
+                                                    type="text"
+                                                    required
+                                                    value={editForm.name}
+                                                    onChange={e => setEditForm({ ...editForm, name: e.target.value })}
+                                                    className="w-full px-3 py-2 border border-[#E5E7EB] rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#10B981] bg-white text-[#1F2937]"
+                                                />
+                                            </div>
+                                            <div>
+                                                <label className="block text-xs text-[#6B7280] font-medium mb-1">Facility Type <span className="text-[#EF4444]">*</span></label>
+                                                <select
+                                                    value={editForm.type}
+                                                    onChange={e => setEditForm({ ...editForm, type: e.target.value })}
+                                                    className="w-full px-3 py-2 border border-[#E5E7EB] rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#10B981] bg-white text-[#1F2937]"
+                                                >
+                                                    <option value="hospital">Hospital</option>
+                                                    <option value="clinic">Clinic</option>
+                                                    <option value="care_home">Care Home</option>
+                                                    <option value="private_practice">Private Practice</option>
+                                                </select>
+                                            </div>
+                                        </div>
+                                        <div className="grid grid-cols-2 gap-4">
+                                            <div>
+                                                <label className="block text-xs text-[#6B7280] font-medium mb-1">Status</label>
+                                                <select
+                                                    value={editForm.status}
+                                                    onChange={e => setEditForm({ ...editForm, status: e.target.value })}
+                                                    className="w-full px-3 py-2 border border-[#E5E7EB] rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#10B981] bg-white text-[#1F2937]"
+                                                >
+                                                    <option value="active">Active</option>
+                                                    <option value="inactive">Inactive</option>
+                                                </select>
+                                            </div>
+                                            <div>
+                                                <label className="block text-xs text-[#6B7280] font-medium mb-1">Ownership</label>
+                                                <input
+                                                    type="text"
+                                                    value={editForm.ownership}
+                                                    onChange={e => setEditForm({ ...editForm, ownership: e.target.value })}
+                                                    className="w-full px-3 py-2 border border-[#E5E7EB] rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#10B981] bg-white text-[#1F2937]"
+                                                />
+                                            </div>
+                                        </div>
+                                        <div className="grid grid-cols-2 gap-4">
+                                            <div>
+                                                <label className="block text-xs text-[#6B7280] font-medium mb-1">Established Year</label>
+                                                <input
+                                                    type="number"
+                                                    value={editForm.established || ''}
+                                                    onChange={e => setEditForm({ ...editForm, established: Number(e.target.value) })}
+                                                    className="w-full px-3 py-2 border border-[#E5E7EB] rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#10B981] bg-white text-[#1F2937]"
+                                                />
+                                            </div>
+                                            <div>
+                                                <label className="block text-xs text-[#6B7280] font-medium mb-1">Bed Capacity</label>
+                                                <input
+                                                    type="number"
+                                                    value={editForm.beds || ''}
+                                                    onChange={e => setEditForm({ ...editForm, beds: Number(e.target.value) })}
+                                                    className="w-full px-3 py-2 border border-[#E5E7EB] rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#10B981] bg-white text-[#1F2937]"
+                                                />
+                                            </div>
+                                        </div>
+                                        <div>
+                                            <label className="block text-xs text-[#6B7280] font-medium mb-1">Description</label>
+                                            <textarea
+                                                rows={3}
+                                                value={editForm.description}
+                                                onChange={e => setEditForm({ ...editForm, description: e.target.value })}
+                                                className="w-full px-3 py-2 border border-[#E5E7EB] rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#10B981] bg-white text-[#1F2937]"
+                                            />
+                                        </div>
+                                        <div className="border-t border-[#E5E7EB] pt-4">
+                                            <div className="flex items-center gap-2 mb-3">
+                                                <ShieldCheck className="w-4 h-4 text-[#10B981]" />
+                                                <h4 className="text-sm font-semibold text-[#1F2937]">HIQA & Accreditation</h4>
+                                            </div>
+                                            <div className="grid grid-cols-2 gap-4">
+                                                <div>
+                                                    <label className="block text-xs text-[#6B7280] font-medium mb-1">HIQA Registration</label>
+                                                    <input
+                                                        type="text"
+                                                        value={editForm.hiqaRegistration}
+                                                        onChange={e => setEditForm({ ...editForm, hiqaRegistration: e.target.value })}
+                                                        placeholder="e.g., HIQA-OSV-0001234"
+                                                        className="w-full px-3 py-2 border border-[#E5E7EB] rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#10B981] bg-white text-[#1F2937]"
+                                                    />
+                                                </div>
+                                                <div>
+                                                    <label className="block text-xs text-[#6B7280] font-medium mb-1">HIQA Status</label>
+                                                    <select
+                                                        value={editForm.hiqaStatus}
+                                                        onChange={e => setEditForm({ ...editForm, hiqaStatus: e.target.value })}
+                                                        className="w-full px-3 py-2 border border-[#E5E7EB] rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#10B981] bg-white text-[#1F2937]"
+                                                    >
+                                                        <option value="Compliant">Compliant</option>
+                                                        <option value="Substantially Compliant">Substantially Compliant</option>
+                                                        <option value="Non-Compliant">Non-Compliant</option>
+                                                        <option value="Pending Review">Pending Review</option>
+                                                    </select>
+                                                </div>
+                                                <div>
+                                                    <label className="block text-xs text-[#6B7280] font-medium mb-1">Last Inspection Date</label>
+                                                    <input
+                                                        type="date"
+                                                        value={editForm.hiqaLastInspection}
+                                                        onChange={e => setEditForm({ ...editForm, hiqaLastInspection: e.target.value })}
+                                                        className="w-full px-3 py-2 border border-[#E5E7EB] rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#10B981] bg-white text-[#1F2937]"
+                                                    />
+                                                </div>
+                                                <div className="flex items-center mt-5">
+                                                    <label className="flex items-center gap-2 cursor-pointer text-xs text-[#6B7280] font-medium">
+                                                        <input
+                                                            type="checkbox"
+                                                            checked={editForm.jciAccredited}
+                                                            onChange={e => setEditForm({ ...editForm, jciAccredited: e.target.checked })}
+                                                            className="rounded border-[#E5E7EB] text-[#10B981] focus:ring-[#10B981] w-4 h-4 bg-white"
+                                                        />
+                                                        JCI Accredited Facility
+                                                    </label>
+                                                </div>
+                                            </div>
+                                        </div>
                                     </div>
-                                    <div>
-                                        <label className="block text-xs text-[#6B7280] font-medium mb-1">Status</label>
-                                        <select
-                                            value={editForm.status}
-                                            onChange={e => setEditForm({ ...editForm, status: e.target.value })}
-                                            className="w-full px-3 py-2 border border-[#E5E7EB] rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#10B981] focus:border-transparent bg-white text-[#1F2937]"
-                                        >
-                                            <option value="active">Active</option>
-                                            <option value="inactive">Inactive</option>
-                                        </select>
+                                )}
+
+                                {modalTab === 'location' && (
+                                    <div className="space-y-4">
+                                        <div className="grid grid-cols-2 gap-4">
+                                            <div className="col-span-2">
+                                                <label className="block text-xs text-[#6B7280] font-medium mb-1">Full Address <span className="text-[#EF4444]">*</span></label>
+                                                <input
+                                                    type="text"
+                                                    required
+                                                    value={editForm.address}
+                                                    onChange={e => setEditForm({ ...editForm, address: e.target.value })}
+                                                    className="w-full px-3 py-2 border border-[#E5E7EB] rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#10B981] bg-white text-[#1F2937]"
+                                                />
+                                            </div>
+                                            <div>
+                                                <label className="block text-xs text-[#6B7280] font-medium mb-1">Eircode</label>
+                                                <input
+                                                    type="text"
+                                                    value={editForm.eircode}
+                                                    onChange={e => setEditForm({ ...editForm, eircode: e.target.value })}
+                                                    className="w-full px-3 py-2 border border-[#E5E7EB] rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#10B981] bg-white text-[#1F2937]"
+                                                />
+                                            </div>
+                                            <div>
+                                                <label className="block text-xs text-[#6B7280] font-medium mb-1">Main Phone <span className="text-[#EF4444]">*</span></label>
+                                                <input
+                                                    type="text"
+                                                    required
+                                                    value={editForm.phone}
+                                                    onChange={e => setEditForm({ ...editForm, phone: e.target.value })}
+                                                    className="w-full px-3 py-2 border border-[#E5E7EB] rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#10B981] bg-white text-[#1F2937]"
+                                                />
+                                            </div>
+                                            <div>
+                                                <label className="block text-xs text-[#6B7280] font-medium mb-1">Fax</label>
+                                                <input
+                                                    type="text"
+                                                    value={editForm.fax}
+                                                    onChange={e => setEditForm({ ...editForm, fax: e.target.value })}
+                                                    className="w-full px-3 py-2 border border-[#E5E7EB] rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#10B981] bg-white text-[#1F2937]"
+                                                />
+                                            </div>
+                                            <div>
+                                                <label className="block text-xs text-[#6B7280] font-medium mb-1">Email Address <span className="text-[#EF4444]">*</span></label>
+                                                <input
+                                                    type="email"
+                                                    required
+                                                    value={editForm.email}
+                                                    onChange={e => setEditForm({ ...editForm, email: e.target.value })}
+                                                    className="w-full px-3 py-2 border border-[#E5E7EB] rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#10B981] bg-white text-[#1F2937]"
+                                                />
+                                            </div>
+                                            <div className="col-span-2">
+                                                <label className="block text-xs text-[#6B7280] font-medium mb-1">Website</label>
+                                                <input
+                                                    type="text"
+                                                    value={editForm.website}
+                                                    onChange={e => setEditForm({ ...editForm, website: e.target.value })}
+                                                    className="w-full px-3 py-2 border border-[#E5E7EB] rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#10B981] bg-white text-[#1F2937]"
+                                                />
+                                            </div>
+                                        </div>
+                                        <div className="border-t border-[#E5E7EB] pt-4">
+                                            <div className="flex items-center gap-2 mb-3">
+                                                <FileText className="w-4 h-4 text-[#059669]" />
+                                                <h4 className="text-sm font-semibold text-[#1F2937]">HSE Information</h4>
+                                            </div>
+                                            <div className="grid grid-cols-2 gap-4">
+                                                <div>
+                                                    <label className="block text-xs text-[#6B7280] font-medium mb-1">HSE Region</label>
+                                                    <select
+                                                        value={editForm.hseRegion}
+                                                        onChange={e => setEditForm({ ...editForm, hseRegion: e.target.value })}
+                                                        className="w-full px-3 py-2 border border-[#E5E7EB] rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#10B981] bg-white text-[#1F2937]"
+                                                    >
+                                                        <option value="">Select Region</option>
+                                                        <option value="HSE Dublin Midlands">HSE Dublin Midlands</option>
+                                                        <option value="HSE South">HSE South</option>
+                                                        <option value="HSE West">HSE West</option>
+                                                        <option value="HSE Mid-West">HSE Mid-West</option>
+                                                        <option value="HSE South East">HSE South East</option>
+                                                    </select>
+                                                </div>
+                                                <div>
+                                                    <label className="block text-xs text-[#6B7280] font-medium mb-1">HSE Area / CHO</label>
+                                                    <input
+                                                        type="text"
+                                                        value={editForm.hseArea}
+                                                        onChange={e => setEditForm({ ...editForm, hseArea: e.target.value })}
+                                                        placeholder="e.g., CHO 7 - Dublin South City"
+                                                        className="w-full px-3 py-2 border border-[#E5E7EB] rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#10B981] bg-white text-[#1F2937]"
+                                                    />
+                                                </div>
+                                            </div>
+                                        </div>
                                     </div>
-                                </div>
-                                <div>
-                                    <label className="block text-xs text-[#6B7280] font-medium mb-1">Description</label>
-                                    <textarea
-                                        rows={3}
-                                        value={editForm.description}
-                                        onChange={e => setEditForm({ ...editForm, description: e.target.value })}
-                                        className="w-full px-3 py-2 border border-[#E5E7EB] rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#10B981] focus:border-transparent bg-white text-[#1F2937]"
-                                    />
-                                </div>
-                                <div className="grid grid-cols-2 gap-4">
-                                    <div>
-                                        <label className="block text-xs text-[#6B7280] font-medium mb-1">Full Address</label>
-                                        <input
-                                            type="text"
-                                            value={editForm.address}
-                                            onChange={e => setEditForm({ ...editForm, address: e.target.value })}
-                                            className="w-full px-3 py-2 border border-[#E5E7EB] rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#10B981] focus:border-transparent bg-white text-[#1F2937]"
-                                        />
+                                )}
+
+                                {modalTab === 'contacts' && (
+                                    <div className="space-y-6">
+                                        {/* Primary Contact */}
+                                        <div className="border border-[#E5E7EB] rounded-xl p-4 bg-[#F9FAFB]">
+                                            <h4 className="text-sm font-semibold text-[#1F2937] flex items-center gap-1.5 mb-3">
+                                                <Users className="w-4 h-4 text-[#8B5CF6]" />
+                                                Primary Contact Person
+                                            </h4>
+                                            <div className="grid grid-cols-2 gap-3">
+                                                <div>
+                                                    <label className="block text-[11px] text-[#6B7280] font-medium mb-1">Contact Name <span className="text-[#EF4444]">*</span></label>
+                                                    <input
+                                                        type="text"
+                                                        required={modalTab === 'contacts'}
+                                                        value={editForm.primaryContactName}
+                                                        onChange={e => setEditForm({ ...editForm, primaryContactName: e.target.value })}
+                                                        className="w-full px-3 py-1.5 border border-[#E5E7EB] rounded-lg text-sm bg-white text-[#1F2937]"
+                                                    />
+                                                </div>
+                                                <div>
+                                                    <label className="block text-[11px] text-[#6B7280] font-medium mb-1">Role/Position <span className="text-[#EF4444]">*</span></label>
+                                                    <input
+                                                        type="text"
+                                                        required={modalTab === 'contacts'}
+                                                        value={editForm.primaryContactRole}
+                                                        onChange={e => setEditForm({ ...editForm, primaryContactRole: e.target.value })}
+                                                        className="w-full px-3 py-1.5 border border-[#E5E7EB] rounded-lg text-sm bg-white text-[#1F2937]"
+                                                    />
+                                                </div>
+                                                <div>
+                                                    <label className="block text-[11px] text-[#6B7280] font-medium mb-1">Contact Phone <span className="text-[#EF4444]">*</span></label>
+                                                    <input
+                                                        type="text"
+                                                        required={modalTab === 'contacts'}
+                                                        value={editForm.primaryContactPhone}
+                                                        onChange={e => setEditForm({ ...editForm, primaryContactPhone: e.target.value })}
+                                                        className="w-full px-3 py-1.5 border border-[#E5E7EB] rounded-lg text-sm bg-white text-[#1F2937]"
+                                                    />
+                                                </div>
+                                                <div>
+                                                    <label className="block text-[11px] text-[#6B7280] font-medium mb-1">Mobile Phone</label>
+                                                    <input
+                                                        type="text"
+                                                        value={editForm.primaryContactMobile}
+                                                        onChange={e => setEditForm({ ...editForm, primaryContactMobile: e.target.value })}
+                                                        className="w-full px-3 py-1.5 border border-[#E5E7EB] rounded-lg text-sm bg-white text-[#1F2937]"
+                                                    />
+                                                </div>
+                                                <div className="col-span-2">
+                                                    <label className="block text-[11px] text-[#6B7280] font-medium mb-1">Contact Email <span className="text-[#EF4444]">*</span></label>
+                                                    <input
+                                                        type="email"
+                                                        required={modalTab === 'contacts'}
+                                                        value={editForm.primaryContactEmail}
+                                                        onChange={e => setEditForm({ ...editForm, primaryContactEmail: e.target.value })}
+                                                        className="w-full px-3 py-1.5 border border-[#E5E7EB] rounded-lg text-sm bg-white text-[#1F2937]"
+                                                    />
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        {/* Secondary Contact */}
+                                        <div className="border border-[#E5E7EB] rounded-xl p-4 bg-white">
+                                            <h4 className="text-sm font-semibold text-[#1F2937] flex items-center gap-1.5 mb-3">
+                                                <Users className="w-4 h-4 text-[#3B82F6]" />
+                                                Secondary Contact
+                                            </h4>
+                                            <div className="grid grid-cols-2 gap-3">
+                                                <div>
+                                                    <label className="block text-[11px] text-[#6B7280] font-medium mb-1">Contact Name</label>
+                                                    <input
+                                                        type="text"
+                                                        value={editForm.secondaryContactName}
+                                                        onChange={e => setEditForm({ ...editForm, secondaryContactName: e.target.value })}
+                                                        className="w-full px-3 py-1.5 border border-[#E5E7EB] rounded-lg text-sm bg-white text-[#1F2937]"
+                                                    />
+                                                </div>
+                                                <div>
+                                                    <label className="block text-[11px] text-[#6B7280] font-medium mb-1">Role/Position</label>
+                                                    <input
+                                                        type="text"
+                                                        value={editForm.secondaryContactRole}
+                                                        onChange={e => setEditForm({ ...editForm, secondaryContactRole: e.target.value })}
+                                                        className="w-full px-3 py-1.5 border border-[#E5E7EB] rounded-lg text-sm bg-white text-[#1F2937]"
+                                                    />
+                                                </div>
+                                                <div>
+                                                    <label className="block text-[11px] text-[#6B7280] font-medium mb-1">Phone</label>
+                                                    <input
+                                                        type="text"
+                                                        value={editForm.secondaryContactPhone}
+                                                        onChange={e => setEditForm({ ...editForm, secondaryContactPhone: e.target.value })}
+                                                        className="w-full px-3 py-1.5 border border-[#E5E7EB] rounded-lg text-sm bg-white text-[#1F2937]"
+                                                    />
+                                                </div>
+                                                <div>
+                                                    <label className="block text-[11px] text-[#6B7280] font-medium mb-1">Email</label>
+                                                    <input
+                                                        type="email"
+                                                        value={editForm.secondaryContactEmail}
+                                                        onChange={e => setEditForm({ ...editForm, secondaryContactEmail: e.target.value })}
+                                                        className="w-full px-3 py-1.5 border border-[#E5E7EB] rounded-lg text-sm bg-white text-[#1F2937]"
+                                                    />
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        {/* Finance Contact */}
+                                        <div className="border border-[#E5E7EB] rounded-xl p-4 bg-white">
+                                            <h4 className="text-sm font-semibold text-[#1F2937] flex items-center gap-1.5 mb-3">
+                                                <Users className="w-4 h-4 text-[#F59E0B]" />
+                                                Finance Contact
+                                            </h4>
+                                            <div className="grid grid-cols-2 gap-3">
+                                                <div>
+                                                    <label className="block text-[11px] text-[#6B7280] font-medium mb-1">Contact Name</label>
+                                                    <input
+                                                        type="text"
+                                                        value={editForm.financeContactName}
+                                                        onChange={e => setEditForm({ ...editForm, financeContactName: e.target.value })}
+                                                        className="w-full px-3 py-1.5 border border-[#E5E7EB] rounded-lg text-sm bg-white text-[#1F2937]"
+                                                    />
+                                                </div>
+                                                <div>
+                                                    <label className="block text-[11px] text-[#6B7280] font-medium mb-1">Role/Position</label>
+                                                    <input
+                                                        type="text"
+                                                        value={editForm.financeContactRole}
+                                                        onChange={e => setEditForm({ ...editForm, financeContactRole: e.target.value })}
+                                                        className="w-full px-3 py-1.5 border border-[#E5E7EB] rounded-lg text-sm bg-white text-[#1F2937]"
+                                                    />
+                                                </div>
+                                                <div>
+                                                    <label className="block text-[11px] text-[#6B7280] font-medium mb-1">Phone</label>
+                                                    <input
+                                                        type="text"
+                                                        value={editForm.financeContactPhone}
+                                                        onChange={e => setEditForm({ ...editForm, financeContactPhone: e.target.value })}
+                                                        className="w-full px-3 py-1.5 border border-[#E5E7EB] rounded-lg text-sm bg-white text-[#1F2937]"
+                                                    />
+                                                </div>
+                                                <div>
+                                                    <label className="block text-[11px] text-[#6B7280] font-medium mb-1">Email</label>
+                                                    <input
+                                                        type="email"
+                                                        value={editForm.financeContactEmail}
+                                                        onChange={e => setEditForm({ ...editForm, financeContactEmail: e.target.value })}
+                                                        className="w-full px-3 py-1.5 border border-[#E5E7EB] rounded-lg text-sm bg-white text-[#1F2937]"
+                                                    />
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        {/* Nursing Contact */}
+                                        <div className="border border-[#E5E7EB] rounded-xl p-4 bg-white">
+                                            <h4 className="text-sm font-semibold text-[#1F2937] flex items-center gap-1.5 mb-3">
+                                                <Users className="w-4 h-4 text-[#10B981]" />
+                                                Nursing Contact
+                                            </h4>
+                                            <div className="grid grid-cols-2 gap-3">
+                                                <div>
+                                                    <label className="block text-[11px] text-[#6B7280] font-medium mb-1">Contact Name</label>
+                                                    <input
+                                                        type="text"
+                                                        value={editForm.nursingContactName}
+                                                        onChange={e => setEditForm({ ...editForm, nursingContactName: e.target.value })}
+                                                        className="w-full px-3 py-1.5 border border-[#E5E7EB] rounded-lg text-sm bg-white text-[#1F2937]"
+                                                    />
+                                                </div>
+                                                <div>
+                                                    <label className="block text-[11px] text-[#6B7280] font-medium mb-1">Role/Position</label>
+                                                    <input
+                                                        type="text"
+                                                        value={editForm.nursingContactRole}
+                                                        onChange={e => setEditForm({ ...editForm, nursingContactRole: e.target.value })}
+                                                        className="w-full px-3 py-1.5 border border-[#E5E7EB] rounded-lg text-sm bg-white text-[#1F2937]"
+                                                    />
+                                                </div>
+                                                <div>
+                                                    <label className="block text-[11px] text-[#6B7280] font-medium mb-1">Phone</label>
+                                                    <input
+                                                        type="text"
+                                                        value={editForm.nursingContactPhone}
+                                                        onChange={e => setEditForm({ ...editForm, nursingContactPhone: e.target.value })}
+                                                        className="w-full px-3 py-1.5 border border-[#E5E7EB] rounded-lg text-sm bg-white text-[#1F2937]"
+                                                    />
+                                                </div>
+                                                <div>
+                                                    <label className="block text-[11px] text-[#6B7280] font-medium mb-1">Email</label>
+                                                    <input
+                                                        type="email"
+                                                        value={editForm.nursingContactEmail}
+                                                        onChange={e => setEditForm({ ...editForm, nursingContactEmail: e.target.value })}
+                                                        className="w-full px-3 py-1.5 border border-[#E5E7EB] rounded-lg text-sm bg-white text-[#1F2937]"
+                                                    />
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        {/* Escalation Contact */}
+                                        <div className="border border-[#E5E7EB] rounded-xl p-4 bg-white">
+                                            <h4 className="text-sm font-semibold text-[#1F2937] flex items-center gap-1.5 mb-3">
+                                                <Users className="w-4 h-4 text-[#EF4444]" />
+                                                Escalation Contact
+                                            </h4>
+                                            <div className="grid grid-cols-2 gap-3">
+                                                <div>
+                                                    <label className="block text-[11px] text-[#6B7280] font-medium mb-1">Contact Name</label>
+                                                    <input
+                                                        type="text"
+                                                        value={editForm.escalationContactName}
+                                                        onChange={e => setEditForm({ ...editForm, escalationContactName: e.target.value })}
+                                                        className="w-full px-3 py-1.5 border border-[#E5E7EB] rounded-lg text-sm bg-white text-[#1F2937]"
+                                                    />
+                                                </div>
+                                                <div>
+                                                    <label className="block text-[11px] text-[#6B7280] font-medium mb-1">Role/Position</label>
+                                                    <input
+                                                        type="text"
+                                                        value={editForm.escalationContactRole}
+                                                        onChange={e => setEditForm({ ...editForm, escalationContactRole: e.target.value })}
+                                                        className="w-full px-3 py-1.5 border border-[#E5E7EB] rounded-lg text-sm bg-white text-[#1F2937]"
+                                                    />
+                                                </div>
+                                                <div>
+                                                    <label className="block text-[11px] text-[#6B7280] font-medium mb-1">Phone</label>
+                                                    <input
+                                                        type="text"
+                                                        value={editForm.escalationContactPhone}
+                                                        onChange={e => setEditForm({ ...editForm, escalationContactPhone: e.target.value })}
+                                                        className="w-full px-3 py-1.5 border border-[#E5E7EB] rounded-lg text-sm bg-white text-[#1F2937]"
+                                                    />
+                                                </div>
+                                                <div>
+                                                    <label className="block text-[11px] text-[#6B7280] font-medium mb-1">Email</label>
+                                                    <input
+                                                        type="email"
+                                                        value={editForm.escalationContactEmail}
+                                                        onChange={e => setEditForm({ ...editForm, escalationContactEmail: e.target.value })}
+                                                        className="w-full px-3 py-1.5 border border-[#E5E7EB] rounded-lg text-sm bg-white text-[#1F2937]"
+                                                    />
+                                                </div>
+                                            </div>
+                                        </div>
                                     </div>
-                                    <div>
-                                        <label className="block text-xs text-[#6B7280] font-medium mb-1">Eircode</label>
-                                        <input
-                                            type="text"
-                                            value={editForm.eircode}
-                                            onChange={e => setEditForm({ ...editForm, eircode: e.target.value })}
-                                            className="w-full px-3 py-2 border border-[#E5E7EB] rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#10B981] focus:border-transparent bg-white text-[#1F2937]"
-                                        />
+                                )}
+
+                                {modalTab === 'contract' && (
+                                    <div className="space-y-4">
+                                        <div className="flex items-center gap-2 mb-4">
+                                            <Briefcase className="w-4 h-4 text-[#10B981]" />
+                                            <h4 className="text-sm font-semibold text-[#1F2937]">Framework & Contract details</h4>
+                                        </div>
+                                        <div className="grid grid-cols-2 gap-4">
+                                            <div>
+                                                <label className="block text-xs text-[#6B7280] font-medium mb-1">Contract Reference Number</label>
+                                                <input
+                                                    type="text"
+                                                    value={editForm.contractRef}
+                                                    onChange={e => setEditForm({ ...editForm, contractRef: e.target.value })}
+                                                    className="w-full px-3 py-2 border border-[#E5E7EB] rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#10B981] bg-white text-[#1F2937]"
+                                                />
+                                            </div>
+                                            <div>
+                                                <label className="block text-xs text-[#6B7280] font-medium mb-1">Framework Type</label>
+                                                <input
+                                                    type="text"
+                                                    value={editForm.frameworkType}
+                                                    onChange={e => setEditForm({ ...editForm, frameworkType: e.target.value })}
+                                                    className="w-full px-3 py-2 border border-[#E5E7EB] rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#10B981] bg-white text-[#1F2937]"
+                                                />
+                                            </div>
+                                            <div>
+                                                <label className="block text-xs text-[#6B7280] font-medium mb-1">Contract Start Date</label>
+                                                <input
+                                                    type="date"
+                                                    value={editForm.contractStartDate}
+                                                    onChange={e => setEditForm({ ...editForm, contractStartDate: e.target.value })}
+                                                    className="w-full px-3 py-2 border border-[#E5E7EB] rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#10B981] bg-white text-[#1F2937]"
+                                                />
+                                            </div>
+                                            <div>
+                                                <label className="block text-xs text-[#6B7280] font-medium mb-1">Contract End Date</label>
+                                                <input
+                                                    type="date"
+                                                    value={editForm.contractEndDate}
+                                                    onChange={e => setEditForm({ ...editForm, contractEndDate: e.target.value })}
+                                                    className="w-full px-3 py-2 border border-[#E5E7EB] rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#10B981] bg-white text-[#1F2937]"
+                                                />
+                                            </div>
+                                            <div>
+                                                <label className="block text-xs text-[#6B7280] font-medium mb-1">Payment Terms</label>
+                                                <select
+                                                    value={editForm.paymentTerms}
+                                                    onChange={e => setEditForm({ ...editForm, paymentTerms: e.target.value })}
+                                                    className="w-full px-3 py-2 border border-[#E5E7EB] rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#10B981] bg-white text-[#1F2937]"
+                                                >
+                                                    <option value="Immediate">Immediate</option>
+                                                    <option value="Net 15 days">Net 15 days</option>
+                                                    <option value="Net 30 days">Net 30 days</option>
+                                                    <option value="Net 60 days">Net 60 days</option>
+                                                </select>
+                                            </div>
+                                            <div>
+                                                <label className="block text-xs text-[#6B7280] font-medium mb-1">Invoice Frequency</label>
+                                                <select
+                                                    value={editForm.invoiceFrequency}
+                                                    onChange={e => setEditForm({ ...editForm, invoiceFrequency: e.target.value })}
+                                                    className="w-full px-3 py-2 border border-[#E5E7EB] rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#10B981] bg-white text-[#1F2937]"
+                                                >
+                                                    <option value="Weekly">Weekly</option>
+                                                    <option value="Fortnightly">Fortnightly</option>
+                                                    <option value="Monthly">Monthly</option>
+                                                </select>
+                                            </div>
+                                            <div>
+                                                <label className="block text-xs text-[#6B7280] font-medium mb-1">Agency Margin (%)</label>
+                                                <input
+                                                    type="text"
+                                                    value={editForm.agencyMargin}
+                                                    onChange={e => setEditForm({ ...editForm, agencyMargin: e.target.value })}
+                                                    className="w-full px-3 py-2 border border-[#E5E7EB] rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#10B981] bg-white text-[#1F2937]"
+                                                />
+                                            </div>
+                                            <div className="flex flex-col gap-3 justify-center mt-4">
+                                                <label className="flex items-center gap-2 cursor-pointer text-xs text-[#6B7280] font-medium">
+                                                    <input
+                                                        type="checkbox"
+                                                        checked={editForm.poRequired}
+                                                        onChange={e => setEditForm({ ...editForm, poRequired: e.target.checked })}
+                                                        className="rounded border-[#E5E7EB] text-[#10B981] focus:ring-[#10B981] w-4 h-4 bg-white"
+                                                    />
+                                                    PO Required
+                                                </label>
+                                                <label className="flex items-center gap-2 cursor-pointer text-xs text-[#6B7280] font-medium">
+                                                    <input
+                                                        type="checkbox"
+                                                        checked={editForm.autoRenewal}
+                                                        onChange={e => setEditForm({ ...editForm, autoRenewal: e.target.checked })}
+                                                        className="rounded border-[#E5E7EB] text-[#10B981] focus:ring-[#10B981] w-4 h-4 bg-white"
+                                                    />
+                                                    Auto Renewal
+                                                </label>
+                                                <label className="flex items-center gap-2 cursor-pointer text-xs text-[#6B7280] font-medium">
+                                                    <input
+                                                        type="checkbox"
+                                                        checked={editForm.vatApplicable}
+                                                        onChange={e => setEditForm({ ...editForm, vatApplicable: e.target.checked })}
+                                                        className="rounded border-[#E5E7EB] text-[#10B981] focus:ring-[#10B981] w-4 h-4 bg-white"
+                                                    />
+                                                    VAT Applicable
+                                                </label>
+                                                {editForm.vatApplicable && (
+                                                    <div>
+                                                        <label className="block text-xs text-[#6B7280] font-medium mb-1">VAT Rate (%)</label>
+                                                        <input
+                                                            type="text"
+                                                            value={editForm.vatRate}
+                                                            onChange={e => setEditForm({ ...editForm, vatRate: e.target.value })}
+                                                            className="w-full px-3 py-2 border border-[#E5E7EB] rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#10B981] bg-white text-[#1F2937]"
+                                                        />
+                                                    </div>
+                                                )}
+                                            </div>
+                                        </div>
                                     </div>
-                                </div>
-                                <div className="grid grid-cols-3 gap-4">
-                                    <div>
-                                        <label className="block text-xs text-[#6B7280] font-medium mb-1">Phone</label>
-                                        <input
-                                            type="text"
-                                            value={editForm.phone}
-                                            onChange={e => setEditForm({ ...editForm, phone: e.target.value })}
-                                            className="w-full px-3 py-2 border border-[#E5E7EB] rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#10B981] focus:border-transparent bg-white text-[#1F2937]"
-                                        />
-                                    </div>
-                                    <div>
-                                        <label className="block text-xs text-[#6B7280] font-medium mb-1">Email</label>
-                                        <input
-                                            type="email"
-                                            value={editForm.email}
-                                            onChange={e => setEditForm({ ...editForm, email: e.target.value })}
-                                            className="w-full px-3 py-2 border border-[#E5E7EB] rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#10B981] focus:border-transparent bg-white text-[#1F2937]"
-                                        />
-                                    </div>
-                                    <div>
-                                        <label className="block text-xs text-[#6B7280] font-medium mb-1">Website</label>
-                                        <input
-                                            type="text"
-                                            value={editForm.website}
-                                            onChange={e => setEditForm({ ...editForm, website: e.target.value })}
-                                            className="w-full px-3 py-2 border border-[#E5E7EB] rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#10B981] focus:border-transparent bg-white text-[#1F2937]"
-                                        />
-                                    </div>
-                                </div>
-                                <div className="grid grid-cols-3 gap-4">
-                                    <div>
-                                        <label className="block text-xs text-[#6B7280] font-medium mb-1">Established Year</label>
-                                        <input
-                                            type="number"
-                                            value={editForm.established}
-                                            onChange={e => setEditForm({ ...editForm, established: Number(e.target.value) })}
-                                            className="w-full px-3 py-2 border border-[#E5E7EB] rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#10B981] focus:border-transparent bg-white text-[#1F2937]"
-                                        />
-                                    </div>
-                                    <div>
-                                        <label className="block text-xs text-[#6B7280] font-medium mb-1">Beds Capacity</label>
-                                        <input
-                                            type="number"
-                                            value={editForm.beds}
-                                            onChange={e => setEditForm({ ...editForm, beds: Number(e.target.value) })}
-                                            className="w-full px-3 py-2 border border-[#E5E7EB] rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#10B981] focus:border-transparent bg-white text-[#1F2937]"
-                                        />
-                                    </div>
-                                    <div>
-                                        <label className="block text-xs text-[#6B7280] font-medium mb-1">Ownership</label>
-                                        <input
-                                            type="text"
-                                            value={editForm.ownership}
-                                            onChange={e => setEditForm({ ...editForm, ownership: e.target.value })}
-                                            className="w-full px-3 py-2 border border-[#E5E7EB] rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#10B981] focus:border-transparent bg-white text-[#1F2937]"
-                                        />
-                                    </div>
-                                </div>
+                                )}
                             </div>
-                            <div className="p-4 border-t border-[#E5E7EB] bg-[#F9FAFB] flex justify-end gap-3">
+                            <div className="p-4 border-t border-[#E5E7EB] bg-[#F9FAFB] flex justify-end gap-3 flex-shrink-0">
                                 <button
                                     type="button"
                                     onClick={() => setShowEditModal(false)}

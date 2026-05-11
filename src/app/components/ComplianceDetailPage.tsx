@@ -1,4 +1,5 @@
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
+import { toast } from 'sonner';
 import {
     ArrowLeft, CheckCircle, XCircle, AlertTriangle, Download, Upload,
     FileText, Calendar, User, Mail, Phone, MapPin, Briefcase, Clock,
@@ -14,7 +15,7 @@ interface ComplianceDetailPageProps {
 const complianceProfiles: Record<string, any> = {
     '#GS234FS': {
         id: '#GS234FS',
-        locumName: 'Dr. Sarah Mitchell',
+        locumName: 'Sarah Mitchell',
         email: 'sarah.mitchell@email.ie',
         phone: '+353 87 123 4567',
         specialty: 'General Surgery',
@@ -106,7 +107,7 @@ const complianceProfiles: Record<string, any> = {
     },
     '#EC0125D': {
         id: '#EC0125D',
-        locumName: 'Dr. James Harrison',
+        locumName: 'James Harrison',
         email: 'james.harrison@email.ie',
         phone: '+353 86 234 5678',
         specialty: 'Cardiology',
@@ -195,6 +196,105 @@ export function ComplianceDetailPage({ locumId, onBack }: ComplianceDetailPagePr
     const [showUploadModal, setShowUploadModal] = useState(false);
     const [uploadDocType, setUploadDocType] = useState('');
 
+    const [showDropdown, setShowDropdown] = useState(false);
+    const dropdownRef = useRef<HTMLDivElement>(null);
+
+    useEffect(() => {
+        function handleClickOutside(event: MouseEvent) {
+            if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+                setShowDropdown(false);
+            }
+        }
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => document.removeEventListener('mousedown', handleClickOutside);
+    }, []);
+
+    const handleExportCSV = () => {
+        const escapeCSVValue = (val: any) => {
+            if (val === undefined || val === null) return "";
+            let str = String(val);
+            if (str.includes(",") || str.includes('"') || str.includes("\n") || str.includes("\r")) {
+                return `"${str.replace(/"/g, '""')}"`;
+            }
+            return str;
+        };
+
+        let csvContent = "";
+
+        // 1. Report Title & Header
+        csvContent += "LOCUM COMPLIANCE REPORT\n\n";
+
+        // 2. Personal & General Info
+        csvContent += "GENERAL INFORMATION\n";
+        csvContent += "Locum ID,Full Name,Email,Phone,Specialty,Grade,Location,IMC Number,Overall Compliance\n";
+        csvContent += [
+            escapeCSVValue(profile.id),
+            escapeCSVValue(profile.locumName),
+            escapeCSVValue(profile.email),
+            escapeCSVValue(profile.phone),
+            escapeCSVValue(profile.specialty),
+            escapeCSVValue(profile.grade),
+            escapeCSVValue(profile.location),
+            escapeCSVValue(profile.imcNumber),
+            escapeCSVValue(`${profile.overallCompliance}%`)
+        ].join(",") + "\n\n";
+
+        // 3. Document Registry
+        csvContent += "COMPLIANCE DOCUMENTS REGISTRY\n";
+        csvContent += "Document Name,Status,Expiry Date,Uploaded Date,Uploaded By,File Name,File Size,Registration Number,Issuing Authority,Notes\n";
+        
+        allDocuments.forEach((doc: any) => {
+            csvContent += [
+                escapeCSVValue(doc.name),
+                escapeCSVValue(doc.status),
+                escapeCSVValue(doc.expiryDate),
+                escapeCSVValue(doc.uploadedDate),
+                escapeCSVValue(doc.uploadedBy),
+                escapeCSVValue(doc.fileName),
+                escapeCSVValue(doc.fileSize),
+                escapeCSVValue(doc.registrationNumber || "N/A"),
+                escapeCSVValue(doc.issuingAuthority || "N/A"),
+                escapeCSVValue(doc.notes || "N/A")
+            ].join(",") + "\n";
+        });
+        csvContent += "\n";
+
+        // 4. Timeline
+        csvContent += "COMPLIANCE TIMELINE EVENTS\n";
+        csvContent += "Date,User,Action,Details\n";
+        profile.timeline.forEach((event: any) => {
+            csvContent += [
+                escapeCSVValue(event.date),
+                escapeCSVValue(event.user),
+                escapeCSVValue(event.action),
+                escapeCSVValue(event.details)
+            ].join(",") + "\n";
+        });
+        csvContent += "\n";
+
+        // 5. Notes
+        csvContent += "COMPLIANCE REVIEW NOTES\n";
+        csvContent += "Date,Author,Note Content\n";
+        profile.notes.forEach((note: any) => {
+            csvContent += [
+                escapeCSVValue(note.date),
+                escapeCSVValue(note.author),
+                escapeCSVValue(note.content)
+            ].join(",") + "\n";
+        });
+
+        const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement("a");
+        link.setAttribute("href", url);
+        link.setAttribute("download", `Compliance_Report_${profile.id.replace('#', '')}.csv`);
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        toast.success("Compliance report exported successfully as CSV!");
+        setShowDropdown(false);
+    };
+
     const tabs = [
         { id: 'documents' as const, label: 'Compliance Documents' },
         { id: 'timeline' as const, label: 'Timeline' },
@@ -244,19 +344,37 @@ export function ComplianceDetailPage({ locumId, onBack }: ComplianceDetailPagePr
                     </div>
                     <p className="text-sm text-[#6B7280]">Complete compliance documentation and verification status</p>
                 </div>
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 relative" ref={dropdownRef}>
                     <button
                         onClick={() => setShowUploadModal(true)}
-                        className="flex items-center gap-1.5 px-3 py-2 text-sm bg-[#10B981] text-white rounded-lg hover:bg-[#059669]"
+                        className="flex items-center gap-1.5 px-3 py-2 text-sm bg-[#10B981] text-white rounded-lg hover:bg-[#059669] transition-colors"
                     >
                         <Upload className="w-3.5 h-3.5" /> Upload Document
                     </button>
-                    <button className="flex items-center gap-1.5 px-3 py-2 text-sm border border-[#E5E7EB] rounded-lg hover:bg-[#F9FAFB]">
+                    <button 
+                        onClick={handleExportCSV}
+                        className="flex items-center gap-1.5 px-3 py-2 text-sm border border-[#E5E7EB] rounded-lg hover:bg-[#F9FAFB] transition-colors"
+                    >
                         <Download className="w-3.5 h-3.5" /> Export Report
                     </button>
-                    <button className="p-2 border border-[#E5E7EB] rounded-lg hover:bg-[#F9FAFB]">
+                    <button 
+                        onClick={() => setShowDropdown(!showDropdown)}
+                        className={`p-2 border border-[#E5E7EB] rounded-lg hover:bg-[#F9FAFB] transition-all ${showDropdown ? 'bg-[#F3F4F6] text-[#1F2937]' : ''}`}
+                    >
                         <MoreHorizontal className="w-4 h-4 text-[#6B7280]" />
                     </button>
+
+                    {showDropdown && (
+                        <div className="absolute right-0 top-full mt-1 bg-white border border-[#E5E7EB] rounded-lg shadow-lg z-50 w-48 py-1">
+                            <button
+                                onClick={handleExportCSV}
+                                className="w-full flex items-center gap-2 px-4 py-2 text-sm text-[#1F2937] hover:bg-[#F9FAFB] text-left transition-colors"
+                            >
+                                <Download className="w-4 h-4 text-[#6B7280]" />
+                                Export as CSV
+                            </button>
+                        </div>
+                    )}
                 </div>
             </div>
 
