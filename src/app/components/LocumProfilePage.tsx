@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { toast } from 'sonner';
 import {
     ArrowLeft, User, Mail, Phone, MapPin, Briefcase, Calendar, Clock,
     FileText, ShieldCheck, Star, Download, Upload, AlertTriangle,
@@ -369,7 +370,7 @@ function buildDocuments(): ComplianceDocument[] {
 // Comprehensive mock data for UK/Ireland locum system
 const locumProfiles: Record<string, any> = {
     '#GS234FS': {
-        id: '#GS234FS', name: 'Dr. Sarah Mitchell', avatar: 'SM', status: 'available',
+        id: '#GS234FS', name: 'Sarah Mitchell', avatar: 'SM', status: 'available',
         personal: {
             dob: '1984-06-15', nationality: 'Irish', gender: 'Female',
             address: '42 Pembroke Road, Ballsbridge, Dublin 4, D04 X5K2',
@@ -459,7 +460,7 @@ const locumProfiles: Record<string, any> = {
         joinDate: '2023-03-15',
     },
     '#EC0125D': {
-        id: '#EC0125D', name: 'Dr. James Harrison', avatar: 'JH', status: 'booked',
+        id: '#EC0125D', name: 'James Harrison', avatar: 'JH', status: 'booked',
         personal: {
             dob: '1981-09-22', nationality: 'British/Irish', gender: 'Male',
             address: '15 Washington Street, Cork City, Cork, T12 HP62',
@@ -547,7 +548,78 @@ function getLocumProfile(id: string) {
 }
 
 export function LocumProfilePage({ locumId, onBack }: LocumProfilePageProps) {
-    const profile = getLocumProfile(locumId);
+    const [profile, setProfile] = useState(() => {
+        const raw = getLocumProfile(locumId);
+        // Deep copy so edits don't bleed unexpectedly until saved
+        const copied = JSON.parse(JSON.stringify(raw));
+        if (copied.name.startsWith('Dr. ')) {
+            copied.name = copied.name.substring(4);
+        }
+        return copied;
+    });
+
+    // Edit Profile Modal States
+    const [showEditModal, setShowEditModal] = useState(false);
+    const [editName, setEditName] = useState('');
+    const [editSpecialty, setEditSpecialty] = useState('');
+    const [editGrade, setEditGrade] = useState('');
+    const [editMobile, setEditMobile] = useState('');
+    const [editEmail, setEditEmail] = useState('');
+    const [editStatus, setEditStatus] = useState<'available' | 'booked' | 'unavailable'>('available');
+
+    const handleOpenEdit = () => {
+        setEditName(profile.name);
+        setEditSpecialty(profile.professional.specialty);
+        setEditGrade(profile.professional.grade);
+        setEditMobile(profile.personal.mobile);
+        setEditEmail(profile.personal.email);
+        setEditStatus(profile.status);
+        setShowEditModal(true);
+    };
+
+    const handleSaveProfile = (e: React.FormEvent) => {
+        e.preventDefault();
+        
+        let cleanedName = editName;
+        if (cleanedName.startsWith('Dr. ')) {
+            cleanedName = cleanedName.substring(4);
+        }
+
+        const updated = {
+            ...profile,
+            name: cleanedName,
+            status: editStatus,
+            personal: {
+                ...profile.personal,
+                mobile: editMobile,
+                email: editEmail,
+            },
+            professional: {
+                ...profile.professional,
+                specialty: editSpecialty,
+                grade: editGrade,
+            }
+        };
+
+        setProfile(updated);
+        // Persist session-wide
+        locumProfiles[profile.id] = updated;
+
+        setShowEditModal(false);
+        toast.success("Profile updated successfully!");
+    };
+
+    const handleExportProfile = () => {
+        const jsonString = `data:text/json;charset=utf-8,${encodeURIComponent(JSON.stringify(profile, null, 2))}`;
+        const downloadAnchor = document.createElement('a');
+        downloadAnchor.setAttribute('href', jsonString);
+        downloadAnchor.setAttribute('download', `Locum_Profile_${profile.id.replace('#', '')}.json`);
+        document.body.appendChild(downloadAnchor);
+        downloadAnchor.click();
+        downloadAnchor.remove();
+        toast.success("Profile records exported successfully!");
+    };
+
     const [activeTab, setActiveTab] = useState<'overview' | 'registration' | 'compliance' | 'shifts' | 'financial' | 'performance' | 'notes'>('overview');
     const [shiftFilter, setShiftFilter] = useState('all');
     const [paymentFilter, setPaymentFilter] = useState('all');
@@ -644,10 +716,16 @@ export function LocumProfilePage({ locumId, onBack }: LocumProfilePageProps) {
                     <p className="text-sm text-[#6B7280]">Comprehensive locum information and compliance records</p>
                 </div>
                 <div className="flex items-center gap-2">
-                    <button className="flex items-center gap-1.5 px-3 py-2 text-sm border border-[#E5E7EB] rounded-lg hover:bg-[#F9FAFB]">
+                    <button 
+                        onClick={handleOpenEdit}
+                        className="flex items-center gap-1.5 px-3 py-2 text-sm border border-[#E5E7EB] rounded-lg hover:bg-[#F9FAFB]"
+                    >
                         <Edit className="w-3.5 h-3.5" /> Edit Profile
                     </button>
-                    <button className="flex items-center gap-1.5 px-3 py-2 text-sm border border-[#E5E7EB] rounded-lg hover:bg-[#F9FAFB]">
+                    <button 
+                        onClick={handleExportProfile}
+                        className="flex items-center gap-1.5 px-3 py-2 text-sm border border-[#E5E7EB] rounded-lg hover:bg-[#F9FAFB]"
+                    >
                         <Download className="w-3.5 h-3.5" /> Export
                     </button>
                     <button className="p-2 border border-[#E5E7EB] rounded-lg hover:bg-[#F9FAFB]">
@@ -1460,6 +1538,113 @@ export function LocumProfilePage({ locumId, onBack }: LocumProfilePageProps) {
                     )}
                 </div>
             </div>
+
+            {/* Edit Profile Modal */}
+            {showEditModal && (
+                <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-6">
+                    <form onSubmit={handleSaveProfile} className="bg-white rounded-xl w-full max-w-lg shadow-xl overflow-hidden">
+                        <div className="p-5 border-b border-[#E5E7EB] flex items-center justify-between">
+                            <div>
+                                <h3 className="text-lg text-[#1F2937]" style={{ fontWeight: 600 }}>Edit Locum Profile</h3>
+                                <p className="text-xs text-[#9CA3AF]">Modify administrative and contact fields for {profile.id}</p>
+                            </div>
+                            <button type="button" onClick={() => setShowEditModal(false)} className="p-2 hover:bg-[#F3F4F6] rounded-lg">
+                                <X className="w-5 h-5 text-[#6B7280]" />
+                            </button>
+                        </div>
+                        
+                        <div className="p-6 space-y-4 max-h-[70vh] overflow-y-auto">
+                            <div className="grid grid-cols-2 gap-4">
+                                <div>
+                                    <label className="block text-xs text-[#4B5563] mb-1" style={{ fontWeight: 500 }}>Full Name</label>
+                                    <input 
+                                        type="text" 
+                                        value={editName}
+                                        onChange={e => setEditName(e.target.value)}
+                                        className="w-full px-3 py-2 border border-[#E5E7EB] rounded-lg text-sm bg-white text-[#1F2937] focus:outline-none focus:ring-2 focus:ring-[#10B981]"
+                                        required
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-xs text-[#4B5563] mb-1" style={{ fontWeight: 500 }}>Availability Status</label>
+                                    <select 
+                                        value={editStatus}
+                                        onChange={e => setEditStatus(e.target.value as any)}
+                                        className="w-full px-3 py-2 border border-[#E5E7EB] rounded-lg text-sm bg-white text-[#1F2937] focus:outline-none focus:ring-2 focus:ring-[#10B981]"
+                                    >
+                                        <option value="available">Available</option>
+                                        <option value="booked">Booked</option>
+                                        <option value="unavailable">Unavailable</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div className="grid grid-cols-2 gap-4">
+                                <div>
+                                    <label className="block text-xs text-[#4B5563] mb-1" style={{ fontWeight: 500 }}>Specialty</label>
+                                    <input 
+                                        type="text" 
+                                        value={editSpecialty}
+                                        onChange={e => setEditSpecialty(e.target.value)}
+                                        className="w-full px-3 py-2 border border-[#E5E7EB] rounded-lg text-sm bg-white text-[#1F2937] focus:outline-none focus:ring-2 focus:ring-[#10B981]"
+                                        required
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-xs text-[#4B5563] mb-1" style={{ fontWeight: 500 }}>Grade</label>
+                                    <input 
+                                        type="text" 
+                                        value={editGrade}
+                                        onChange={e => setEditGrade(e.target.value)}
+                                        className="w-full px-3 py-2 border border-[#E5E7EB] rounded-lg text-sm bg-white text-[#1F2937] focus:outline-none focus:ring-2 focus:ring-[#10B981]"
+                                        required
+                                    />
+                                </div>
+                            </div>
+
+                            <div className="grid grid-cols-2 gap-4">
+                                <div>
+                                    <label className="block text-xs text-[#4B5563] mb-1" style={{ fontWeight: 500 }}>Mobile Number</label>
+                                    <input 
+                                        type="text" 
+                                        value={editMobile}
+                                        onChange={e => setEditMobile(e.target.value)}
+                                        className="w-full px-3 py-2 border border-[#E5E7EB] rounded-lg text-sm bg-white text-[#1F2937] focus:outline-none focus:ring-2 focus:ring-[#10B981]"
+                                        required
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-xs text-[#4B5563] mb-1" style={{ fontWeight: 500 }}>Email Address</label>
+                                    <input 
+                                        type="email" 
+                                        value={editEmail}
+                                        onChange={e => setEditEmail(e.target.value)}
+                                        className="w-full px-3 py-2 border border-[#E5E7EB] rounded-lg text-sm bg-white text-[#1F2937] focus:outline-none focus:ring-2 focus:ring-[#10B981]"
+                                        required
+                                    />
+                                </div>
+                            </div>
+                        </div>
+
+                        <div className="p-5 border-t border-[#E5E7EB] flex justify-end gap-2 bg-[#F9FAFB]">
+                            <button 
+                                type="button" 
+                                onClick={() => setShowEditModal(false)}
+                                className="px-4 py-2 border border-[#E5E7EB] rounded-lg text-sm text-[#4B5563] bg-white hover:bg-[#F3F4F6]"
+                            >
+                                Cancel
+                            </button>
+                            <button 
+                                type="submit"
+                                className="px-4 py-2 bg-[#10B981] hover:bg-[#059669] text-white rounded-lg text-sm flex items-center gap-1.5"
+                                style={{ fontWeight: 500 }}
+                            >
+                                <CheckCircle className="w-4 h-4" /> Save Changes
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            )}
         </div>
     );
 }

@@ -23,6 +23,7 @@ import { TimesheetDetailPage } from './components/TimesheetDetailPage';
 import { ComplianceDetailPage } from './components/ComplianceDetailPage';
 import { Mail, Bell, Search, Plus, ChevronRight } from 'lucide-react';
 import { Toaster } from './components/ui/sonner';
+import { toast } from 'sonner';
 
 const pageLabels: Record<string, string> = {
     dashboard: 'Dashboard',
@@ -70,6 +71,13 @@ function AppContent() {
     const [globalSearch, setGlobalSearch] = useState('');
     const [selectedProfileId, setSelectedProfileId] = useState<string>(initialUrl.id);
     const { permissions, role } = useUserRole();
+    const [showNotifications, setShowNotifications] = useState(false);
+    const [notifications, setNotifications] = useState([
+        { id: 1, title: 'Compliance Expired', message: 'Garda Vetting for Emily Chen has expired.', time: '10m ago', unread: true, type: 'critical' },
+        { id: 2, title: 'Urgent Shift Unfilled', message: 'Night shift at Beaumont Hospital remains unfilled.', time: '1h ago', unread: true, type: 'warning' },
+        { id: 3, title: 'Timesheet Submitted', message: 'Sarah Mitchell submitted timesheet TS-2026-001.', time: '3h ago', unread: true, type: 'info' },
+        { id: 4, title: 'Compliance Expiring', message: 'Medical License for David Thompson expires in 3 days.', time: '5h ago', unread: true, type: 'warning' },
+    ]);
 
     const setCurrentPage = (page: string) => {
         const detailPages = ['locumProfile', 'facilityProfile', 'shiftDetail', 'timesheetDetail', 'complianceDetail'];
@@ -251,10 +259,79 @@ function AppContent() {
                             <button className="relative w-9 h-9 bg-white border border-[#E5E7EB] rounded-lg flex items-center justify-center hover:bg-[#F9FAFB] transition-colors">
                                 <Mail className="w-4 h-4 text-[#6B7280]" />
                             </button>
-                            <button className="relative w-9 h-9 bg-white border border-[#E5E7EB] rounded-lg flex items-center justify-center hover:bg-[#F9FAFB] transition-colors">
-                                <Bell className="w-4 h-4 text-[#6B7280]" />
-                                <span className="absolute -top-1 -right-1 w-4 h-4 bg-[#EF4444] text-white text-[9px] rounded-full flex items-center justify-center">4</span>
-                            </button>
+                            <div className="relative">
+                                <button 
+                                    onClick={() => setShowNotifications(!showNotifications)}
+                                    className="relative w-9 h-9 bg-white border border-[#E5E7EB] rounded-lg flex items-center justify-center hover:bg-[#F9FAFB] transition-colors"
+                                >
+                                    <Bell className="w-4 h-4 text-[#6B7280]" />
+                                    {notifications.filter(n => n.unread).length > 0 && (
+                                        <span className="absolute -top-1 -right-1 w-4 h-4 bg-[#EF4444] text-white text-[9px] rounded-full flex items-center justify-center">
+                                            {notifications.filter(n => n.unread).length}
+                                        </span>
+                                    )}
+                                </button>
+                                
+                                {showNotifications && (
+                                    <div className="absolute right-0 mt-2 w-80 bg-white border border-[#E5E7EB] rounded-xl shadow-xl z-50 overflow-hidden">
+                                        <div className="p-4 border-b border-[#E5E7EB] flex items-center justify-between bg-[#F9FAFB]">
+                                            <h4 className="text-sm text-[#1F2937]" style={{ fontWeight: 600 }}>Notifications</h4>
+                                            {notifications.some(n => n.unread) && (
+                                                <button 
+                                                    type="button"
+                                                    onClick={(e) => {
+                                                        e.stopPropagation();
+                                                        setNotifications(notifications.map(n => ({ ...n, unread: false })));
+                                                        toast.success("All notifications marked as read");
+                                                    }}
+                                                    className="text-xs text-[#10B981] hover:text-[#059669]"
+                                                    style={{ fontWeight: 500 }}
+                                                >
+                                                    Mark all read
+                                                </button>
+                                            )}
+                                        </div>
+                                        <div className="divide-y divide-[#E5E7EB] max-h-[300px] overflow-y-auto">
+                                            {notifications.map(n => (
+                                                <div 
+                                                    key={n.id} 
+                                                    onClick={() => {
+                                                        setNotifications(notifications.map(item => item.id === n.id ? { ...item, unread: false } : item));
+                                                        setShowNotifications(false);
+                                                        setCurrentPage('alerts');
+                                                    }}
+                                                    className={`p-3 hover:bg-[#F9FAFB] transition-colors cursor-pointer flex gap-3 text-left ${n.unread ? 'bg-[#ECFDF5]/60' : ''}`}
+                                                >
+                                                    <div className="flex-shrink-0 mt-1">
+                                                        <div className={`w-2 h-2 rounded-full ${
+                                                            n.type === 'critical' ? 'bg-[#EF4444]' : 
+                                                            n.type === 'warning' ? 'bg-[#F59E0B]' : 'bg-[#3B82F6]'
+                                                        }`} />
+                                                    </div>
+                                                    <div className="flex-1 min-w-0">
+                                                        <p className="text-xs text-[#1F2937]" style={{ fontWeight: n.unread ? 600 : 400 }}>{n.title}</p>
+                                                        <p className="text-[11px] text-[#6B7280] mt-0.5 leading-relaxed">{n.message}</p>
+                                                        <p className="text-[9px] text-[#9CA3AF] mt-1">{n.time}</p>
+                                                    </div>
+                                                </div>
+                                            ))}
+                                        </div>
+                                        <div className="p-3 border-t border-[#E5E7EB] text-center bg-[#F9FAFB]">
+                                            <button 
+                                                type="button"
+                                                onClick={() => {
+                                                    setShowNotifications(false);
+                                                    setCurrentPage('alerts');
+                                                }}
+                                                className="text-xs text-[#10B981] hover:text-[#059669]"
+                                                style={{ fontWeight: 500 }}
+                                            >
+                                                View all active alerts
+                                            </button>
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
                             {permissions.canCreateEntities && (
                                 <button
                                     onClick={() => setShowCreateDialog(true)}

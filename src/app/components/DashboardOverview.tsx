@@ -37,24 +37,24 @@ const specialtyDemand = [
 ];
 
 const upcomingBookings = [
-    { id: 'BK-001', locum: 'Dr. Sarah Mitchell', facility: "St. James's Hospital", specialty: 'General Surgery', date: '10 Feb', time: '08:00 - 16:00', status: 'confirmed' },
-    { id: 'BK-002', locum: 'Dr. James Harrison', facility: 'Cork University Hospital', specialty: 'Cardiology', date: '10 Feb', time: '09:00 - 21:00', status: 'confirmed' },
+    { id: 'BK-001', locum: 'Sarah Mitchell', facility: "St. James's Hospital", specialty: 'General Surgery', date: '10 Feb', time: '08:00 - 16:00', status: 'confirmed' },
+    { id: 'BK-002', locum: 'James Harrison', facility: 'Cork University Hospital', specialty: 'Cardiology', date: '10 Feb', time: '09:00 - 21:00', status: 'confirmed' },
     { id: 'BK-003', locum: 'Pending Assignment', facility: 'Beaumont Hospital', specialty: 'Emergency Medicine', date: '10 Feb', time: '20:00 - 08:00', status: 'urgent' },
-    { id: 'BK-004', locum: 'Dr. Emily Chen', facility: 'University Hospital Galway', specialty: 'Anesthesiology', date: '11 Feb', time: '07:00 - 19:00', status: 'pending' },
+    { id: 'BK-004', locum: 'Emily Chen', facility: 'University Hospital Galway', specialty: 'Anesthesiology', date: '11 Feb', time: '07:00 - 19:00', status: 'pending' },
     { id: 'BK-005', locum: 'Pending Assignment', facility: 'Mater Hospital', specialty: 'Pediatrics', date: '11 Feb', time: '08:00 - 20:00', status: 'open' },
 ];
 
 const complianceAlerts = [
-    { locum: 'Dr. David Thompson', doc: 'Medical License', daysLeft: 3, severity: 'critical' },
-    { locum: 'Dr. Emily Chen', doc: 'Garda Vetting', daysLeft: -12, severity: 'expired' },
-    { locum: 'Dr. Rachel Martinez', doc: 'CPR Training', daysLeft: 18, severity: 'warning' },
-    { locum: 'Dr. David Thompson', doc: 'Indemnity Insurance', daysLeft: -45, severity: 'expired' },
+    { locum: 'David Thompson', doc: 'Medical License', daysLeft: 3, severity: 'critical' },
+    { locum: 'Emily Chen', doc: 'Garda Vetting', daysLeft: -12, severity: 'expired' },
+    { locum: 'Rachel Martinez', doc: 'CPR Training', daysLeft: 18, severity: 'warning' },
+    { locum: 'David Thompson', doc: 'Indemnity Insurance', daysLeft: -45, severity: 'expired' },
 ];
 
 const emergencyAlerts = [
     { id: 1, message: 'Night shift coverage needed at Beaumont Hospital - Emergency Medicine', time: '2 hours ago', priority: 'high' },
     { id: 2, message: 'Waterford University Hospital urgent shift unfilled for 12 Feb', time: '4 hours ago', priority: 'high' },
-    { id: 3, message: 'Dr. Michael Brooks called in sick - Limerick replacement needed', time: '5 hours ago', priority: 'medium' },
+    { id: 3, message: 'Michael Brooks called in sick - Limerick replacement needed', time: '5 hours ago', priority: 'medium' },
 ];
 
 interface DashboardOverviewProps {
