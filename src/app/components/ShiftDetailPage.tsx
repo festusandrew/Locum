@@ -2,7 +2,8 @@ import { useState } from 'react';
 import {
     ArrowLeft, Calendar, Clock, MapPin, DollarSign, Users, Building2,
     CheckCircle, AlertTriangle, Edit, Ban, UserPlus, Download, MoreHorizontal,
-    Phone, Mail, ShieldCheck, FileText, Activity, MessageSquare, X
+    Phone, Mail, ShieldCheck, FileText, Activity, MessageSquare, X,
+    Copy, Send, TrendingUp, Trash2
 } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -274,6 +275,113 @@ export function ShiftDetailPage({ shiftId, onBack, onViewLocumProfile }: ShiftDe
         toast.success("Shift details updated successfully!");
     };
 
+    const [showActionDropdown, setShowActionDropdown] = useState(false);
+
+    const handleBroadcast = () => {
+        const timelineEntry = {
+            date: new Date().toISOString().replace('T', ' ').substring(0, 16),
+            user: 'Omar Murphy',
+            action: 'Shift broadcasted',
+            details: 'Shift broadcasted to all matching verified locum professionals'
+        };
+        const updatedProfile = {
+            ...profile,
+            timeline: [timelineEntry, ...(profile.timeline || [])]
+        };
+        setProfile(updatedProfile);
+        if (typeof window !== 'undefined') {
+            localStorage.setItem(`shift_profile_${profile.id}`, JSON.stringify(updatedProfile));
+        }
+        setShowActionDropdown(false);
+        toast.success("Broadcast successful! 15 matching locums notified.");
+    };
+
+    const handleDuplicate = () => {
+        setShowActionDropdown(false);
+        toast.success(`Shift ${profile.id} cloned successfully! Draft SH-NEW created.`);
+    };
+
+    const handleEscalate = () => {
+        const newRate = Math.round(profile.rate * 1.1);
+        const timelineEntry = {
+            date: new Date().toISOString().replace('T', ' ').substring(0, 16),
+            user: 'Omar Murphy',
+            action: 'Shift escalated',
+            details: `Shift escalated to Urgent status. Hourly rate increased by 10% from €${profile.rate} to €${newRate}.`
+        };
+        const updatedProfile = {
+            ...profile,
+            status: 'urgent',
+            rate: newRate,
+            totalPay: newRate * profile.hours,
+            timeline: [timelineEntry, ...(profile.timeline || [])]
+        };
+        setProfile(updatedProfile);
+        if (typeof window !== 'undefined') {
+            localStorage.setItem(`shift_profile_${profile.id}`, JSON.stringify(updatedProfile));
+        }
+        setShowActionDropdown(false);
+        toast.success("Shift status upgraded to Urgent. Rates increased by 10%!");
+    };
+
+    const handleDownloadPDF = () => {
+        const summaryText = `
+MPLOYUS SHIFT BRIEFING SHEET
+-----------------------------------------
+Shift ID: ${profile.id}
+Status: ${profile.status.toUpperCase()}
+Specialty: ${profile.specialty}
+Department: ${profile.department}
+Grade: ${profile.grade}
+Shift Type: ${profile.shiftType}
+Date: ${profile.date}
+Time: ${profile.startTime} - ${profile.endTime} (${profile.hours} hours)
+Hourly Rate: €${profile.rate}
+Total Pay: €${profile.totalPay}
+
+FACILITY INFORMATION
+-----------------------------------------
+Facility: ${profile.facility} (${profile.facilityId})
+Location: ${profile.location}
+Address: ${profile.address}
+
+FACILITY CONTACT
+-----------------------------------------
+Name: ${profile.contactPerson?.name}
+Role: ${profile.contactPerson?.role}
+Phone: ${profile.contactPerson?.phone}
+Email: ${profile.contactPerson?.email}
+
+Created Date: ${profile.createdDate || 'N/A'}
+Last Modified: ${profile.lastModified || 'N/A'}
+-----------------------------------------
+Generated on: ${new Date().toLocaleString()}
+`;
+        const blob = new Blob([summaryText], { type: 'text/plain' });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = `shift_briefing_${profile.id}.txt`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(url);
+        
+        setShowActionDropdown(false);
+        toast.success("Shift briefing sheet downloaded!");
+    };
+
+    const handleDelete = () => {
+        if (confirm(`Are you sure you want to delete shift ${profile.id}? This action cannot be undone.`)) {
+            if (typeof window !== 'undefined') {
+                localStorage.removeItem(`shift_profile_${profile.id}`);
+            }
+            toast.success(`Shift ${profile.id} deleted successfully.`);
+            onBack();
+        }
+        setShowActionDropdown(false);
+    };
+
     const config = statusConfig[profile.status];
 
     const handleAssignLocum = () => {
@@ -395,9 +503,58 @@ export function ShiftDetailPage({ shiftId, onBack, onViewLocumProfile }: ShiftDe
                             <Ban className="w-3.5 h-3.5" /> Cancel
                         </button>
                     )}
-                    <button className="p-2 border border-[#E5E7EB] rounded-lg hover:bg-[#F9FAFB]">
-                        <MoreHorizontal className="w-4 h-4 text-[#6B7280]" />
-                    </button>
+                    <div className="relative">
+                        <button 
+                            onClick={() => setShowActionDropdown(!showActionDropdown)}
+                            className="p-2 border border-[#E5E7EB] rounded-lg hover:bg-[#F9FAFB] transition-colors relative"
+                        >
+                            <MoreHorizontal className="w-4 h-4 text-[#6B7280]" />
+                        </button>
+                        
+                        {showActionDropdown && (
+                            <>
+                                <div className="fixed inset-0 z-10" onClick={() => setShowActionDropdown(false)} />
+                                <div className="absolute right-0 mt-2 w-56 bg-white border border-[#E5E7EB] rounded-xl shadow-xl z-20 py-1.5 animate-in fade-in slide-in-from-top-2 duration-150">
+                                    <div className="px-3 py-1.5 text-xs text-[#9CA3AF] font-semibold uppercase tracking-wider border-b border-[#F3F4F6] mb-1">
+                                        Shift Actions
+                                    </div>
+                                    <button
+                                        onClick={handleBroadcast}
+                                        className="w-full text-left px-4 py-2.5 text-sm text-[#374151] hover:bg-[#F9FAFB] flex items-center gap-2.5 transition-colors"
+                                    >
+                                        <Send className="w-4 h-4 text-[#3B82F6]" /> Broadcast to Pool
+                                    </button>
+                                    <button
+                                        onClick={handleDuplicate}
+                                        className="w-full text-left px-4 py-2.5 text-sm text-[#374151] hover:bg-[#F9FAFB] flex items-center gap-2.5 transition-colors"
+                                    >
+                                        <Copy className="w-4 h-4 text-[#10B981]" /> Duplicate Shift
+                                    </button>
+                                    {profile.status !== 'urgent' && (
+                                        <button
+                                            onClick={handleEscalate}
+                                            className="w-full text-left px-4 py-2.5 text-sm text-[#374151] hover:bg-[#F9FAFB] flex items-center gap-2.5 transition-colors"
+                                        >
+                                            <TrendingUp className="w-4 h-4 text-[#F59E0B]" /> Escalate to Urgent
+                                        </button>
+                                    )}
+                                    <button
+                                        onClick={handleDownloadPDF}
+                                        className="w-full text-left px-4 py-2.5 text-sm text-[#374151] hover:bg-[#F9FAFB] flex items-center gap-2.5 transition-colors"
+                                    >
+                                        <FileText className="w-4 h-4 text-[#7C3AED]" /> Download Briefing (.txt)
+                                    </button>
+                                    <div className="border-t border-[#F3F4F6] my-1" />
+                                    <button
+                                        onClick={handleDelete}
+                                        className="w-full text-left px-4 py-2.5 text-sm text-[#EF4444] hover:bg-[#FEE2E2] flex items-center gap-2.5 transition-colors font-medium"
+                                    >
+                                        <Trash2 className="w-4 h-4 text-[#EF4444]" /> Delete Shift
+                                    </button>
+                                </div>
+                            </>
+                        )}
+                    </div>
                 </div>
             </div>
 
