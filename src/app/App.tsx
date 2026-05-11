@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { UserRoleProvider, useUserRole } from './contexts/UserRoleContext';
 import { Sidebar } from './components/Sidebar';
 import { DashboardOverview } from './components/DashboardOverview';
@@ -45,13 +45,64 @@ const pageLabels: Record<string, string> = {
     complianceDetail: 'Compliance Details',
 };
 
+const parseUrl = () => {
+    let path = window.location.pathname.replace(/^\/|\/$/g, '');
+    const validPages = [
+        'dashboard', 'locums', 'clients', 'shifts', 'timesheets', 'payroll',
+        'compliance', 'communications', 'performance', 'reports', 'alerts',
+        'ai', 'settings', 'locumProfile', 'facilityProfile', 'shiftDetail',
+        'timesheetDetail', 'complianceDetail'
+    ];
+    if (!validPages.includes(path)) {
+        path = 'dashboard';
+    }
+    const params = new URLSearchParams(window.location.search);
+    const id = params.get('id') || '';
+    return { page: path, id };
+};
+
 function AppContent() {
-    const [currentPage, setCurrentPage] = useState('dashboard');
+    const initialUrl = parseUrl();
+    const [currentPage, setCurrentPageState] = useState(initialUrl.page);
     const [showCreateDialog, setShowCreateDialog] = useState(false);
     const [searchOpen, setSearchOpen] = useState(false);
     const [globalSearch, setGlobalSearch] = useState('');
-    const [selectedProfileId, setSelectedProfileId] = useState<string>('');
+    const [selectedProfileId, setSelectedProfileId] = useState<string>(initialUrl.id);
     const { permissions, role } = useUserRole();
+
+    const setCurrentPage = (page: string) => {
+        const detailPages = ['locumProfile', 'facilityProfile', 'shiftDetail', 'timesheetDetail', 'complianceDetail'];
+        if (!detailPages.includes(page)) {
+            setSelectedProfileId('');
+        }
+        setCurrentPageState(page);
+    };
+
+    // Synchronize local state with URL
+    useEffect(() => {
+        const syncUrlWithState = () => {
+            const { page, id } = parseUrl();
+            if (page !== currentPage || id !== selectedProfileId) {
+                let url = `/${currentPage}`;
+                if (selectedProfileId) {
+                    url += `?id=${selectedProfileId}`;
+                }
+                window.history.pushState({ page: currentPage, id: selectedProfileId }, '', url);
+            }
+        };
+        syncUrlWithState();
+    }, [currentPage, selectedProfileId]);
+
+    // Handle back/forward popstate
+    useEffect(() => {
+        const handlePopState = () => {
+            const { page, id } = parseUrl();
+            setCurrentPageState(page);
+            setSelectedProfileId(id);
+        };
+        window.addEventListener('popstate', handlePopState);
+        return () => window.removeEventListener('popstate', handlePopState);
+    }, []);
 
     const handleViewLocumProfile = (id: string) => {
         setSelectedProfileId(id);
