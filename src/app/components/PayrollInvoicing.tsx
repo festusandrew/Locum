@@ -371,7 +371,7 @@ export function PayrollInvoicing() {
 
             {/* Updated Log Payroll Modal */}
             {showLogPayrollModal && (
-                <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-6">
+                <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-6">
                     <div className="bg-white rounded-xl w-full max-w-4xl shadow-2xl animate-in fade-in zoom-in duration-200 overflow-hidden flex flex-col max-h-[90vh]">
                         <div className="p-5 border-b border-[#E5E7EB] flex items-center justify-between bg-white shrink-0">
                             <div className="flex items-center gap-3">
@@ -698,7 +698,7 @@ export function PayrollInvoicing() {
 
             {/* Remittance Detail Modal */}
             {showPayrollDetail && selectedPayroll && (
-                <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-6">
+                <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-6">
                     <div className="bg-white rounded-xl w-full max-w-4xl max-h-[90vh] overflow-hidden flex flex-col shadow-2xl animate-in fade-in zoom-in duration-200">
                         <div className="p-5 border-b border-[#E5E7EB] flex items-center justify-between bg-white shrink-0">
                             <div className="flex items-center gap-3">

@@ -297,7 +297,7 @@ export function AlertsRisk() {
 
             {/* Resolve Modal */}
             {showResolveModal && selectedAlert && (
-                <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-6">
+                <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-6">
                     <div className="bg-white rounded-xl w-full max-w-lg shadow-2xl animate-in fade-in zoom-in duration-200 overflow-hidden">
                         <div className="p-5 border-b border-[#E5E7EB] flex items-center justify-between bg-white">
                             <div className="flex items-center gap-3">
@@ -340,7 +340,7 @@ export function AlertsRisk() {
 
             {/* Find Locum Modal */}
             {showFindLocum && selectedAlert && (
-                <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-6">
+                <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-6">
                     <div className="bg-white rounded-xl w-full max-w-2xl shadow-2xl animate-in fade-in zoom-in duration-200 overflow-hidden">
                         <div className="p-5 border-b border-[#E5E7EB] flex items-center justify-between bg-white">
                             <div className="flex items-center gap-3">

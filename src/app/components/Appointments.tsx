@@ -256,7 +256,7 @@ export function Appointments() {
 
             {/* Schedule Dialog */}
             {showScheduleDialog && (
-                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
+                <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
                     <div className="bg-white rounded-xl p-6 w-96">
                         <div className="flex items-center justify-between mb-4">
                             <h3 className="text-[#1F2937]">Schedule Shift</h3>

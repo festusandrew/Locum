@@ -541,7 +541,7 @@ export function Compliance({ onViewComplianceDetail }: { onViewComplianceDetail?
 
             {/* Upload Dialog */}
             {showUploadDialog && (
-                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+                <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
                     <div className="bg-white rounded-xl p-6 w-[500px]">
                         <div className="flex items-center justify-between mb-6">
                             <h3 className="text-[#1F2937]">Upload Compliance Document</h3>
@@ -610,7 +610,7 @@ export function Compliance({ onViewComplianceDetail }: { onViewComplianceDetail?
 
             {/* Edit Document Dialog */}
             {showEditDialog && selectedDocument && (
-                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+                <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
                     <div className="bg-white rounded-xl p-6 w-[500px]">
                         <div className="flex items-center justify-between mb-6">
                             <h3 className="text-[#1F2937]">Edit Document</h3>
@@ -671,7 +671,7 @@ export function Compliance({ onViewComplianceDetail }: { onViewComplianceDetail?
 
             {/* Update Document Dialog */}
             {showUpdateDialog && selectedDocument && (
-                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+                <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
                     <div className="bg-white rounded-xl p-6 w-[500px]">
                         <div className="flex items-center justify-between mb-6">
                             <h3 className="text-[#1F2937]">Update Document</h3>
@@ -739,7 +739,7 @@ export function Compliance({ onViewComplianceDetail }: { onViewComplianceDetail?
 
             {/* View History Dialog */}
             {showHistoryDialog && selectedDocument && (
-                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+                <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
                     <div className="bg-white rounded-xl p-6 w-[600px] max-h-[80vh] overflow-y-auto">
                         <div className="flex items-center justify-between mb-6">
                             <h3 className="text-[#1F2937]">Document History</h3>
@@ -808,7 +808,7 @@ export function Compliance({ onViewComplianceDetail }: { onViewComplianceDetail?
 
             {/* Archive Document Dialog */}
             {showArchiveDialog && selectedDocument && (
-                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+                <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
                     <div className="bg-white rounded-xl p-6 w-[500px]">
                         <div className="flex items-center justify-between mb-6">
                             <h3 className="text-[#1F2937]">Archive Document</h3>
@@ -859,7 +859,7 @@ export function Compliance({ onViewComplianceDetail }: { onViewComplianceDetail?
 
             {/* Notes Dialog */}
             {showNotesDialog && selectedDocument && (
-                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+                <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
                     <div className="bg-white rounded-xl p-6 w-[600px] max-h-[80vh] overflow-y-auto">
                         <div className="flex items-center justify-between mb-6">
                             <h3 className="text-[#1F2937]">Document Notes</h3>
@@ -936,7 +936,7 @@ export function Compliance({ onViewComplianceDetail }: { onViewComplianceDetail?
 
             {/* Delete Document Dialog */}
             {showDeleteDialog && selectedDocument && (
-                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+                <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
                     <div className="bg-white rounded-xl p-6 w-[500px]">
                         <div className="flex items-center justify-between mb-6">
                             <h3 className="text-[#1F2937]">Delete Document</h3>

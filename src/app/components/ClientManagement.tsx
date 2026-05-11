@@ -394,7 +394,7 @@ export function ClientManagement({ subPage = 'directory', onViewProfile }: { sub
 
             {/* Add Client Modal */}
             {showAddModal && (
-                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-6">
+                <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-6">
                     <div className="bg-white rounded-xl w-full max-w-4xl max-h-[90vh] flex flex-col shadow-2xl">
                         {/* Modal Header */}
                         <div className="flex items-center justify-between px-6 py-4 border-b border-[#E5E7EB]">
@@ -686,7 +686,7 @@ export function ClientManagement({ subPage = 'directory', onViewProfile }: { sub
 
             {/* Edit Client Modal */}
             {showEditModal && selectedClient && (
-                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-6">
+                <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-6">
                     <div className="bg-white rounded-xl w-full max-w-4xl max-h-[90vh] flex flex-col shadow-2xl">
                         {/* Modal Header */}
                         <div className="flex items-center justify-between px-6 py-4 border-b border-[#E5E7EB]">
@@ -837,7 +837,7 @@ export function ClientManagement({ subPage = 'directory', onViewProfile }: { sub
 
             {/* Archive Client Modal */}
             {showArchiveModal && selectedClient && (
-                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-6">
+                <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-6">
                     <div className="bg-white rounded-xl w-full max-w-md shadow-2xl overflow-hidden">
                         <div className="p-6 text-center">
                             <div className="w-16 h-16 bg-[#FEF2F2] text-[#EF4444] rounded-full flex items-center justify-center mx-auto mb-4 border-4 border-[#FEE2E2]">

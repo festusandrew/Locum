@@ -478,7 +478,7 @@ export function Transactions() {
 
             {/* Transaction Details Dialog */}
             {showDetailsDialog && selectedTransaction && (
-                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+                <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
                     <div className="bg-white rounded-xl p-6 w-[600px] max-h-[90vh] overflow-y-auto">
                         <div className="flex items-center justify-between mb-6">
                             <div>
@@ -619,7 +619,7 @@ export function Transactions() {
 
             {/* Receipt Dialog */}
             {showReceiptDialog && selectedTransaction && (
-                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+                <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
                     <div className="bg-white rounded-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
                         {/* Receipt Content - Ready for Print */}
                         <div id="receipt-content" className="p-8">
