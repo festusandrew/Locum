@@ -94,12 +94,102 @@ export function ShiftBooking({ subPage = 'board', onViewShiftDetail }: { subPage
         a.click();
     };
 
-    // Calendar view helpers
+    // Calendar view states
+    const [calendarSubView, setCalendarSubView] = useState<'month' | 'week' | 'day'>('week');
+    const [calendarAnchorDate, setCalendarAnchorDate] = useState<Date>(new Date(2026, 1, 9)); // Mon 9 Feb 2026
+
     const daysOfWeek = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
-    const calendarDays = Array.from({ length: 7 }, (_, i) => {
-        const d = new Date(2026, 1, 9 + i);
-        return { date: d, dateStr: d.toISOString().split('T')[0], dayName: daysOfWeek[i] };
-    });
+
+    // Helper to find Monday of a given date's week (Monday-start)
+    const getMonday = (src: Date) => {
+        const d = new Date(src);
+        const day = d.getDay();
+        const diff = d.getDate() - day + (day === 0 ? -6 : 1);
+        return new Date(d.setDate(diff));
+    };
+
+    // Week view days: 7 days starting from Monday of that week
+    const getWeekDays = () => {
+        const monday = getMonday(calendarAnchorDate);
+        return Array.from({ length: 7 }, (_, i) => {
+            const d = new Date(monday.getFullYear(), monday.getMonth(), monday.getDate() + i);
+            return {
+                date: d,
+                dateStr: `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`,
+                dayName: daysOfWeek[i]
+            };
+        });
+    };
+
+    // Month view days: first day to last day of that month
+    const getMonthDays = () => {
+        const year = calendarAnchorDate.getFullYear();
+        const month = calendarAnchorDate.getMonth();
+        const firstDayIndex = new Date(year, month, 1).getDay(); // Sun = 0, Mon = 1, etc.
+        // Convert Sun = 0 to Monday-start (Mon = 0, Tue = 1, ... Sun = 6)
+        const prefixEmptyCount = firstDayIndex === 0 ? 6 : firstDayIndex - 1;
+        
+        const totalDays = new Date(year, month + 1, 0).getDate();
+        
+        const list = [];
+        // Empty prefix blocks
+        for (let i = 0; i < prefixEmptyCount; i++) {
+            list.push({ isEmpty: true, key: `empty-${i}`, dateStr: '' });
+        }
+        // Month days
+        for (let day = 1; day <= totalDays; day++) {
+            const d = new Date(year, month, day);
+            list.push({
+                isEmpty: false,
+                key: `day-${day}`,
+                date: d,
+                dateStr: `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`,
+                dayNum: day
+            });
+        }
+        return list;
+    };
+
+    const handlePrevCalendar = () => {
+        if (calendarSubView === 'month') {
+            setCalendarAnchorDate(new Date(calendarAnchorDate.getFullYear(), calendarAnchorDate.getMonth() - 1, 1));
+        } else if (calendarSubView === 'week') {
+            const prev = new Date(calendarAnchorDate);
+            prev.setDate(prev.getDate() - 7);
+            setCalendarAnchorDate(prev);
+        } else {
+            const prev = new Date(calendarAnchorDate);
+            prev.setDate(prev.getDate() - 1);
+            setCalendarAnchorDate(prev);
+        }
+    };
+
+    const handleNextCalendar = () => {
+        if (calendarSubView === 'month') {
+            setCalendarAnchorDate(new Date(calendarAnchorDate.getFullYear(), calendarAnchorDate.getMonth() + 1, 1));
+        } else if (calendarSubView === 'week') {
+            const next = new Date(calendarAnchorDate);
+            next.setDate(next.getDate() + 7);
+            setCalendarAnchorDate(next);
+        } else {
+            const next = new Date(calendarAnchorDate);
+            next.setDate(next.getDate() + 1);
+            setCalendarAnchorDate(next);
+        }
+    };
+
+    const formatCalendarHeader = () => {
+        const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+        if (calendarSubView === 'month') {
+            return `${months[calendarAnchorDate.getMonth()]} ${calendarAnchorDate.getFullYear()}`;
+        } else if (calendarSubView === 'week') {
+            const monday = getMonday(calendarAnchorDate);
+            const sunday = new Date(monday.getFullYear(), monday.getMonth(), monday.getDate() + 6);
+            return `Week of ${monday.getDate()} ${months[monday.getMonth()]} - ${sunday.getDate()} ${months[sunday.getMonth()]} ${sunday.getFullYear()}`;
+        } else {
+            return `${calendarAnchorDate.getDate()} ${months[calendarAnchorDate.getMonth()]} ${calendarAnchorDate.getFullYear()}`;
+        }
+    };
 
     return (
         <div className="p-6">
@@ -270,49 +360,267 @@ export function ShiftBooking({ subPage = 'board', onViewShiftDetail }: { subPage
                         </table>
                     </div>
                 </div>
-            )}
-
-            {viewMode === 'calendar' && (
-                <div className="bg-white rounded-xl border border-[#E5E7EB]">
-                    <div className="p-4 border-b border-[#E5E7EB] flex items-center justify-between">
+            )}            {viewMode === 'calendar' && (
+                <div className="bg-white rounded-xl border border-[#E5E7EB] shadow-sm overflow-hidden">
+                    {/* Calendar Header with Subview Selectors & Navigation */}
+                    <div className="p-4 border-b border-[#E5E7EB] bg-[#F9FAFB] flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                         <div className="flex items-center gap-3">
-                            <button className="p-1 hover:bg-[#F3F4F6] rounded"><ChevronLeft className="w-5 h-5 text-[#6B7280]" /></button>
-                            <h3 className="text-[#1F2937]">Week of 9 - 15 Feb 2026</h3>
-                            <button className="p-1 hover:bg-[#F3F4F6] rounded"><ChevronRight className="w-5 h-5 text-[#6B7280]" /></button>
+                            <div className="flex items-center gap-1 bg-white border border-[#E5E7EB] rounded-lg p-0.5">
+                                <button 
+                                    type="button"
+                                    onClick={handlePrevCalendar} 
+                                    className="p-1.5 hover:bg-[#F3F4F6] rounded text-[#6B7280] transition-colors"
+                                >
+                                    <ChevronLeft className="w-4 h-4" />
+                                </button>
+                                <button 
+                                    type="button"
+                                    onClick={handleNextCalendar} 
+                                    className="p-1.5 hover:bg-[#F3F4F6] rounded text-[#6B7280] transition-colors"
+                                >
+                                    <ChevronRight className="w-4 h-4" />
+                                </button>
+                            </div>
+                            <h3 className="text-base text-[#1F2937] font-semibold select-none">
+                                {formatCalendarHeader()}
+                            </h3>
                         </div>
-                        <button onClick={() => setShowCreateShift(true)} className="flex items-center gap-2 px-4 py-2 text-sm bg-[#10B981] text-white rounded-lg hover:bg-[#059669]">
+
+                        {/* Month / Week / Day view switchers */}
+                        <div className="flex items-center gap-1 bg-white border border-[#E5E7EB] rounded-lg p-1">
+                            {(['month', 'week', 'day'] as const).map(view => (
+                                <button
+                                    key={view}
+                                    type="button"
+                                    onClick={() => setCalendarSubView(view)}
+                                    className={`px-3 py-1 text-xs font-medium rounded-md capitalize transition-all ${
+                                        calendarSubView === view
+                                            ? 'bg-[#10B981] text-white shadow-sm'
+                                            : 'text-[#6B7280] hover:text-[#1F2937] hover:bg-[#F3F4F6]'
+                                    }`}
+                                >
+                                    {view}
+                                </button>
+                            ))}
+                        </div>
+
+                        <button 
+                            type="button"
+                            onClick={() => setShowCreateShift(true)} 
+                            className="flex items-center gap-2 px-4 py-2 text-sm bg-[#10B981] text-white rounded-lg hover:bg-[#059669] transition-colors shadow-sm ml-auto sm:ml-0"
+                        >
                             <Plus className="w-4 h-4" />Create Shift
                         </button>
                     </div>
-                    <div className="grid grid-cols-7 border-b border-[#E5E7EB]">
-                        {calendarDays.map(day => (
-                            <div key={day.dateStr} className="p-3 border-r border-[#E5E7EB] last:border-r-0 text-center">
-                                <p className="text-xs text-[#6B7280]">{day.dayName}</p>
-                                <p className="text-lg text-[#1F2937]" style={{ fontWeight: 600 }}>{day.date.getDate()}</p>
+
+                    {/* === MONTH VIEW === */}
+                    {calendarSubView === 'month' && (
+                        <div className="divide-y divide-[#E5E7EB]">
+                            {/* Days Header */}
+                            <div className="grid grid-cols-7 bg-[#F9FAFB] text-center py-2.5">
+                                {daysOfWeek.map(dayName => (
+                                    <span key={dayName} className="text-xs font-semibold text-[#4B5563] uppercase tracking-wider">{dayName}</span>
+                                ))}
                             </div>
-                        ))}
-                    </div>
-                    <div className="grid grid-cols-7 min-h-[400px]">
-                        {calendarDays.map(day => {
-                            const dayShifts = shifts.filter(s => s.date === day.dateStr);
-                            return (
-                                <div key={day.dateStr} className="border-r border-[#E5E7EB] last:border-r-0 p-2 space-y-1.5">
-                                    {dayShifts.map(shift => {
-                                        const config = statusConfig[shift.status];
-                                        return (
-                                            <div key={shift.id} className="p-2 rounded-lg border cursor-pointer hover:shadow-sm transition-shadow"
-                                                style={{ backgroundColor: config.bg, borderColor: config.border }}>
-                                                <p className="text-[11px]" style={{ fontWeight: 600, color: config.color }}>{shift.specialty}</p>
-                                                <p className="text-[10px] text-[#6B7280] truncate">{shift.facility}</p>
-                                                <p className="text-[10px] text-[#9CA3AF]">{shift.time}</p>
-                                                {shift.locum && <p className="text-[10px] text-[#1F2937] mt-0.5 truncate">{shift.locum}</p>}
+                            {/* Days Grid */}
+                            <div className="grid grid-cols-7 bg-white auto-rows-[110px] divide-x divide-y divide-[#E5E7EB] border-t border-[#E5E7EB]">
+                                {getMonthDays().map((cell, idx) => {
+                                    if (cell.isEmpty) {
+                                        return <div key={cell.key} className="bg-[#FAFAFA] border-r border-b border-[#E5E7EB]" />;
+                                    }
+
+                                    const dayShifts = shifts.filter(s => s.date === cell.dateStr);
+                                    const isToday = cell.dateStr === '2026-02-09'; // highlighting mock "today"
+
+                                    return (
+                                        <div 
+                                            key={cell.key} 
+                                            onClick={() => {
+                                                if (cell.date) {
+                                                    setCalendarAnchorDate(cell.date);
+                                                    setCalendarSubView('day');
+                                                }
+                                            }}
+                                            className={`p-1.5 flex flex-col gap-1 cursor-pointer transition-colors hover:bg-[#F3FFFA]/50 border-r border-b border-[#E5E7EB] overflow-hidden ${
+                                                isToday ? 'bg-[#ECFDF5]' : ''
+                                            }`}
+                                        >
+                                            <span className={`text-xs font-bold text-[#4B5563] self-end px-1.5 py-0.5 rounded-full ${
+                                                isToday ? 'bg-[#10B981] text-white' : ''
+                                            }`}>
+                                                {cell.dayNum}
+                                            </span>
+                                            <div className="flex-1 overflow-y-auto space-y-1 scrollbar-none">
+                                                {dayShifts.slice(0, 3).map(shift => {
+                                                    const config = statusConfig[shift.status];
+                                                    return (
+                                                        <div 
+                                                            key={shift.id} 
+                                                            className="px-1 py-0.5 rounded text-[9px] border truncate"
+                                                            style={{ backgroundColor: config.bg, borderColor: config.border, color: config.color, fontWeight: 500 }}
+                                                            title={`${shift.specialty} at ${shift.facility}`}
+                                                        >
+                                                            {shift.specialty}
+                                                        </div>
+                                                    );
+                                                })}
+                                                {dayShifts.length > 3 && (
+                                                    <div className="text-[9px] text-[#10B981] font-semibold text-center">
+                                                        +{dayShifts.length - 3} more
+                                                    </div>
+                                                )}
                                             </div>
-                                        );
-                                    })}
+                                        </div>
+                                    );
+                                })}
+                            </div>
+                        </div>
+                    )}
+
+                    {/* === WEEK VIEW === */}
+                    {calendarSubView === 'week' && (
+                        <div className="divide-y divide-[#E5E7EB]">
+                            {/* Days Header */}
+                            <div className="grid grid-cols-7 border-b border-[#E5E7EB] bg-[#FAFAFA]">
+                                {getWeekDays().map(day => {
+                                    const isToday = day.dateStr === '2026-02-09';
+                                    return (
+                                        <div key={day.dateStr} className="p-3 border-r border-[#E5E7EB] last:border-r-0 text-center flex flex-col items-center">
+                                            <p className="text-xs text-[#6B7280] font-medium uppercase tracking-wider">{day.dayName}</p>
+                                            <p className={`text-lg mt-1 w-8 h-8 flex items-center justify-center rounded-full ${
+                                                isToday ? 'bg-[#10B981] text-white font-bold shadow-sm' : 'text-[#1F2937] font-semibold'
+                                            }`}>
+                                                {day.date.getDate()}
+                                            </p>
+                                        </div>
+                                    );
+                                })}
+                            </div>
+                            {/* Week Columns */}
+                            <div className="grid grid-cols-7 min-h-[450px] divide-x divide-[#E5E7EB] bg-white">
+                                {getWeekDays().map(day => {
+                                    const dayShifts = shifts.filter(s => s.date === day.dateStr);
+                                    return (
+                                        <div key={day.dateStr} className="p-2.5 space-y-2.5 bg-white hover:bg-[#FAFAFA]/30 transition-colors">
+                                            {dayShifts.map(shift => {
+                                                const config = statusConfig[shift.status];
+                                                return (
+                                                    <div 
+                                                        key={shift.id} 
+                                                        onClick={() => onViewShiftDetail?.(shift.id)}
+                                                        className="p-2.5 rounded-xl border cursor-pointer hover:shadow-md transition-all hover:-translate-y-0.5 bg-white"
+                                                        style={{ borderColor: config.border, borderLeftWidth: '4px', borderLeftColor: config.color }}
+                                                    >
+                                                        <div className="flex items-center justify-between gap-1 mb-1">
+                                                            <span className="text-[11px] font-bold" style={{ color: config.color }}>
+                                                                {shift.specialty}
+                                                            </span>
+                                                            <span className="text-[9px] px-1 py-0.2 rounded font-semibold uppercase"
+                                                                style={{ backgroundColor: config.bg, color: config.color }}>
+                                                                {shift.status}
+                                                            </span>
+                                                        </div>
+                                                        <p className="text-[10px] text-[#1F2937] font-semibold truncate mb-0.5">{shift.facility}</p>
+                                                        <p className="text-[9px] text-[#6B7280] font-medium">{shift.time} ({shift.hours}h)</p>
+                                                        {shift.locum && (
+                                                            <div className="flex items-center gap-1 mt-1.5 pt-1 border-t border-[#F3F4F6]">
+                                                                <div className="w-4 h-4 bg-[#EDE9FE] rounded-full flex items-center justify-center text-[8px] font-bold text-[#8B5CF6]">
+                                                                    {shift.locum[0]}
+                                                                </div>
+                                                                <span className="text-[9px] text-[#4B5563] font-medium truncate">{shift.locum}</span>
+                                                            </div>
+                                                        )}
+                                                    </div>
+                                                );
+                                            })}
+                                            {dayShifts.length === 0 && (
+                                                <div className="h-full flex items-center justify-center py-10">
+                                                    <span className="text-[10px] text-[#9CA3AF] italic text-center">No shifts scheduled</span>
+                                                </div>
+                                            )}
+                                        </div>
+                                    );
+                                })}
+                            </div>
+                        </div>
+                    )}
+
+                    {/* === DAILY VIEW === */}
+                    {calendarSubView === 'day' && (
+                        <div className="bg-white p-6">
+                            <div className="max-w-2xl mx-auto space-y-4">
+                                <div className="flex items-center justify-between border-b border-[#E5E7EB] pb-3">
+                                    <h4 className="text-sm font-bold text-[#374151] uppercase tracking-wider">Shifts Scheduled For Today</h4>
+                                    <span className="text-xs bg-[#E8FBF2] text-[#10B981] font-semibold px-2 py-1 rounded-full">
+                                        {shifts.filter(s => s.date === `${calendarAnchorDate.getFullYear()}-${String(calendarAnchorDate.getMonth() + 1).padStart(2, '0')}-${String(calendarAnchorDate.getDate()).padStart(2, '0')}`).length} Shifts
+                                    </span>
                                 </div>
-                            );
-                        })}
-                    </div>
+                                <div className="space-y-3">
+                                    {(() => {
+                                        const currentDayStr = `${calendarAnchorDate.getFullYear()}-${String(calendarAnchorDate.getMonth() + 1).padStart(2, '0')}-${String(calendarAnchorDate.getDate()).padStart(2, '0')}`;
+                                        const dayShifts = shifts.filter(s => s.date === currentDayStr);
+                                        
+                                        if (dayShifts.length === 0) {
+                                            return (
+                                                <div className="text-center py-16 border-2 border-dashed border-[#E5E7EB] rounded-xl">
+                                                    <Calendar className="w-10 h-10 text-[#9CA3AF] mx-auto mb-2" />
+                                                    <p className="text-sm text-[#4B5563] font-medium">No shifts scheduled for this date</p>
+                                                    <p className="text-xs text-[#9CA3AF] mt-1">Navigate to other days or click "Create Shift" to add one.</p>
+                                                </div>
+                                            );
+                                        }
+
+                                        return dayShifts.map(shift => {
+                                            const config = statusConfig[shift.status];
+                                            return (
+                                                <div 
+                                                    key={shift.id} 
+                                                    onClick={() => onViewShiftDetail?.(shift.id)}
+                                                    className="flex flex-col md:flex-row md:items-center justify-between p-4 border border-[#E5E7EB] rounded-xl hover:shadow-md transition-all hover:bg-[#FAFAFA]/50 cursor-pointer"
+                                                >
+                                                    <div className="flex items-start gap-3.5">
+                                                        <div className="w-10 h-10 bg-[#ECFDF5] rounded-xl flex items-center justify-center flex-shrink-0 text-[#10B981] font-bold">
+                                                            {shift.specialty.substring(0, 2).toUpperCase()}
+                                                        </div>
+                                                        <div>
+                                                            <div className="flex items-center gap-2 mb-1">
+                                                                <h5 className="font-bold text-sm text-[#1F2937]">{shift.specialty}</h5>
+                                                                <span className="px-2 py-0.5 text-[10px] font-semibold rounded-full"
+                                                                    style={{ backgroundColor: config.bg, color: config.color }}>
+                                                                    {config.label}
+                                                                </span>
+                                                            </div>
+                                                            <p className="text-xs text-[#6B7280] font-medium flex items-center gap-1.5">
+                                                                <Building2 className="w-3.5 h-3.5 text-[#9CA3AF]" /> {shift.facility} ({shift.location})
+                                                            </p>
+                                                            <p className="text-xs text-[#9CA3AF] mt-1 flex items-center gap-1.5">
+                                                                <Clock className="w-3.5 h-3.5" /> {shift.time} • {shift.hours} Hours • €{shift.rate}/hr
+                                                            </p>
+                                                        </div>
+                                                    </div>
+                                                    <div className="mt-4 md:mt-0 flex items-center gap-3 border-t md:border-t-0 pt-3 md:pt-0">
+                                                        {shift.locum ? (
+                                                            <div className="flex items-center gap-2">
+                                                                <div className="w-8 h-8 bg-[#EDE9FE] rounded-full flex items-center justify-center text-xs font-bold text-[#8B5CF6]">
+                                                                    {shift.locum[0]}
+                                                                </div>
+                                                                <div>
+                                                                    <p className="text-xs text-[#4B5563] font-semibold">{shift.locum}</p>
+                                                                    <p className="text-[10px] text-[#9CA3AF]">Assigned Locum</p>
+                                                                </div>
+                                                            </div>
+                                                        ) : (
+                                                            <span className="text-xs text-[#9CA3AF] italic">Unassigned</span>
+                                                        )}
+                                                    </div>
+                                                </div>
+                                            );
+                                        });
+                                    })()}
+                                </div>
+                            </div>
+                        </div>
+                    )}
                 </div>
             )}
 
