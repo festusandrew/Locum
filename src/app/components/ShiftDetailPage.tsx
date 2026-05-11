@@ -157,12 +157,22 @@ const statusConfig: Record<string, { label: string; color: string; bg: string; b
 };
 
 function getShiftProfile(id: string) {
+    if (typeof window !== 'undefined') {
+        const saved = localStorage.getItem(`shift_profile_${id}`);
+        if (saved) {
+            try {
+                return JSON.parse(saved);
+            } catch (e) {
+                console.error(e);
+            }
+        }
+    }
     if (shiftProfiles[id]) return shiftProfiles[id];
     return shiftProfiles['SH-001'];
 }
 
 export function ShiftDetailPage({ shiftId, onBack, onViewLocumProfile }: ShiftDetailPageProps) {
-    const [profile, setProfile] = useState(() => ({ ...getShiftProfile(shiftId) }));
+    const [profile, setProfile] = useState<any>(() => ({ ...getShiftProfile(shiftId) }));
     const [activeTab, setActiveTab] = useState<'details' | 'compliance' | 'timeline' | 'notes'>('details');
     const [showAssignModal, setShowAssignModal] = useState(false);
     const [showCancelModal, setShowCancelModal] = useState(false);
@@ -171,10 +181,103 @@ export function ShiftDetailPage({ shiftId, onBack, onViewLocumProfile }: ShiftDe
     const [showAddNoteInput, setShowAddNoteInput] = useState(false);
     const [newNoteContent, setNewNoteContent] = useState('');
 
+    const [showEditModal, setShowEditModal] = useState(false);
+    const [modalTab, setModalTab] = useState<'shift' | 'facility'>('shift');
+    const [editForm, setEditForm] = useState({
+        specialty: '',
+        department: '',
+        grade: '',
+        shiftType: '',
+        date: '',
+        startTime: '',
+        endTime: '',
+        hours: 8,
+        rate: 55,
+        description: '',
+        facility: '',
+        location: '',
+        address: '',
+        facilityId: '',
+        contactName: '',
+        contactRole: '',
+        contactPhone: '',
+        contactEmail: '',
+    });
+
+    const handleOpenEdit = () => {
+        setEditForm({
+            specialty: profile.specialty || '',
+            department: profile.department || '',
+            grade: profile.grade || '',
+            shiftType: profile.shiftType || '',
+            date: profile.date || '',
+            startTime: profile.startTime || '',
+            endTime: profile.endTime || '',
+            hours: profile.hours || 8,
+            rate: profile.rate || 55,
+            description: profile.description || '',
+            facility: profile.facility || '',
+            location: profile.location || '',
+            address: profile.address || '',
+            facilityId: profile.facilityId || '',
+            contactName: profile.contactPerson?.name || '',
+            contactRole: profile.contactPerson?.role || '',
+            contactPhone: profile.contactPerson?.phone || '',
+            contactEmail: profile.contactPerson?.email || '',
+        });
+        setModalTab('shift');
+        setShowEditModal(true);
+    };
+
+    const handleEditSubmit = (e: React.FormEvent) => {
+        e.preventDefault();
+        
+        const updatedProfile = {
+            ...profile,
+            specialty: editForm.specialty,
+            department: editForm.department,
+            grade: editForm.grade,
+            shiftType: editForm.shiftType,
+            date: editForm.date,
+            startTime: editForm.startTime,
+            endTime: editForm.endTime,
+            hours: Number(editForm.hours),
+            rate: Number(editForm.rate),
+            totalPay: Number(editForm.hours) * Number(editForm.rate),
+            description: editForm.description,
+            facility: editForm.facility,
+            location: editForm.location,
+            address: editForm.address,
+            facilityId: editForm.facilityId,
+            contactPerson: {
+                name: editForm.contactName,
+                role: editForm.contactRole,
+                phone: editForm.contactPhone,
+                email: editForm.contactEmail,
+            },
+            lastModified: new Date().toISOString().split('T')[0],
+        };
+        
+        const timelineEntry = {
+            date: new Date().toISOString().replace('T', ' ').substring(0, 16),
+            user: 'Omar Murphy',
+            action: 'Shift updated',
+            details: 'Shift details edited via dashboard'
+        };
+        updatedProfile.timeline = [timelineEntry, ...(updatedProfile.timeline || [])];
+
+        setProfile(updatedProfile);
+        if (typeof window !== 'undefined') {
+            localStorage.setItem(`shift_profile_${profile.id}`, JSON.stringify(updatedProfile));
+        }
+        setShowEditModal(false);
+        toast.success("Shift details updated successfully!");
+    };
+
     const config = statusConfig[profile.status];
 
     const handleAssignLocum = () => {
-        setProfile(prev => ({
+        setProfile((prev: any) => ({
             ...prev,
             status: 'filled',
             locum: selectedAssignee,
@@ -193,7 +296,7 @@ export function ShiftDetailPage({ shiftId, onBack, onViewLocumProfile }: ShiftDe
             toast.error("Please enter a cancellation reason.");
             return;
         }
-        setProfile(prev => ({
+        setProfile((prev: any) => ({
             ...prev,
             status: 'cancelled',
             timeline: [
@@ -210,7 +313,7 @@ export function ShiftDetailPage({ shiftId, onBack, onViewLocumProfile }: ShiftDe
             toast.error("Please enter note content.");
             return;
         }
-        setProfile(prev => ({
+        setProfile((prev: any) => ({
             ...prev,
             notes: [
                 { date: new Date().toISOString().split('T')[0], author: 'Omar Murphy', content: newNoteContent },
@@ -273,13 +376,7 @@ export function ShiftDetailPage({ shiftId, onBack, onViewLocumProfile }: ShiftDe
                         </button>
                     )}
                     <button 
-                        onClick={() => {
-                            const newRate = prompt("Enter new Hourly Rate (€):", profile.rate.toString());
-                            if (newRate && !isNaN(Number(newRate))) {
-                                setProfile(prev => ({ ...prev, rate: Number(newRate), totalPay: Number(newRate) * prev.hours }));
-                                toast.success("Hourly rate updated successfully!");
-                            }
-                        }}
+                        onClick={handleOpenEdit}
                         className="flex items-center gap-1.5 px-3 py-2 text-sm border border-[#E5E7EB] rounded-lg hover:bg-[#F9FAFB]"
                     >
                         <Edit className="w-3.5 h-3.5" /> Edit
@@ -692,6 +789,297 @@ export function ShiftDetailPage({ shiftId, onBack, onViewLocumProfile }: ShiftDe
                                 Cancel Shift
                             </button>
                         </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Edit Shift Modal */}
+            {showEditModal && (
+                <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-6">
+                    <div className="bg-white rounded-2xl w-full max-w-2xl shadow-2xl flex flex-col max-h-[90vh]">
+                        {/* Modal Header */}
+                        <div className="p-6 border-b border-[#E5E7EB] flex items-center justify-between">
+                            <div>
+                                <h3 className="text-xl text-[#1F2937]" style={{ fontWeight: 700 }}>Edit Shift Details</h3>
+                                <p className="text-xs text-[#6B7280] mt-0.5">Update all shift attributes, facility and contact details</p>
+                            </div>
+                            <button 
+                                onClick={() => setShowEditModal(false)} 
+                                className="w-8 h-8 flex items-center justify-center text-[#6B7280] hover:text-[#EF4444] hover:bg-[#FEE2E2] rounded-lg transition-colors"
+                            >
+                                <X className="w-5 h-5" />
+                            </button>
+                        </div>
+
+                        {/* Tabs Navigation */}
+                        <div className="flex border-b border-[#E5E7EB] bg-[#F9FAFB] px-6 gap-2">
+                            <button
+                                type="button"
+                                onClick={() => setModalTab('shift')}
+                                className={`py-3 px-4 text-sm font-semibold border-b-2 transition-all ${
+                                    modalTab === 'shift'
+                                        ? 'border-[#10B981] text-[#10B981]'
+                                        : 'border-transparent text-[#6B7280] hover:text-[#1F2937]'
+                                }`}
+                            >
+                                1. Shift Details
+                            </button>
+                            <button
+                                type="button"
+                                onClick={() => setModalTab('facility')}
+                                className={`py-3 px-4 text-sm font-semibold border-b-2 transition-all ${
+                                    modalTab === 'facility'
+                                        ? 'border-[#10B981] text-[#10B981]'
+                                        : 'border-transparent text-[#6B7280] hover:text-[#1F2937]'
+                                }`}
+                            >
+                                2. Facility & Contacts
+                            </button>
+                        </div>
+
+                        {/* Modal Body / Form */}
+                        <form onSubmit={handleEditSubmit} className="flex-1 overflow-y-auto p-6 space-y-6">
+                            {/* TAB 1: SHIFT DETAILS */}
+                            {modalTab === 'shift' && (
+                                <div className="space-y-4">
+                                    <div className="grid grid-cols-2 gap-4">
+                                        <div>
+                                            <label className="block text-xs text-[#4B5563] mb-1 font-semibold uppercase tracking-wider">Specialty</label>
+                                            <input 
+                                                type="text" 
+                                                value={editForm.specialty}
+                                                onChange={e => setEditForm(prev => ({ ...prev, specialty: e.target.value }))}
+                                                required
+                                                className="w-full px-3.5 py-2.5 border border-[#E5E7EB] rounded-lg text-sm text-[#1F2937] focus:ring-2 focus:ring-[#10B981] focus:border-[#10B981] outline-none"
+                                            />
+                                        </div>
+                                        <div>
+                                            <label className="block text-xs text-[#4B5563] mb-1 font-semibold uppercase tracking-wider">Department</label>
+                                            <input 
+                                                type="text" 
+                                                value={editForm.department}
+                                                onChange={e => setEditForm(prev => ({ ...prev, department: e.target.value }))}
+                                                required
+                                                className="w-full px-3.5 py-2.5 border border-[#E5E7EB] rounded-lg text-sm text-[#1F2937] focus:ring-2 focus:ring-[#10B981] focus:border-[#10B981] outline-none"
+                                            />
+                                        </div>
+                                    </div>
+
+                                    <div className="grid grid-cols-2 gap-4">
+                                        <div>
+                                            <label className="block text-xs text-[#4B5563] mb-1 font-semibold uppercase tracking-wider">Grade Required</label>
+                                            <input 
+                                                type="text" 
+                                                value={editForm.grade}
+                                                onChange={e => setEditForm(prev => ({ ...prev, grade: e.target.value }))}
+                                                required
+                                                className="w-full px-3.5 py-2.5 border border-[#E5E7EB] rounded-lg text-sm text-[#1F2937] focus:ring-2 focus:ring-[#10B981] focus:border-[#10B981] outline-none"
+                                            />
+                                        </div>
+                                        <div>
+                                            <label className="block text-xs text-[#4B5563] mb-1 font-semibold uppercase tracking-wider">Shift Type</label>
+                                            <input 
+                                                type="text" 
+                                                value={editForm.shiftType}
+                                                onChange={e => setEditForm(prev => ({ ...prev, shiftType: e.target.value }))}
+                                                required
+                                                className="w-full px-3.5 py-2.5 border border-[#E5E7EB] rounded-lg text-sm text-[#1F2937] focus:ring-2 focus:ring-[#10B981] focus:border-[#10B981] outline-none"
+                                            />
+                                        </div>
+                                    </div>
+
+                                    <div className="grid grid-cols-3 gap-4">
+                                        <div>
+                                            <label className="block text-xs text-[#4B5563] mb-1 font-semibold uppercase tracking-wider">Date</label>
+                                            <input 
+                                                type="date" 
+                                                value={editForm.date}
+                                                onChange={e => setEditForm(prev => ({ ...prev, date: e.target.value }))}
+                                                required
+                                                className="w-full px-3.5 py-2.5 border border-[#E5E7EB] rounded-lg text-sm text-[#1F2937] focus:ring-2 focus:ring-[#10B981] focus:border-[#10B981] outline-none"
+                                            />
+                                        </div>
+                                        <div>
+                                            <label className="block text-xs text-[#4B5563] mb-1 font-semibold uppercase tracking-wider">Start Time</label>
+                                            <input 
+                                                type="text" 
+                                                value={editForm.startTime}
+                                                onChange={e => setEditForm(prev => ({ ...prev, startTime: e.target.value }))}
+                                                required
+                                                placeholder="e.g. 08:00"
+                                                className="w-full px-3.5 py-2.5 border border-[#E5E7EB] rounded-lg text-sm text-[#1F2937] focus:ring-2 focus:ring-[#10B981] focus:border-[#10B981] outline-none"
+                                            />
+                                        </div>
+                                        <div>
+                                            <label className="block text-xs text-[#4B5563] mb-1 font-semibold uppercase tracking-wider">End Time</label>
+                                            <input 
+                                                type="text" 
+                                                value={editForm.endTime}
+                                                onChange={e => setEditForm(prev => ({ ...prev, endTime: e.target.value }))}
+                                                required
+                                                placeholder="e.g. 16:00"
+                                                className="w-full px-3.5 py-2.5 border border-[#E5E7EB] rounded-lg text-sm text-[#1F2937] focus:ring-2 focus:ring-[#10B981] focus:border-[#10B981] outline-none"
+                                            />
+                                        </div>
+                                    </div>
+
+                                    <div className="grid grid-cols-2 gap-4">
+                                        <div>
+                                            <label className="block text-xs text-[#4B5563] mb-1 font-semibold uppercase tracking-wider">Total Hours</label>
+                                            <input 
+                                                type="number" 
+                                                value={editForm.hours}
+                                                onChange={e => setEditForm(prev => ({ ...prev, hours: Number(e.target.value) }))}
+                                                required
+                                                className="w-full px-3.5 py-2.5 border border-[#E5E7EB] rounded-lg text-sm text-[#1F2937] focus:ring-2 focus:ring-[#10B981] focus:border-[#10B981] outline-none"
+                                            />
+                                        </div>
+                                        <div>
+                                            <label className="block text-xs text-[#4B5563] mb-1 font-semibold uppercase tracking-wider">Hourly Rate (€)</label>
+                                            <input 
+                                                type="number" 
+                                                value={editForm.rate}
+                                                onChange={e => setEditForm(prev => ({ ...prev, rate: Number(e.target.value) }))}
+                                                required
+                                                className="w-full px-3.5 py-2.5 border border-[#E5E7EB] rounded-lg text-sm text-[#1F2937] focus:ring-2 focus:ring-[#10B981] focus:border-[#10B981] outline-none"
+                                            />
+                                        </div>
+                                    </div>
+
+                                    <div>
+                                        <label className="block text-xs text-[#4B5563] mb-1 font-semibold uppercase tracking-wider">Description</label>
+                                        <textarea 
+                                            value={editForm.description}
+                                            onChange={e => setEditForm(prev => ({ ...prev, description: e.target.value }))}
+                                            rows={3}
+                                            className="w-full px-3.5 py-2.5 border border-[#E5E7EB] rounded-lg text-sm text-[#1F2937] focus:ring-2 focus:ring-[#10B981] focus:border-[#10B981] outline-none"
+                                        />
+                                    </div>
+                                </div>
+                            )}
+
+                            {/* TAB 2: FACILITY & CONTACTS */}
+                            {modalTab === 'facility' && (
+                                <div className="space-y-4">
+                                    <div className="bg-[#F0FDF4] p-4 rounded-xl space-y-4 border border-[#DCFCE7]">
+                                        <h4 className="text-sm font-semibold text-[#166534] flex items-center gap-1.5">
+                                            <Building2 className="w-4 h-4" /> Facility Details
+                                        </h4>
+                                        <div className="grid grid-cols-2 gap-4">
+                                            <div>
+                                                <label className="block text-xs text-[#065F46] mb-1 font-semibold uppercase tracking-wider">Facility Name</label>
+                                                <input 
+                                                    type="text" 
+                                                    value={editForm.facility}
+                                                    onChange={e => setEditForm(prev => ({ ...prev, facility: e.target.value }))}
+                                                    required
+                                                    className="w-full px-3.5 py-2.5 border border-[#A7F3D0] rounded-lg text-sm text-[#1F2937] bg-white focus:ring-2 focus:ring-[#10B981] focus:border-[#10B981] outline-none"
+                                                />
+                                            </div>
+                                            <div>
+                                                <label className="block text-xs text-[#065F46] mb-1 font-semibold uppercase tracking-wider">Facility ID</label>
+                                                <input 
+                                                    type="text" 
+                                                    value={editForm.facilityId}
+                                                    onChange={e => setEditForm(prev => ({ ...prev, facilityId: e.target.value }))}
+                                                    required
+                                                    className="w-full px-3.5 py-2.5 border border-[#A7F3D0] rounded-lg text-sm text-[#1F2937] bg-white focus:ring-2 focus:ring-[#10B981] focus:border-[#10B981] outline-none"
+                                                />
+                                            </div>
+                                        </div>
+                                        <div className="grid grid-cols-2 gap-4">
+                                            <div>
+                                                <label className="block text-xs text-[#065F46] mb-1 font-semibold uppercase tracking-wider">Location (Region/City)</label>
+                                                <input 
+                                                    type="text" 
+                                                    value={editForm.location}
+                                                    onChange={e => setEditForm(prev => ({ ...prev, location: e.target.value }))}
+                                                    required
+                                                    className="w-full px-3.5 py-2.5 border border-[#A7F3D0] rounded-lg text-sm text-[#1F2937] bg-white focus:ring-2 focus:ring-[#10B981] focus:border-[#10B981] outline-none"
+                                                />
+                                            </div>
+                                            <div>
+                                                <label className="block text-xs text-[#065F46] mb-1 font-semibold uppercase tracking-wider">Full Address</label>
+                                                <input 
+                                                    type="text" 
+                                                    value={editForm.address}
+                                                    onChange={e => setEditForm(prev => ({ ...prev, address: e.target.value }))}
+                                                    required
+                                                    className="w-full px-3.5 py-2.5 border border-[#A7F3D0] rounded-lg text-sm text-[#1F2937] bg-white focus:ring-2 focus:ring-[#10B981] focus:border-[#10B981] outline-none"
+                                                />
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div className="bg-[#F5F3FF] p-4 rounded-xl space-y-4 border border-[#EDE9FE]">
+                                        <h4 className="text-sm font-semibold text-[#5B21B6] flex items-center gap-1.5">
+                                            <Users className="w-4 h-4" /> Contact Person
+                                        </h4>
+                                        <div className="grid grid-cols-2 gap-4">
+                                            <div>
+                                                <label className="block text-xs text-[#5B21B6] mb-1 font-semibold uppercase tracking-wider">Contact Name</label>
+                                                <input 
+                                                    type="text" 
+                                                    value={editForm.contactName}
+                                                    onChange={e => setEditForm(prev => ({ ...prev, contactName: e.target.value }))}
+                                                    required
+                                                    className="w-full px-3.5 py-2.5 border border-[#DDD6FE] rounded-lg text-sm text-[#1F2937] bg-white focus:ring-2 focus:ring-[#10B981] focus:border-[#10B981] outline-none"
+                                                />
+                                            </div>
+                                            <div>
+                                                <label className="block text-xs text-[#5B21B6] mb-1 font-semibold uppercase tracking-wider">Contact Role</label>
+                                                <input 
+                                                    type="text" 
+                                                    value={editForm.contactRole}
+                                                    onChange={e => setEditForm(prev => ({ ...prev, contactRole: e.target.value }))}
+                                                    required
+                                                    className="w-full px-3.5 py-2.5 border border-[#DDD6FE] rounded-lg text-sm text-[#1F2937] bg-white focus:ring-2 focus:ring-[#10B981] focus:border-[#10B981] outline-none"
+                                                />
+                                            </div>
+                                        </div>
+                                        <div className="grid grid-cols-2 gap-4">
+                                            <div>
+                                                <label className="block text-xs text-[#5B21B6] mb-1 font-semibold uppercase tracking-wider">Contact Phone</label>
+                                                <input 
+                                                    type="text" 
+                                                    value={editForm.contactPhone}
+                                                    onChange={e => setEditForm(prev => ({ ...prev, contactPhone: e.target.value }))}
+                                                    required
+                                                    className="w-full px-3.5 py-2.5 border border-[#DDD6FE] rounded-lg text-sm text-[#1F2937] bg-white focus:ring-2 focus:ring-[#10B981] focus:border-[#10B981] outline-none"
+                                                />
+                                            </div>
+                                            <div>
+                                                <label className="block text-xs text-[#5B21B6] mb-1 font-semibold uppercase tracking-wider">Contact Email</label>
+                                                <input 
+                                                    type="email" 
+                                                    value={editForm.contactEmail}
+                                                    onChange={e => setEditForm(prev => ({ ...prev, contactEmail: e.target.value }))}
+                                                    required
+                                                    className="w-full px-3.5 py-2.5 border border-[#DDD6FE] rounded-lg text-sm text-[#1F2937] bg-white focus:ring-2 focus:ring-[#10B981] focus:border-[#10B981] outline-none"
+                                                />
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
+
+                            {/* Modal Footer */}
+                            <div className="pt-4 border-t border-[#E5E7EB] flex justify-end gap-3">
+                                <button 
+                                    type="button"
+                                    onClick={() => setShowEditModal(false)} 
+                                    className="px-5 py-2.5 border border-[#E5E7EB] text-[#4B5563] rounded-lg text-sm hover:bg-[#F9FAFB] font-medium transition-colors"
+                                >
+                                    Cancel
+                                </button>
+                                <button 
+                                    type="submit"
+                                    className="px-5 py-2.5 bg-[#10B981] text-white rounded-lg text-sm hover:bg-[#059669] font-medium shadow-sm transition-all"
+                                >
+                                    Save Changes
+                                </button>
+                            </div>
+                        </form>
                     </div>
                 </div>
             )}
