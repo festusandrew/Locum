@@ -64,6 +64,7 @@ const parseUrl = () => {
 function AppContent() {
     const initialUrl = parseUrl();
     const [currentPage, setCurrentPageState] = useState(initialUrl.page);
+    const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
     const [showCreateDialog, setShowCreateDialog] = useState(false);
     const [searchOpen, setSearchOpen] = useState(false);
     const [globalSearch, setGlobalSearch] = useState('');
@@ -174,9 +175,14 @@ function AppContent() {
 
     return (
         <div className="min-h-screen bg-[#F5F5F5]">
-            <Sidebar currentPage={currentPage} onNavigate={setCurrentPage} />
+            <Sidebar 
+                currentPage={currentPage} 
+                onNavigate={setCurrentPage} 
+                isCollapsed={sidebarCollapsed} 
+                onToggleCollapse={() => setSidebarCollapsed(!sidebarCollapsed)} 
+            />
 
-            <div className="ml-[240px]">
+            <div className={`transition-all duration-300 ease-in-out ${sidebarCollapsed ? 'ml-[72px]' : 'ml-[240px]'}`}>
                 {/* Top Header */}
                 <div className="bg-white border-b border-[#E5E7EB] px-6 py-3 sticky top-0 z-30">
                     <div className="flex items-center justify-between">
