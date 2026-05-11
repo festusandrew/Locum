@@ -102,11 +102,11 @@ const specialtyDistributionData = [
 ];
 
 const topPerformingLocums = [
-    { name: 'Dr. Sarah Mitchell', shifts: 52, rating: 4.9, revenue: 65000, change: 12 },
-    { name: 'Dr. Emily Chen', shifts: 48, rating: 4.8, revenue: 58500, change: 8 },
-    { name: 'Dr. James Harrison', shifts: 45, rating: 4.7, revenue: 54000, change: -3 },
-    { name: 'Dr. Michael Brooks', shifts: 42, rating: 4.6, revenue: 51200, change: 15 },
-    { name: 'Dr. Rachel Martinez', shifts: 38, rating: 4.8, revenue: 47800, change: 5 },
+    { name: 'Sarah Mitchell', shifts: 52, rating: 4.9, revenue: 65000, change: 12 },
+    { name: 'Emily Chen', shifts: 48, rating: 4.8, revenue: 58500, change: 8 },
+    { name: 'James Harrison', shifts: 45, rating: 4.7, revenue: 54000, change: -3 },
+    { name: 'Michael Brooks', shifts: 42, rating: 4.6, revenue: 51200, change: 15 },
+    { name: 'Rachel Martinez', shifts: 38, rating: 4.8, revenue: 47800, change: 5 },
 ];
 
 export function Reports() {

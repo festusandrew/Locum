@@ -35,7 +35,7 @@ const transactions: Transaction[] = [
     {
         id: 'TXN-2024-001',
         date: '2024-12-11 09:45',
-        locumName: 'Dr. Sarah Mitchell',
+        locumName: 'Sarah Mitchell',
         facility: 'St. James\'s Hospital, Dublin',
         type: 'payment',
         amount: 1250.00,
@@ -48,7 +48,7 @@ const transactions: Transaction[] = [
     {
         id: 'TXN-2024-002',
         date: '2024-12-11 08:30',
-        locumName: 'Dr. James Harrison',
+        locumName: 'James Harrison',
         facility: 'Cork University Hospital',
         type: 'payment',
         amount: 980.50,
@@ -61,7 +61,7 @@ const transactions: Transaction[] = [
     {
         id: 'TXN-2024-003',
         date: '2024-12-10 16:20',
-        locumName: 'Dr. Emily Chen',
+        locumName: 'Emily Chen',
         facility: 'University Hospital Galway',
         type: 'payment',
         amount: 1580.00,
@@ -74,7 +74,7 @@ const transactions: Transaction[] = [
     {
         id: 'TXN-2024-004',
         date: '2024-12-10 14:15',
-        locumName: 'Dr. Michael Brooks',
+        locumName: 'Michael Brooks',
         facility: 'University Hospital Limerick',
         type: 'payment',
         amount: 1420.00,
@@ -87,7 +87,7 @@ const transactions: Transaction[] = [
     {
         id: 'TXN-2024-005',
         date: '2024-12-10 11:00',
-        locumName: 'Dr. Rachel Martinez',
+        locumName: 'Rachel Martinez',
         facility: 'Beaumont Hospital, Dublin',
         type: 'invoice',
         amount: 875.00,
@@ -100,7 +100,7 @@ const transactions: Transaction[] = [
     {
         id: 'TXN-2024-006',
         date: '2024-12-09 15:45',
-        locumName: 'Dr. David Thompson',
+        locumName: 'David Thompson',
         facility: 'University Hospital Waterford',
         type: 'payment',
         amount: 1125.00,
@@ -113,7 +113,7 @@ const transactions: Transaction[] = [
     {
         id: 'TXN-2024-007',
         date: '2024-12-09 10:30',
-        locumName: 'Dr. Sarah Mitchell',
+        locumName: 'Sarah Mitchell',
         facility: 'Mater Misericordiae Hospital',
         type: 'payment',
         amount: 1680.00,
@@ -126,7 +126,7 @@ const transactions: Transaction[] = [
     {
         id: 'TXN-2024-008',
         date: '2024-12-08 09:15',
-        locumName: 'Dr. James Harrison',
+        locumName: 'James Harrison',
         facility: 'Cork University Hospital',
         type: 'refund',
         amount: -350.00,
@@ -139,7 +139,7 @@ const transactions: Transaction[] = [
     {
         id: 'TXN-2024-009',
         date: '2024-12-08 08:00',
-        locumName: 'Dr. Emily Chen',
+        locumName: 'Emily Chen',
         facility: 'St. Vincent\'s Hospital, Dublin',
         type: 'payment',
         amount: 1320.00,
@@ -152,7 +152,7 @@ const transactions: Transaction[] = [
     {
         id: 'TXN-2024-010',
         date: '2024-12-07 16:30',
-        locumName: 'Dr. Michael Brooks',
+        locumName: 'Michael Brooks',
         facility: 'Tallaght Hospital, Dublin',
         type: 'payment',
         amount: 1050.00,

@@ -21,16 +21,16 @@ interface Shift {
 }
 
 const shifts: Shift[] = [
-    { id: 'SH-001', facility: "St. James's Hospital", location: 'Dublin', specialty: 'General Surgery', date: '2026-02-10', time: '08:00 - 16:00', hours: 8, rate: 55, status: 'filled', locum: 'Dr. Sarah Mitchell', requiredCompliance: ['Medical License', 'Garda Vetting'] },
-    { id: 'SH-002', facility: 'Cork University Hospital', location: 'Cork', specialty: 'Cardiology', date: '2026-02-10', time: '09:00 - 21:00', hours: 12, rate: 60, status: 'filled', locum: 'Dr. James Harrison', requiredCompliance: ['Medical License', 'Indemnity Insurance'] },
+    { id: 'SH-001', facility: "St. James's Hospital", location: 'Dublin', specialty: 'General Surgery', date: '2026-02-10', time: '08:00 - 16:00', hours: 8, rate: 55, status: 'filled', locum: 'Sarah Mitchell', requiredCompliance: ['Medical License', 'Garda Vetting'] },
+    { id: 'SH-002', facility: 'Cork University Hospital', location: 'Cork', specialty: 'Cardiology', date: '2026-02-10', time: '09:00 - 21:00', hours: 12, rate: 60, status: 'filled', locum: 'James Harrison', requiredCompliance: ['Medical License', 'Indemnity Insurance'] },
     { id: 'SH-003', facility: 'Beaumont Hospital', location: 'Dublin', specialty: 'Emergency Medicine', date: '2026-02-10', time: '20:00 - 08:00', hours: 12, rate: 65, status: 'urgent', locum: null, requiredCompliance: ['Medical License', 'Garda Vetting', 'CPR Training'] },
     { id: 'SH-004', facility: 'University Hospital Galway', location: 'Galway', specialty: 'Anesthesiology', date: '2026-02-11', time: '07:00 - 19:00', hours: 12, rate: 58, status: 'open', locum: null, requiredCompliance: ['Medical License', 'Indemnity Insurance'] },
     { id: 'SH-005', facility: 'Mater Hospital', location: 'Dublin', specialty: 'Pediatrics', date: '2026-02-11', time: '08:00 - 20:00', hours: 12, rate: 55, status: 'open', locum: null, requiredCompliance: ['Medical License', 'Garda Vetting'] },
-    { id: 'SH-006', facility: "St. James's Hospital", location: 'Dublin', specialty: 'General Surgery', date: '2026-02-12', time: '08:00 - 16:00', hours: 8, rate: 55, status: 'recurring', locum: 'Dr. Sarah Mitchell', requiredCompliance: ['Medical License', 'Garda Vetting'] },
+    { id: 'SH-006', facility: "St. James's Hospital", location: 'Dublin', specialty: 'General Surgery', date: '2026-02-12', time: '08:00 - 16:00', hours: 8, rate: 55, status: 'recurring', locum: 'Sarah Mitchell', requiredCompliance: ['Medical License', 'Garda Vetting'] },
     { id: 'SH-007', facility: 'Limerick University Hospital', location: 'Limerick', specialty: 'Orthopedics', date: '2026-02-09', time: '09:00 - 17:00', hours: 8, rate: 52, status: 'cancelled', locum: null, requiredCompliance: ['Medical License'] },
     { id: 'SH-008', facility: 'Waterford University Hospital', location: 'Waterford', specialty: 'Emergency Medicine', date: '2026-02-12', time: '20:00 - 08:00', hours: 12, rate: 65, status: 'urgent', locum: null, requiredCompliance: ['Medical License', 'CPR Training'] },
     { id: 'SH-009', facility: 'Galway Clinic', location: 'Galway', specialty: 'General Surgery', date: '2026-02-13', time: '08:00 - 16:00', hours: 8, rate: 58, status: 'open', locum: null, requiredCompliance: ['Medical License', 'Indemnity Insurance'] },
-    { id: 'SH-010', facility: 'Beacon Hospital', location: 'Dublin', specialty: 'Cardiology', date: '2026-02-13', time: '09:00 - 17:00', hours: 8, rate: 60, status: 'filled', locum: 'Dr. Emily Chen', requiredCompliance: ['Medical License'] },
+    { id: 'SH-010', facility: 'Beacon Hospital', location: 'Dublin', specialty: 'Cardiology', date: '2026-02-13', time: '09:00 - 17:00', hours: 8, rate: 60, status: 'filled', locum: 'Emily Chen', requiredCompliance: ['Medical License'] },
 ];
 
 const statusConfig: Record<string, { label: string; color: string; bg: string; border: string }> = {
@@ -437,9 +437,9 @@ export function ShiftBooking({ subPage = 'board', onViewShiftDetail }: { subPage
                                 <label className="block text-sm text-[#1F2937] mb-1" style={{ fontWeight: 500 }}>Locum</label>
                                 <select className="w-full px-3 py-2 border border-[#E5E7EB] rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#10B981]">
                                     <option>Select locum...</option>
-                                    <option>Dr. Sarah Mitchell</option>
-                                    <option>Dr. James Harrison</option>
-                                    <option>Dr. Emily Chen</option>
+                                    <option>Sarah Mitchell</option>
+                                    <option>James Harrison</option>
+                                    <option>Emily Chen</option>
                                 </select>
                             </div>
                         </div>

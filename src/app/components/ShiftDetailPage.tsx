@@ -26,7 +26,7 @@ const shiftProfiles: Record<string, any> = {
         rate: 55,
         totalPay: 440,
         status: 'filled',
-        locum: 'Dr. Sarah Mitchell',
+        locum: 'Sarah Mitchell',
         locumId: 'LOC-001',
         grade: 'Consultant',
         shiftType: 'Standard',
@@ -46,13 +46,13 @@ const shiftProfiles: Record<string, any> = {
             email: 'siobhan.oreilly@stjames.ie',
         },
         timeline: [
-            { date: '2026-02-08 14:30', user: 'Omar Murphy', action: 'Shift confirmed', details: 'Dr. Sarah Mitchell confirmed availability' },
-            { date: '2026-02-07 10:15', user: 'System', action: 'Locum assigned', details: 'Dr. Sarah Mitchell assigned to shift' },
+            { date: '2026-02-08 14:30', user: 'Omar Murphy', action: 'Shift confirmed', details: 'Sarah Mitchell confirmed availability' },
+            { date: '2026-02-07 10:15', user: 'System', action: 'Locum assigned', details: 'Sarah Mitchell assigned to shift' },
             { date: '2026-02-05 09:20', user: 'Lisa Keane', action: 'Compliance verified', details: 'All compliance documents verified' },
             { date: '2026-01-15 16:45', user: 'Omar Murphy', action: 'Shift created', details: 'Shift posted as open' },
         ],
         notes: [
-            { date: '2026-02-08', author: 'Omar Murphy', content: 'Dr. Mitchell confirmed. Parking pass arranged. Theatre 3.' },
+            { date: '2026-02-08', author: 'Omar Murphy', content: 'Sarah Mitchell confirmed. Parking pass arranged. Theatre 3.' },
             { date: '2026-02-05', author: 'Lisa Keane', content: 'All compliance docs verified and current.' },
         ],
         description: 'Consultant General Surgeon required for elective surgery list. Theatre experience essential. Familiarity with laparoscopic procedures preferred.',
@@ -86,7 +86,7 @@ const shiftProfiles: Record<string, any> = {
             { name: 'BLS/CPR Certification', status: 'required', expiryDate: null },
         ],
         contactPerson: {
-            name: 'Dr. Michael O\'Brien',
+            name: "Michael O'Brien",
             role: 'ED Clinical Director',
             phone: '+353 1 809 3000',
             email: 'mobrien@beaumont.ie',
@@ -130,7 +130,7 @@ const shiftProfiles: Record<string, any> = {
             { name: 'Airway Management Certification', status: 'preferred', expiryDate: null },
         ],
         contactPerson: {
-            name: 'Dr. Fiona Lynch',
+            name: 'Fiona Lynch',
             role: 'Anaesthetics Consultant',
             phone: '+353 91 524 222',
             email: 'flynch@uhg.ie',
@@ -515,9 +515,9 @@ export function ShiftDetailPage({ shiftId, onBack }: ShiftDetailPageProps) {
                                 <label className="block text-sm text-[#1F2937] mb-1" style={{ fontWeight: 500 }}>Select Locum</label>
                                 <select className="w-full px-3 py-2 border border-[#E5E7EB] rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#10B981]">
                                     <option>Select locum...</option>
-                                    <option>Dr. Sarah Mitchell - General Surgery</option>
-                                    <option>Dr. James Harrison - Cardiology</option>
-                                    <option>Dr. Emily Chen - Anesthesiology</option>
+                                    <option>Sarah Mitchell - General Surgery</option>
+                                    <option>James Harrison - Cardiology</option>
+                                    <option>Emily Chen - Anesthesiology</option>
                                 </select>
                             </div>
                             <div className="bg-[#EFF6FF] border border-[#BFDBFE] rounded-lg p-3">

@@ -1,9 +1,10 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { toast } from 'sonner';
 import {
     ArrowLeft, Building2, MapPin, Phone, Mail, Globe, Star, Users,
     Calendar, Clock, FileText, ShieldCheck, Download, Edit, MoreHorizontal,
     CheckCircle, AlertTriangle, User, Banknote, CreditCard, Award,
-    MessageSquare, Activity, Briefcase, Heart, Hash, BadgeCheck, Bed
+    MessageSquare, Activity, Briefcase, Heart, Hash, BadgeCheck, Bed, X
 } from 'lucide-react';
 
 interface FacilityProfilePageProps {
@@ -252,8 +253,119 @@ function getFacilityProfile(id: string) {
 }
 
 export function FacilityProfilePage({ facilityId, onBack }: FacilityProfilePageProps) {
-    const profile = getFacilityProfile(facilityId);
+    const [profile, setProfile] = useState<any>(() => {
+        const stored = localStorage.getItem(`mployus_facility_profile_${facilityId}`);
+        if (stored) return JSON.parse(stored);
+        const initial = facilityProfiles[facilityId] || facilityProfiles['CL-001'];
+        localStorage.setItem(`mployus_facility_profile_${facilityId}`, JSON.stringify(initial));
+        return initial;
+    });
+
     const [activeTab, setActiveTab] = useState<'overview' | 'departments' | 'contract' | 'compliance' | 'bookings' | 'financial' | 'ratings' | 'notes'>('overview');
+    const [showEditModal, setShowEditModal] = useState(false);
+    const [showAddNoteModal, setShowAddNoteModal] = useState(false);
+    const [showMoreMenu, setShowMoreMenu] = useState(false);
+
+    // Form states
+    const [editForm, setEditForm] = useState({
+        name: profile.name,
+        description: profile.overview.description,
+        address: profile.overview.address,
+        eircode: profile.overview.eircode,
+        phone: profile.overview.phone,
+        email: profile.overview.email,
+        website: profile.overview.website,
+        established: profile.overview.established,
+        beds: profile.overview.beds,
+        ownership: profile.overview.ownership,
+        status: profile.status
+    });
+
+    const [newNoteAuthor, setNewNoteAuthor] = useState('');
+    const [newNoteContent, setNewNoteContent] = useState('');
+
+    useEffect(() => {
+        const stored = localStorage.getItem(`mployus_facility_profile_${facilityId}`);
+        const currentProfile = stored ? JSON.parse(stored) : (facilityProfiles[facilityId] || facilityProfiles['CL-001']);
+        setProfile(currentProfile);
+        setEditForm({
+            name: currentProfile.name,
+            description: currentProfile.overview.description,
+            address: currentProfile.overview.address,
+            eircode: currentProfile.overview.eircode,
+            phone: currentProfile.overview.phone,
+            email: currentProfile.overview.email,
+            website: currentProfile.overview.website,
+            established: currentProfile.overview.established,
+            beds: currentProfile.overview.beds,
+            ownership: currentProfile.overview.ownership,
+            status: currentProfile.status
+        });
+    }, [facilityId]);
+
+    const updateProfile = (updated: any) => {
+        setProfile(updated);
+        localStorage.setItem(`mployus_facility_profile_${facilityId}`, JSON.stringify(updated));
+    };
+
+    const handleEditSubmit = (e: React.FormEvent) => {
+        e.preventDefault();
+        const updated = {
+            ...profile,
+            name: editForm.name,
+            status: editForm.status,
+            overview: {
+                ...profile.overview,
+                description: editForm.description,
+                address: editForm.address,
+                eircode: editForm.eircode,
+                phone: editForm.phone,
+                email: editForm.email,
+                website: editForm.website,
+                established: editForm.established,
+                beds: editForm.beds,
+                ownership: editForm.ownership
+            }
+        };
+        updateProfile(updated);
+        setShowEditModal(false);
+        toast.success('Facility profile updated successfully');
+    };
+
+    const handleAddNoteSubmit = (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!newNoteContent.trim()) return;
+        const newNote = {
+            date: new Date().toISOString().split('T')[0],
+            author: newNoteAuthor.trim() || 'System Admin',
+            content: newNoteContent.trim()
+        };
+        const updatedNotes = [newNote, ...profile.notes];
+        updateProfile({ ...profile, notes: updatedNotes });
+        setNewNoteContent('');
+        setNewNoteAuthor('');
+        setShowAddNoteModal(false);
+        toast.success('Internal note added successfully');
+    };
+
+    const handleExport = () => {
+        const dataStr = JSON.stringify(profile, null, 2);
+        const dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(dataStr);
+        const exportFileDefaultName = `${profile.name.replace(/\s+/g, '_')}_profile.json`;
+
+        const linkElement = document.createElement('a');
+        linkElement.setAttribute('href', dataUri);
+        linkElement.setAttribute('download', exportFileDefaultName);
+        linkElement.click();
+
+        toast.success('Facility profile exported successfully');
+    };
+
+    const handleToggleStatus = () => {
+        const newStatus = profile.status === 'active' ? 'inactive' : 'active';
+        updateProfile({ ...profile, status: newStatus });
+        toast.success(`Facility status marked as ${newStatus}`);
+    };
 
     const tabs = [
         { id: 'overview' as const, label: 'Overview' },
@@ -293,16 +405,41 @@ export function FacilityProfilePage({ facilityId, onBack }: FacilityProfilePageP
                 </button>
                 <div className="flex-1">
                     <div className="flex items-center gap-3">
-                        <h2 className="text-[#1F2937]">Facility Profile</h2>
+                        <h2 className="text-[#1F2937]">{profile.name} Details</h2>
                         <span className={`px-2 py-0.5 rounded text-[11px] border ${typeColors[profile.type]}`}>{typeLabels[profile.type]}</span>
                         {getStatusBadge(profile.status)}
                     </div>
                     <p className="text-sm text-[#6B7280]">Comprehensive facility information, contracts, and booking history</p>
                 </div>
-                <div className="flex items-center gap-2">
-                    <button className="flex items-center gap-1.5 px-3 py-2 text-sm border border-[#E5E7EB] rounded-lg hover:bg-[#F9FAFB]"><Edit className="w-3.5 h-3.5" /> Edit</button>
-                    <button className="flex items-center gap-1.5 px-3 py-2 text-sm border border-[#E5E7EB] rounded-lg hover:bg-[#F9FAFB]"><Download className="w-3.5 h-3.5" /> Export</button>
-                    <button className="p-2 border border-[#E5E7EB] rounded-lg hover:bg-[#F9FAFB]"><MoreHorizontal className="w-4 h-4 text-[#6B7280]" /></button>
+                <div className="flex items-center gap-2 relative">
+                    <button onClick={() => setShowEditModal(true)} className="flex items-center gap-1.5 px-3 py-2 text-sm border border-[#E5E7EB] rounded-lg hover:bg-[#F9FAFB] transition-colors"><Edit className="w-3.5 h-3.5" /> Edit</button>
+                    <button onClick={handleExport} className="flex items-center gap-1.5 px-3 py-2 text-sm border border-[#E5E7EB] rounded-lg hover:bg-[#F9FAFB] transition-colors"><Download className="w-3.5 h-3.5" /> Export</button>
+                    <button onClick={() => setShowMoreMenu(!showMoreMenu)} className="p-2 border border-[#E5E7EB] rounded-lg hover:bg-[#F9FAFB] transition-colors"><MoreHorizontal className="w-4 h-4 text-[#6B7280]" /></button>
+                    
+                    {showMoreMenu && (
+                        <div className="absolute right-0 top-11 w-48 bg-white rounded-lg shadow-lg border border-[#E5E7EB] py-1 z-50 animate-in fade-in slide-in-from-top-1 duration-150">
+                            <button
+                                onClick={() => {
+                                    handleToggleStatus();
+                                    setShowMoreMenu(false);
+                                }}
+                                className="w-full text-left px-4 py-2 text-xs text-[#1F2937] hover:bg-[#F9FAFB] flex items-center gap-2"
+                            >
+                                <CheckCircle className="w-3.5 h-3.5 text-[#10B981]" />
+                                Mark as {profile.status === 'active' ? 'Inactive' : 'Active'}
+                            </button>
+                            <button
+                                onClick={() => {
+                                    toast.info('Compliance report downloaded');
+                                    setShowMoreMenu(false);
+                                }}
+                                className="w-full text-left px-4 py-2 text-xs text-[#1F2937] hover:bg-[#F9FAFB] flex items-center gap-2 border-t border-[#F3F4F6]"
+                            >
+                                <ShieldCheck className="w-3.5 h-3.5 text-[#3B82F6]" />
+                                Download Compliance PDF
+                            </button>
+                        </div>
+                    )}
                 </div>
             </div>
 
@@ -688,7 +825,7 @@ export function FacilityProfilePage({ facilityId, onBack }: FacilityProfilePageP
                         <div className="space-y-4">
                             <div className="flex items-center justify-between">
                                 <h4 className="text-sm text-[#1F2937]" style={{ fontWeight: 600 }}>Internal Notes & Activity Log</h4>
-                                <button className="flex items-center gap-1.5 px-3 py-1.5 text-sm bg-[#10B981] text-white rounded-lg hover:bg-[#059669]">
+                                <button onClick={() => setShowAddNoteModal(true)} className="flex items-center gap-1.5 px-3 py-1.5 text-sm bg-[#10B981] text-white rounded-lg hover:bg-[#059669] transition-colors">
                                     <MessageSquare className="w-3.5 h-3.5" /> Add Note
                                 </button>
                             </div>
@@ -712,6 +849,203 @@ export function FacilityProfilePage({ facilityId, onBack }: FacilityProfilePageP
                     )}
                 </div>
             </div>
+
+            {/* Edit Facility Profile Modal */}
+            {showEditModal && (
+                <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-6 animate-in fade-in duration-200">
+                    <div className="bg-white rounded-xl w-full max-w-2xl shadow-2xl animate-in fade-in zoom-in-95 duration-200 overflow-hidden">
+                        <div className="p-5 border-b border-[#E5E7EB] flex items-center justify-between bg-white">
+                            <h3 className="text-lg font-semibold text-[#1F2937]">Edit Facility Profile</h3>
+                            <button onClick={() => setShowEditModal(false)} className="text-[#9CA3AF] hover:text-[#6B7280] p-1.5 rounded-lg hover:bg-[#F3F4F6] transition-colors">
+                                <X className="w-5 h-5" />
+                            </button>
+                        </div>
+                        <form onSubmit={handleEditSubmit}>
+                            <div className="p-6 space-y-4 max-h-[70vh] overflow-y-auto">
+                                <div className="grid grid-cols-2 gap-4">
+                                    <div>
+                                        <label className="block text-xs text-[#6B7280] font-medium mb-1">Facility Name</label>
+                                        <input
+                                            type="text"
+                                            required
+                                            value={editForm.name}
+                                            onChange={e => setEditForm({ ...editForm, name: e.target.value })}
+                                            className="w-full px-3 py-2 border border-[#E5E7EB] rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#10B981] focus:border-transparent bg-white text-[#1F2937]"
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="block text-xs text-[#6B7280] font-medium mb-1">Status</label>
+                                        <select
+                                            value={editForm.status}
+                                            onChange={e => setEditForm({ ...editForm, status: e.target.value })}
+                                            className="w-full px-3 py-2 border border-[#E5E7EB] rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#10B981] focus:border-transparent bg-white text-[#1F2937]"
+                                        >
+                                            <option value="active">Active</option>
+                                            <option value="inactive">Inactive</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div>
+                                    <label className="block text-xs text-[#6B7280] font-medium mb-1">Description</label>
+                                    <textarea
+                                        rows={3}
+                                        value={editForm.description}
+                                        onChange={e => setEditForm({ ...editForm, description: e.target.value })}
+                                        className="w-full px-3 py-2 border border-[#E5E7EB] rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#10B981] focus:border-transparent bg-white text-[#1F2937]"
+                                    />
+                                </div>
+                                <div className="grid grid-cols-2 gap-4">
+                                    <div>
+                                        <label className="block text-xs text-[#6B7280] font-medium mb-1">Full Address</label>
+                                        <input
+                                            type="text"
+                                            value={editForm.address}
+                                            onChange={e => setEditForm({ ...editForm, address: e.target.value })}
+                                            className="w-full px-3 py-2 border border-[#E5E7EB] rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#10B981] focus:border-transparent bg-white text-[#1F2937]"
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="block text-xs text-[#6B7280] font-medium mb-1">Eircode</label>
+                                        <input
+                                            type="text"
+                                            value={editForm.eircode}
+                                            onChange={e => setEditForm({ ...editForm, eircode: e.target.value })}
+                                            className="w-full px-3 py-2 border border-[#E5E7EB] rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#10B981] focus:border-transparent bg-white text-[#1F2937]"
+                                        />
+                                    </div>
+                                </div>
+                                <div className="grid grid-cols-3 gap-4">
+                                    <div>
+                                        <label className="block text-xs text-[#6B7280] font-medium mb-1">Phone</label>
+                                        <input
+                                            type="text"
+                                            value={editForm.phone}
+                                            onChange={e => setEditForm({ ...editForm, phone: e.target.value })}
+                                            className="w-full px-3 py-2 border border-[#E5E7EB] rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#10B981] focus:border-transparent bg-white text-[#1F2937]"
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="block text-xs text-[#6B7280] font-medium mb-1">Email</label>
+                                        <input
+                                            type="email"
+                                            value={editForm.email}
+                                            onChange={e => setEditForm({ ...editForm, email: e.target.value })}
+                                            className="w-full px-3 py-2 border border-[#E5E7EB] rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#10B981] focus:border-transparent bg-white text-[#1F2937]"
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="block text-xs text-[#6B7280] font-medium mb-1">Website</label>
+                                        <input
+                                            type="text"
+                                            value={editForm.website}
+                                            onChange={e => setEditForm({ ...editForm, website: e.target.value })}
+                                            className="w-full px-3 py-2 border border-[#E5E7EB] rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#10B981] focus:border-transparent bg-white text-[#1F2937]"
+                                        />
+                                    </div>
+                                </div>
+                                <div className="grid grid-cols-3 gap-4">
+                                    <div>
+                                        <label className="block text-xs text-[#6B7280] font-medium mb-1">Established Year</label>
+                                        <input
+                                            type="number"
+                                            value={editForm.established}
+                                            onChange={e => setEditForm({ ...editForm, established: Number(e.target.value) })}
+                                            className="w-full px-3 py-2 border border-[#E5E7EB] rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#10B981] focus:border-transparent bg-white text-[#1F2937]"
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="block text-xs text-[#6B7280] font-medium mb-1">Beds Capacity</label>
+                                        <input
+                                            type="number"
+                                            value={editForm.beds}
+                                            onChange={e => setEditForm({ ...editForm, beds: Number(e.target.value) })}
+                                            className="w-full px-3 py-2 border border-[#E5E7EB] rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#10B981] focus:border-transparent bg-white text-[#1F2937]"
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="block text-xs text-[#6B7280] font-medium mb-1">Ownership</label>
+                                        <input
+                                            type="text"
+                                            value={editForm.ownership}
+                                            onChange={e => setEditForm({ ...editForm, ownership: e.target.value })}
+                                            className="w-full px-3 py-2 border border-[#E5E7EB] rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#10B981] focus:border-transparent bg-white text-[#1F2937]"
+                                        />
+                                    </div>
+                                </div>
+                            </div>
+                            <div className="p-4 border-t border-[#E5E7EB] bg-[#F9FAFB] flex justify-end gap-3">
+                                <button
+                                    type="button"
+                                    onClick={() => setShowEditModal(false)}
+                                    className="px-4 py-2 border border-[#E5E7EB] rounded-lg text-sm text-[#4B5563] bg-white hover:bg-[#F9FAFB] transition-colors"
+                                >
+                                    Cancel
+                                </button>
+                                <button
+                                    type="submit"
+                                    className="px-4 py-2 bg-[#10B981] hover:bg-[#059669] text-white rounded-lg text-sm font-medium transition-colors"
+                                >
+                                    Save Changes
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            )}
+
+            {/* Add Note Modal */}
+            {showAddNoteModal && (
+                <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-6 animate-in fade-in duration-200">
+                    <div className="bg-white rounded-xl w-full max-w-md shadow-2xl animate-in fade-in zoom-in-95 duration-200 overflow-hidden">
+                        <div className="p-5 border-b border-[#E5E7EB] flex items-center justify-between bg-white">
+                            <h3 className="text-lg font-semibold text-[#1F2937]">Add Internal Note</h3>
+                            <button onClick={() => setShowAddNoteModal(false)} className="text-[#9CA3AF] hover:text-[#6B7280] p-1.5 rounded-lg hover:bg-[#F3F4F6] transition-colors">
+                                <X className="w-5 h-5" />
+                            </button>
+                        </div>
+                        <form onSubmit={handleAddNoteSubmit}>
+                            <div className="p-6 space-y-4">
+                                <div>
+                                    <label className="block text-xs text-[#6B7280] font-medium mb-1">Author Name</label>
+                                    <input
+                                        type="text"
+                                        placeholder="System Admin"
+                                        value={newNoteAuthor}
+                                        onChange={e => setNewNoteAuthor(e.target.value)}
+                                        className="w-full px-3 py-2 border border-[#E5E7EB] rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#10B981] bg-white text-[#1F2937]"
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-xs text-[#6B7280] font-medium mb-1">Note Content</label>
+                                    <textarea
+                                        required
+                                        rows={4}
+                                        placeholder="Type internal note content here..."
+                                        value={newNoteContent}
+                                        onChange={e => setNewNoteContent(e.target.value)}
+                                        className="w-full px-3 py-2 border border-[#E5E7EB] rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#10B981] bg-white text-[#1F2937]"
+                                    />
+                                </div>
+                            </div>
+                            <div className="p-4 border-t border-[#E5E7EB] bg-[#F9FAFB] flex justify-end gap-3">
+                                <button
+                                    type="button"
+                                    onClick={() => setShowAddNoteModal(false)}
+                                    className="px-4 py-2 border border-[#E5E7EB] rounded-lg text-sm text-[#4B5563] bg-white hover:bg-[#F9FAFB] transition-colors"
+                                >
+                                    Cancel
+                                </button>
+                                <button
+                                    type="submit"
+                                    className="px-4 py-2 bg-[#10B981] hover:bg-[#059669] text-white rounded-lg text-sm font-medium transition-colors"
+                                >
+                                    Add Note
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }

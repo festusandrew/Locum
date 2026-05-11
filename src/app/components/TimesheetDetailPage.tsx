@@ -13,7 +13,7 @@ interface TimesheetDetailPageProps {
 const timesheetProfiles: Record<string, any> = {
     'TS-2026-001': {
         id: 'TS-2026-001',
-        locum: 'Dr. Sarah Mitchell',
+        locum: 'Sarah Mitchell',
         locumId: 'LOC-001',
         facility: "St. James's Hospital",
         facilityId: 'CL-001',
@@ -42,15 +42,15 @@ const timesheetProfiles: Record<string, any> = {
         signatureTimestamp: '2026-02-09 16:10',
         supportingDocs: true,
         submittedAt: '2026-02-09 16:30',
-        submittedBy: 'Dr. Sarah Mitchell',
+        submittedBy: 'Sarah Mitchell',
         shiftType: 'Day Shift',
         paymentMethod: 'PAYE',
         niNumber: 'AB123456C',
         taxCode: '1257L',
         pensionContrib: true,
         timeline: [
-            { date: '2026-02-09 16:30', user: 'Dr. Sarah Mitchell', action: 'Timesheet submitted', details: 'Submitted for approval with all verifications' },
-            { date: '2026-02-09 16:10', user: 'Dr. Sarah Mitchell', action: 'Digital signature captured', details: 'Signed electronically via mobile app' },
+            { date: '2026-02-09 16:30', user: 'Sarah Mitchell', action: 'Timesheet submitted', details: 'Submitted for approval with all verifications' },
+            { date: '2026-02-09 16:10', user: 'Sarah Mitchell', action: 'Digital signature captured', details: 'Signed electronically via mobile app' },
             { date: '2026-02-09 16:05', user: 'System', action: 'Clock out recorded', details: 'GPS verified at facility location' },
             { date: '2026-02-09 07:58', user: 'System', action: 'Clock in recorded', details: 'GPS verified at facility location' },
         ],
@@ -71,7 +71,7 @@ const timesheetProfiles: Record<string, any> = {
     },
     'TS-2026-002': {
         id: 'TS-2026-002',
-        locum: 'Dr. James Harrison',
+        locum: 'James Harrison',
         locumId: 'LOC-002',
         facility: 'Cork University Hospital',
         facilityId: 'CL-002',
@@ -100,7 +100,7 @@ const timesheetProfiles: Record<string, any> = {
         signatureTimestamp: '2026-02-09 21:15',
         supportingDocs: false,
         submittedAt: '2026-02-09 21:45',
-        submittedBy: 'Dr. James Harrison',
+        submittedBy: 'James Harrison',
         shiftType: 'Long Day',
         paymentMethod: 'Self-Employed (Umbrella)',
         niNumber: 'CD789012E',
@@ -108,13 +108,13 @@ const timesheetProfiles: Record<string, any> = {
         pensionContrib: false,
         timeline: [
             { date: '2026-02-10 09:00', user: 'System', action: 'Sent to client for approval', details: 'Awaiting confirmation from facility' },
-            { date: '2026-02-09 21:45', user: 'Dr. James Harrison', action: 'Timesheet submitted', details: 'Submitted for agency review' },
-            { date: '2026-02-09 21:15', user: 'Dr. James Harrison', action: 'Digital signature captured', details: 'Signed via mobile app' },
+            { date: '2026-02-09 21:45', user: 'James Harrison', action: 'Timesheet submitted', details: 'Submitted for agency review' },
+            { date: '2026-02-09 21:15', user: 'James Harrison', action: 'Digital signature captured', details: 'Signed via mobile app' },
             { date: '2026-02-09 21:10', user: 'System', action: 'Clock out recorded', details: 'GPS verified' },
             { date: '2026-02-09 08:55', user: 'System', action: 'Clock in recorded', details: 'GPS verified' },
         ],
         notes: [
-            { date: '2026-02-09', author: 'Dr. James Harrison', content: 'Very busy shift. Multiple emergency cases. No time for proper lunch break.' },
+            { date: '2026-02-09', author: 'James Harrison', content: 'Very busy shift. Multiple emergency cases. No time for proper lunch break.' },
         ],
         attachments: [],
         breakdown: {
