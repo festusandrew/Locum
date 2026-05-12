@@ -20,10 +20,12 @@ import {
     EyeOff,
     Users,
     UserCog,
-    UserPlus
+    UserPlus,
+    Plus
 } from 'lucide-react';
 import { useState } from 'react';
 import { useUserRole, UserRole } from '../contexts/UserRoleContext';
+import { toast } from 'sonner';
 
 type SettingsTab = 'profile' | 'notifications' | 'security' | 'system' | 'integrations' | 'access';
 
@@ -41,6 +43,20 @@ export function Settings() {
         phone: '',
         role: 'staff' as UserRole,
         department: 'Operations'
+    });
+
+    // Custom Integrations State
+    const [showAddIntegrationDialog, setShowAddIntegrationDialog] = useState(false);
+    const [customIntegrations, setCustomIntegrations] = useState<any[]>([
+        { id: 'int-001', name: 'Slack Notification Alerts', description: 'Broadcast urgent unfilled shift alerts directly to Slack channels', status: 'connected', provider: 'Slack' },
+        { id: 'int-002', name: 'Stripe Payments Sandbox', description: 'Zero upfront fee payment processor for locum timesheet billing', status: 'connected', provider: 'Stripe' }
+    ]);
+    const [newIntegrationData, setNewIntegrationData] = useState({
+        name: '',
+        description: '',
+        provider: 'Webhook',
+        apiKey: '',
+        webhookUrl: ''
     });
 
     // Permission management state
@@ -758,9 +774,74 @@ export function Settings() {
                         {/* Integrations Settings */}
                         {activeTab === 'integrations' && (
                             <div className="p-6">
-                                <div className="mb-6">
-                                    <h3 className="text-[#1F2937] mb-1">Integrations</h3>
-                                    <p className="text-sm text-[#6B7280]">Connect with third-party services</p>
+                                <div className="mb-6 flex items-start justify-between">
+                                    <div>
+                                        <h3 className="text-[#1F2937] mb-1">Integrations</h3>
+                                        <p className="text-sm text-[#6B7280]">Connect with third-party services</p>
+                                    </div>
+                                    <button
+                                        onClick={() => setShowAddIntegrationDialog(true)}
+                                        className="px-4 py-2 bg-[#10B981] hover:bg-[#059669] text-white rounded-lg text-sm font-medium flex items-center gap-2 shadow-sm transition-colors"
+                                    >
+                                        <Plus className="w-4 h-4" />
+                                        Add Integration
+                                    </button>
+                                </div>
+
+                                {/* How to Connect an Integration/Service Guide */}
+                                <div className="mb-6 p-5 rounded-2xl bg-gradient-to-br from-[#3B82F6]/5 via-white to-transparent border border-[#E5E7EB] shadow-sm">
+                                    <div className="flex items-start gap-4">
+                                        <div className="w-10 h-10 bg-[#EFF6FF] rounded-xl flex items-center justify-center text-[#3B82F6] flex-shrink-0">
+                                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                            </svg>
+                                        </div>
+                                        <div className="flex-1">
+                                            <h4 className="font-bold text-[#1F2937] text-sm mb-2" style={{ fontWeight: 700 }}>How to Connect New Integrations & Services</h4>
+                                            
+                                            <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mt-3">
+                                                <div className="p-3 bg-[#F9FAFB] rounded-lg border border-[#F3F4F6]">
+                                                    <div className="flex items-center gap-2 mb-1.5">
+                                                        <span className="w-5 h-5 bg-[#3B82F6]/10 text-[#3B82F6] rounded-full flex items-center justify-center text-xs font-bold">1</span>
+                                                        <span className="text-xs font-semibold text-[#1F2937]">Get Credentials</span>
+                                                    </div>
+                                                    <p className="text-[11px] text-[#6B7280] leading-relaxed">
+                                                        Obtain API keys, webhooks, or OAuth secrets from your provider console (e.g. Google Developer Console, Twilio, Slack App Directory).
+                                                    </p>
+                                                </div>
+
+                                                <div className="p-3 bg-[#F9FAFB] rounded-lg border border-[#F3F4F6]">
+                                                    <div className="flex items-center gap-2 mb-1.5">
+                                                        <span className="w-5 h-5 bg-[#10B981]/10 text-[#10B981] rounded-full flex items-center justify-center text-xs font-bold">2</span>
+                                                        <span className="text-xs font-semibold text-[#1F2937]">Trigger Setup</span>
+                                                    </div>
+                                                    <p className="text-[11px] text-[#6B7280] leading-relaxed">
+                                                        Click the <strong className="text-[#10B981]">"Connect"</strong> button on any service listing below to open its secure credential configuration modal.
+                                                    </p>
+                                                </div>
+
+                                                <div className="p-3 bg-[#F9FAFB] rounded-lg border border-[#F3F4F6]">
+                                                    <div className="flex items-center gap-2 mb-1.5">
+                                                        <span className="w-5 h-5 bg-[#F59E0B]/10 text-[#F59E0B] rounded-full flex items-center justify-center text-xs font-bold">3</span>
+                                                        <span className="text-xs font-semibold text-[#1F2937]">Insert Keys</span>
+                                                    </div>
+                                                    <p className="text-[11px] text-[#6B7280] leading-relaxed">
+                                                        Enter your token parameters, client secrets, or endpoint URLs safely into the form fields and click save to persist them securely.
+                                                    </p>
+                                                </div>
+
+                                                <div className="p-3 bg-[#F9FAFB] rounded-lg border border-[#F3F4F6]">
+                                                    <div className="flex items-center gap-2 mb-1.5">
+                                                        <span className="w-5 h-5 bg-[#8B5CF6]/10 text-[#8B5CF6] rounded-full flex items-center justify-center text-xs font-bold">4</span>
+                                                        <span className="text-xs font-semibold text-[#1F2937]">Run Test Sync</span>
+                                                    </div>
+                                                    <p className="text-[11px] text-[#6B7280] leading-relaxed">
+                                                        Click <strong className="text-[#8B5CF6]">"Configure"</strong> and run a diagnostic test to confirm your endpoint transmits live data flows correctly.
+                                                    </p>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
                                 </div>
 
                                 <div className="space-y-4">
@@ -865,6 +946,58 @@ export function Settings() {
                                             </button>
                                         </div>
                                     </div>
+
+                                    {/* Custom Dynamically Added Integrations */}
+                                    {customIntegrations.map((integration) => {
+                                        const isConnected = integration.status === 'connected';
+                                        return (
+                                            <div key={integration.id} className="p-4 border border-[#E5E7EB] rounded-xl hover:border-[#3B82F6]/30 hover:shadow-sm transition-all bg-gradient-to-r from-transparent to-white font-sans">
+                                                <div className="flex items-center justify-between">
+                                                    <div className="flex items-center gap-3">
+                                                        <div className="w-12 h-12 bg-[#EFF6FF] rounded-lg flex items-center justify-center">
+                                                            <Globe className="w-6 h-6 text-[#3B82F6]" />
+                                                        </div>
+                                                        <div>
+                                                            <div className="flex items-center gap-2">
+                                                                <h4 className="font-semibold text-sm text-[#1F2937]">{integration.name}</h4>
+                                                                <span className="px-1.5 py-0.2 bg-[#E0E7FF] text-[#3B82F6] text-[9px] font-bold rounded-full uppercase tracking-wider">
+                                                                    {integration.provider}
+                                                                </span>
+                                                            </div>
+                                                            <p className="text-xs text-[#6B7280]">{integration.description}</p>
+                                                        </div>
+                                                    </div>
+                                                    <div className="flex items-center gap-2">
+                                                        {isConnected ? (
+                                                            <>
+                                                                <span className="px-2 py-1 bg-[#D1FAE5] text-[#059669] rounded text-xs flex items-center gap-1 font-medium">
+                                                                    <Check className="w-3 h-3" />
+                                                                    Connected
+                                                                </span>
+                                                                <button 
+                                                                    onClick={() => toast.info(`Configuring ${integration.name} custom parameters...`)}
+                                                                    className="px-4 py-2 border border-[#E5E7EB] text-[#1F2937] rounded-lg hover:bg-[#F9FAFB] text-sm"
+                                                                >
+                                                                    Configure
+                                                                </button>
+                                                            </>
+                                                        ) : (
+                                                            <button 
+                                                                onClick={() => {
+                                                                    const updated = customIntegrations.map(item => item.id === integration.id ? {...item, status: 'connected'} : item);
+                                                                    setCustomIntegrations(updated);
+                                                                    toast.success(`${integration.name} connected successfully!`);
+                                                                }}
+                                                                className="px-4 py-2 border border-[#E5E7EB] text-[#1F2937] rounded-lg hover:bg-[#F9FAFB] text-sm font-medium"
+                                                            >
+                                                                Connect
+                                                            </button>
+                                                        )}
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        );
+                                    })}
                                 </div>
                             </div>
                         )}
@@ -1393,6 +1526,145 @@ export function Settings() {
                             >
                                 <UserPlus className="w-4 h-4" />
                                 Add Staff Member
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Add Integration Dialog */}
+            {showAddIntegrationDialog && (
+                <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 font-sans">
+                    <div className="bg-white rounded-xl shadow-xl w-full max-w-lg mx-4">
+                        {/* Dialog Header */}
+                        <div className="p-6 border-b border-[#E5E7EB]">
+                            <div className="flex items-center justify-between">
+                                <div className="flex items-center gap-3">
+                                    <div className="w-10 h-10 bg-[#EFF6FF] rounded-lg flex items-center justify-center">
+                                        <Plus className="w-5 h-5 text-[#3B82F6]" />
+                                    </div>
+                                    <div>
+                                        <h3 className="text-[#1F2937] font-bold text-lg" style={{ fontWeight: 700 }}>Add New Integration</h3>
+                                        <p className="text-xs text-[#6B7280]">Connect a new custom third-party service</p>
+                                    </div>
+                                </div>
+                                <button
+                                    onClick={() => setShowAddIntegrationDialog(false)}
+                                    className="text-[#6B7280] hover:text-[#1F2937]"
+                                >
+                                    <X className="w-5 h-5" />
+                                </button>
+                            </div>
+                        </div>
+
+                        {/* Dialog Content */}
+                        <div className="p-6 space-y-4">
+                            <div>
+                                <label className="block text-sm font-medium text-[#1F2937] mb-2">
+                                    Integration Name <span className="text-[#EF4444]">*</span>
+                                </label>
+                                <input
+                                    type="text"
+                                    value={newIntegrationData.name}
+                                    onChange={(e) => setNewIntegrationData({ ...newIntegrationData, name: e.target.value })}
+                                    placeholder="e.g., Slack Webhook, Zapier Sync"
+                                    className="w-full px-3 py-2 border border-[#E5E7EB] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#10B981] text-sm"
+                                />
+                            </div>
+
+                            <div>
+                                <label className="block text-sm font-medium text-[#1F2937] mb-2">
+                                    Description <span className="text-[#EF4444]">*</span>
+                                </label>
+                                <input
+                                    type="text"
+                                    value={newIntegrationData.description}
+                                    onChange={(e) => setNewIntegrationData({ ...newIntegrationData, description: e.target.value })}
+                                    placeholder="e.g., Broadcast emergency unfilled shift alerts to team channels"
+                                    className="w-full px-3 py-2 border border-[#E5E7EB] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#10B981] text-sm"
+                                />
+                            </div>
+
+                            <div className="grid grid-cols-2 gap-4">
+                                <div>
+                                    <label className="block text-sm font-medium text-[#1F2937] mb-2">
+                                        Provider Type <span className="text-[#EF4444]">*</span>
+                                    </label>
+                                    <select
+                                        value={newIntegrationData.provider}
+                                        onChange={(e) => setNewIntegrationData({ ...newIntegrationData, provider: e.target.value })}
+                                        className="w-full px-3 py-2 border border-[#E5E7EB] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#10B981] text-sm"
+                                    >
+                                        <option value="Webhook">Webhook Integration</option>
+                                        <option value="Slack">Slack Webhook</option>
+                                        <option value="Stripe">Stripe API</option>
+                                        <option value="Zapier">Zapier Automation</option>
+                                        <option value="Twilio">Twilio API</option>
+                                        <option value="Airtable">Airtable Integration</option>
+                                    </select>
+                                </div>
+
+                                <div>
+                                    <label className="block text-sm font-medium text-[#1F2937] mb-2">
+                                        API Key / Webhook URL
+                                    </label>
+                                    <input
+                                        type="password"
+                                        value={newIntegrationData.apiKey}
+                                        onChange={(e) => setNewIntegrationData({ ...newIntegrationData, apiKey: e.target.value })}
+                                        placeholder="••••••••••••••••"
+                                        className="w-full px-3 py-2 border border-[#E5E7EB] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#10B981] text-sm"
+                                    />
+                                </div>
+                            </div>
+
+                            <div>
+                                <label className="block text-sm font-medium text-[#1F2937] mb-2">
+                                    Webhook Endpoint (Optional)
+                                </label>
+                                <input
+                                    type="text"
+                                    value={newIntegrationData.webhookUrl}
+                                    onChange={(e) => setNewIntegrationData({ ...newIntegrationData, webhookUrl: e.target.value })}
+                                    placeholder="https://api.yourdomain.com/v1/webhook"
+                                    className="w-full px-3 py-2 border border-[#E5E7EB] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#10B981] text-sm"
+                                />
+                            </div>
+                        </div>
+
+                        {/* Dialog Footer */}
+                        <div className="p-6 border-t border-[#E5E7EB] bg-[#F9FAFB] rounded-b-xl flex justify-end gap-3">
+                            <button
+                                onClick={() => setShowAddIntegrationDialog(false)}
+                                className="px-4 py-2 border border-[#E5E7EB] text-[#1F2937] rounded-lg hover:bg-white text-sm"
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                onClick={() => {
+                                    const newInt = {
+                                        id: `int-${Date.now()}`,
+                                        name: newIntegrationData.name,
+                                        description: newIntegrationData.description,
+                                        provider: newIntegrationData.provider,
+                                        status: 'connected'
+                                    };
+                                    setCustomIntegrations([newInt, ...customIntegrations]);
+                                    setShowAddIntegrationDialog(false);
+                                    setNewIntegrationData({
+                                        name: '',
+                                        description: '',
+                                        provider: 'Webhook',
+                                        apiKey: '',
+                                        webhookUrl: ''
+                                    });
+                                    toast.success(`${newInt.name} added and connected successfully!`);
+                                }}
+                                disabled={!newIntegrationData.name || !newIntegrationData.description}
+                                className="px-4 py-2 bg-[#10B981] text-white rounded-lg hover:bg-[#059669] text-sm flex items-center gap-2 disabled:bg-[#D1D5DB] disabled:cursor-not-allowed font-medium"
+                            >
+                                <Plus className="w-4 h-4" />
+                                Add Integration
                             </button>
                         </div>
                     </div>

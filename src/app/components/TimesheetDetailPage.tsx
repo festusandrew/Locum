@@ -2,7 +2,8 @@ import { useState } from 'react';
 import {
     ArrowLeft, Clock, CheckCircle, XCircle, AlertTriangle, Download,
     FileText, MapPin, Building2, User, Calendar, Navigation, Upload,
-    Edit, MoreHorizontal, ThumbsUp, ThumbsDown, MessageSquare, Activity, X
+    Edit, MoreHorizontal, ThumbsUp, ThumbsDown, MessageSquare, Activity, X,
+    Send, Eye, FileSpreadsheet, AlertCircle, Trash2
 } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -147,7 +148,7 @@ function getTimesheetProfile(id: string) {
 }
 
 export function TimesheetDetailPage({ timesheetId, onBack, onViewLocumProfile, onViewFacilityProfile }: TimesheetDetailPageProps) {
-    const [profile, setProfile] = useState(() => ({ ...getTimesheetProfile(timesheetId) }));
+    const [profile, setProfile] = useState<any>(() => ({ ...getTimesheetProfile(timesheetId) }));
     const [activeTab, setActiveTab] = useState<'details' | 'breakdown' | 'timeline' | 'notes'>('details');
     const [showApprovalModal, setShowApprovalModal] = useState(false);
     const [showRejectModal, setShowRejectModal] = useState(false);
@@ -157,10 +158,114 @@ export function TimesheetDetailPage({ timesheetId, onBack, onViewLocumProfile, o
     const [showUploadModal, setShowUploadModal] = useState(false);
     const [uploadFileName, setUploadFileName] = useState('');
 
+    const [showActionDropdown, setShowActionDropdown] = useState(false);
+
+    const handleResendNotification = () => {
+        const timelineEntry = {
+            date: new Date().toISOString().replace('T', ' ').substring(0, 16),
+            user: 'Omar Murphy',
+            action: 'Verification reminder sent',
+            details: `Reminder notification dispatched to client ${profile.facility}`
+        };
+        const updatedProfile = {
+            ...profile,
+            timeline: [timelineEntry, ...(profile.timeline || [])]
+        };
+        setProfile(updatedProfile);
+        setShowActionDropdown(false);
+        toast.success(`Verification reminder sent to ${profile.facility}!`);
+    };
+
+    const handleDownloadInvoice = () => {
+        const summaryText = `
+MPLOYUS TIMESHEET INVOICE BRIEF
+-----------------------------------------
+Timesheet ID: ${profile.id}
+Status: ${profile.status.toUpperCase()}
+Locum Professional: ${profile.locum} (ID: ${profile.locumId})
+Facility: ${profile.facility} (ID: ${profile.facilityId})
+Department: ${profile.department}
+Location: ${profile.location}
+
+TIME & ATTENDANCE
+-----------------------------------------
+Shift Date: ${profile.shiftDate} (${profile.dayOfWeek})
+Shift Type: ${profile.shiftType}
+Clock In/Out: ${profile.clockIn} - ${profile.clockOut}
+Actual Hours: ${profile.actualHours.toFixed(2)} hours
+Overtime Hours: ${profile.overtime.toFixed(2)} hours
+
+PAYMENT SUMMARY
+-----------------------------------------
+Hourly Rate: €${profile.rate.toFixed(2)}/hr
+Overtime Rate: €${profile.overtimeRate.toFixed(2)}/hr
+Gross Pay: €${profile.breakdown.grossPay.toFixed(2)}
+Net Pay: €${profile.breakdown.netPay.toFixed(2)}
+Total Employer Cost: €${profile.breakdown.totalEmployerCost.toFixed(2)}
+Payment Method: ${profile.paymentMethod}
+
+-----------------------------------------
+Generated on: ${new Date().toLocaleString()}
+`;
+        const blob = new Blob([summaryText], { type: 'text/plain' });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = `timesheet_invoice_${profile.id}.txt`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(url);
+        
+        setShowActionDropdown(false);
+        toast.success("Invoice summary briefing sheet downloaded!");
+    };
+
+    const handleFlagAudit = () => {
+        const timelineEntry = {
+            date: new Date().toISOString().replace('T', ' ').substring(0, 16),
+            user: 'Omar Murphy',
+            action: 'Timesheet flagged for QA audit',
+            details: 'Timesheet successfully flagged for manual quality assurance review and validation'
+        };
+        const updatedProfile = {
+            ...profile,
+            timeline: [timelineEntry, ...(profile.timeline || [])]
+        };
+        setProfile(updatedProfile);
+        setShowActionDropdown(false);
+        toast.success("Timesheet successfully flagged for QA audit!");
+    };
+
+    const handleDispute = () => {
+        const timelineEntry = {
+            date: new Date().toISOString().replace('T', ' ').substring(0, 16),
+            user: 'Omar Murphy',
+            action: 'Timesheet disputed',
+            details: 'Timesheet marked as disputed due to hours or rate discrepancy. Escalated to support.'
+        };
+        const updatedProfile = {
+            ...profile,
+            status: 'rejected',
+            timeline: [timelineEntry, ...(profile.timeline || [])]
+        };
+        setProfile(updatedProfile);
+        setShowActionDropdown(false);
+        toast.success("Timesheet marked as disputed. Support team notified.");
+    };
+
+    const handleVoidTimesheet = () => {
+        if (confirm(`Are you sure you want to void timesheet ${profile.id}? This action cannot be undone.`)) {
+            toast.success(`Timesheet ${profile.id} voided successfully.`);
+            onBack();
+        }
+        setShowActionDropdown(false);
+    };
+
     const config = statusConfig[profile.status];
 
     const handleApproveTimesheet = () => {
-        setProfile(prev => ({
+        setProfile((prev: any) => ({
             ...prev,
             status: 'approved',
             timeline: [
@@ -177,7 +282,7 @@ export function TimesheetDetailPage({ timesheetId, onBack, onViewLocumProfile, o
             toast.error("Please enter a rejection reason.");
             return;
         }
-        setProfile(prev => ({
+        setProfile((prev: any) => ({
             ...prev,
             status: 'rejected',
             timeline: [
@@ -194,7 +299,7 @@ export function TimesheetDetailPage({ timesheetId, onBack, onViewLocumProfile, o
             toast.error("Please enter a note.");
             return;
         }
-        setProfile(prev => ({
+        setProfile((prev: any) => ({
             ...prev,
             notes: [
                 { date: new Date().toISOString().split('T')[0], author: 'Omar Murphy', content: newNoteContent },
@@ -217,7 +322,7 @@ export function TimesheetDetailPage({ timesheetId, onBack, onViewLocumProfile, o
             size: `${Math.floor(50 + Math.random() * 400)} KB`,
             uploadedAt: new Date().toISOString().replace('T', ' ').substring(0, 16)
         };
-        setProfile(prev => ({
+        setProfile((prev: any) => ({
             ...prev,
             attachments: [...(prev.attachments || []), newAttachment]
         }));
@@ -290,9 +395,56 @@ export function TimesheetDetailPage({ timesheetId, onBack, onViewLocumProfile, o
                     >
                         <Download className="w-3.5 h-3.5" /> Export PDF
                     </button>
-                    <button className="p-2 border border-[#E5E7EB] rounded-lg hover:bg-[#F9FAFB]">
-                        <MoreHorizontal className="w-4 h-4 text-[#6B7280]" />
-                    </button>
+                    <div className="relative">
+                        <button 
+                            onClick={() => setShowActionDropdown(!showActionDropdown)}
+                            className="p-2 border border-[#E5E7EB] rounded-lg hover:bg-[#F9FAFB] transition-colors relative"
+                        >
+                            <MoreHorizontal className="w-4 h-4 text-[#6B7280]" />
+                        </button>
+                        
+                        {showActionDropdown && (
+                            <>
+                                <div className="fixed inset-0 z-10" onClick={() => setShowActionDropdown(false)} />
+                                <div className="absolute right-0 mt-2 w-56 bg-white border border-[#E5E7EB] rounded-xl shadow-xl z-20 py-1.5 animate-in fade-in slide-in-from-top-2 duration-150">
+                                    <div className="px-3 py-1.5 text-xs text-[#9CA3AF] font-semibold uppercase tracking-wider border-b border-[#F3F4F6] mb-1">
+                                        Timesheet Actions
+                                    </div>
+                                    <button
+                                        onClick={handleResendNotification}
+                                        className="w-full text-left px-4 py-2.5 text-sm text-[#374151] hover:bg-[#F9FAFB] flex items-center gap-2.5 transition-colors"
+                                    >
+                                        <Send className="w-4 h-4 text-[#3B82F6]" /> Resend Verification
+                                    </button>
+                                    <button
+                                        onClick={handleDownloadInvoice}
+                                        className="w-full text-left px-4 py-2.5 text-sm text-[#374151] hover:bg-[#F9FAFB] flex items-center gap-2.5 transition-colors"
+                                    >
+                                        <FileSpreadsheet className="w-4 h-4 text-[#10B981]" /> Download Invoice (.txt)
+                                    </button>
+                                    <button
+                                        onClick={handleFlagAudit}
+                                        className="w-full text-left px-4 py-2.5 text-sm text-[#374151] hover:bg-[#F9FAFB] flex items-center gap-2.5 transition-colors"
+                                    >
+                                        <Eye className="w-4 h-4 text-[#7C3AED]" /> Flag for Audit
+                                    </button>
+                                    <button
+                                        onClick={handleDispute}
+                                        className="w-full text-left px-4 py-2.5 text-sm text-[#374151] hover:bg-[#F9FAFB] flex items-center gap-2.5 transition-colors"
+                                    >
+                                        <AlertCircle className="w-4 h-4 text-[#F59E0B]" /> Dispute Hours
+                                    </button>
+                                    <div className="border-t border-[#F3F4F6] my-1" />
+                                    <button
+                                        onClick={handleVoidTimesheet}
+                                        className="w-full text-left px-4 py-2.5 text-sm text-[#EF4444] hover:bg-[#FEE2E2] flex items-center gap-2.5 transition-colors font-medium"
+                                    >
+                                        <Trash2 className="w-4 h-4 text-[#EF4444]" /> Void Timesheet
+                                    </button>
+                                </div>
+                            </>
+                        )}
+                    </div>
                 </div>
             </div>
  

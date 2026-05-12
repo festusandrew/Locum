@@ -195,6 +195,34 @@ export function ComplianceDetailPage({ locumId, onBack }: ComplianceDetailPagePr
     const [activeTab, setActiveTab] = useState<'documents' | 'timeline' | 'notes'>('documents');
     const [showUploadModal, setShowUploadModal] = useState(false);
     const [uploadDocType, setUploadDocType] = useState('');
+    const [uploadExpiryDate, setUploadExpiryDate] = useState('');
+    
+    const fileInputRef = useRef<HTMLInputElement>(null);
+    const [selectedFile, setSelectedFile] = useState<File | null>(null);
+
+    const handleFileSelectClick = () => {
+        fileInputRef.current?.click();
+    };
+
+    const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (file) {
+            setSelectedFile(file);
+            toast.success(`Selected file: ${file.name}`);
+        }
+    };
+
+    const handleUploadSubmit = () => {
+        if (!uploadDocType || !uploadExpiryDate || !selectedFile) {
+            toast.error("Please fill in all fields and select a file.");
+            return;
+        }
+        toast.success(`Successfully uploaded ${selectedFile.name} for locum's compliance profile!`);
+        setShowUploadModal(false);
+        setSelectedFile(null);
+        setUploadDocType('');
+        setUploadExpiryDate('');
+    };
 
     const [showDropdown, setShowDropdown] = useState(false);
     const dropdownRef = useRef<HTMLDivElement>(null);
@@ -633,18 +661,26 @@ export function ComplianceDetailPage({ locumId, onBack }: ComplianceDetailPagePr
             {/* Upload Modal */}
             {showUploadModal && (
                 <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-6">
-                    <div className="bg-white rounded-xl w-full max-w-lg">
+                    <div className="bg-white rounded-xl w-full max-w-lg shadow-2xl border border-[#E5E7EB] animate-in fade-in zoom-in-95 duration-150">
                         <div className="p-5 border-b border-[#E5E7EB] flex items-center justify-between">
-                            <h3 className="text-[#1F2937]" style={{ fontWeight: 600 }}>Upload Compliance Document</h3>
-                            <button onClick={() => setShowUploadModal(false)} className="p-2 hover:bg-[#F3F4F6] rounded-lg">
+                            <h3 className="text-[#1F2937] font-semibold text-lg">Upload Compliance Document</h3>
+                            <button 
+                                onClick={() => {
+                                    setShowUploadModal(false);
+                                    setSelectedFile(null);
+                                    setUploadDocType('');
+                                    setUploadExpiryDate('');
+                                }} 
+                                className="p-2 hover:bg-[#F3F4F6] rounded-lg transition-colors"
+                            >
                                 <X className="w-5 h-5 text-[#6B7280]" />
                             </button>
                         </div>
                         <div className="p-5 space-y-4">
                             <div>
-                                <label className="block text-sm text-[#1F2937] mb-1" style={{ fontWeight: 500 }}>Document Type</label>
+                                <label className="block text-sm text-[#1F2937] mb-1.5 font-medium">Document Type <span className="text-[#EF4444]">*</span></label>
                                 <select
-                                    className="w-full px-3 py-2 text-sm border border-[#E5E7EB] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#10B981]"
+                                    className="w-full px-3 py-2 text-sm border border-[#E5E7EB] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#10B981] bg-white text-[#1F2937]"
                                     value={uploadDocType}
                                     onChange={(e) => setUploadDocType(e.target.value)}
                                 >
@@ -657,26 +693,71 @@ export function ComplianceDetailPage({ locumId, onBack }: ComplianceDetailPagePr
                                 </select>
                             </div>
                             <div>
-                                <label className="block text-sm text-[#1F2937] mb-1" style={{ fontWeight: 500 }}>Expiry Date</label>
+                                <label className="block text-sm text-[#1F2937] mb-1.5 font-medium">Expiry Date <span className="text-[#EF4444]">*</span></label>
                                 <input
                                     type="date"
-                                    className="w-full px-3 py-2 text-sm border border-[#E5E7EB] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#10B981]"
+                                    value={uploadExpiryDate}
+                                    onChange={(e) => setUploadExpiryDate(e.target.value)}
+                                    className="w-full px-3 py-2 text-sm border border-[#E5E7EB] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#10B981] bg-white text-[#1F2937]"
                                 />
                             </div>
                             <div>
-                                <label className="block text-sm text-[#1F2937] mb-1" style={{ fontWeight: 500 }}>Upload File</label>
-                                <div className="border-2 border-dashed border-[#E5E7EB] rounded-lg p-6 text-center hover:border-[#10B981] cursor-pointer">
-                                    <Upload className="w-8 h-8 text-[#6B7280] mx-auto mb-2" />
-                                    <p className="text-sm text-[#6B7280]">Click to upload or drag and drop</p>
-                                    <p className="text-xs text-[#9CA3AF] mt-1">PDF, JPG, PNG up to 10MB</p>
-                                </div>
+                                <label className="block text-sm text-[#1F2937] mb-1.5 font-medium">Upload File <span className="text-[#EF4444]">*</span></label>
+                                <input 
+                                    type="file" 
+                                    ref={fileInputRef} 
+                                    className="hidden" 
+                                    onChange={handleFileChange} 
+                                    accept=".pdf,.png,.jpg,.jpeg" 
+                                />
+
+                                {!selectedFile ? (
+                                    <div 
+                                        onClick={handleFileSelectClick}
+                                        className="border-2 border-dashed border-[#E5E7EB] hover:border-[#10B981] hover:bg-[#F0FDF4]/30 rounded-xl p-6 text-center cursor-pointer transition-all duration-200"
+                                    >
+                                        <Upload className="w-8 h-8 text-[#9CA3AF] mx-auto mb-2" />
+                                        <p className="text-sm text-[#374151]" style={{ fontWeight: 500 }}>Click to select a file from your device</p>
+                                        <p className="text-xs text-[#9CA3AF] mt-1">Accepts PDF, JPG, PNG up to 10MB</p>
+                                    </div>
+                                ) : (
+                                    <div className="border border-[#10B981] bg-[#F0FDF4]/50 rounded-xl p-4 flex items-center justify-between">
+                                        <div className="flex items-center gap-3 min-w-0">
+                                            <div className="w-10 h-10 bg-[#D1FAE5] rounded-lg flex items-center justify-center flex-shrink-0">
+                                                <FileText className="w-5 h-5 text-[#10B981]" />
+                                            </div>
+                                            <div className="min-w-0">
+                                                <p className="text-sm font-medium text-[#1F2937] truncate">{selectedFile.name}</p>
+                                                <p className="text-xs text-[#6B7280]">{(selectedFile.size / 1024 / 1024).toFixed(2)} MB</p>
+                                            </div>
+                                        </div>
+                                        <button 
+                                            type="button"
+                                            onClick={() => setSelectedFile(null)}
+                                            className="p-1.5 hover:bg-[#E5E7EB] rounded-lg transition-colors text-[#6B7280] hover:text-[#EF4444]"
+                                        >
+                                            <X className="w-4 h-4" />
+                                        </button>
+                                    </div>
+                                )}
                             </div>
                         </div>
                         <div className="p-5 border-t border-[#E5E7EB] flex justify-end gap-2">
-                            <button onClick={() => setShowUploadModal(false)} className="px-4 py-2 border border-[#E5E7EB] text-[#1F2937] rounded-lg text-sm hover:bg-[#F9FAFB]">
+                            <button 
+                                onClick={() => {
+                                    setShowUploadModal(false);
+                                    setSelectedFile(null);
+                                    setUploadDocType('');
+                                    setUploadExpiryDate('');
+                                }} 
+                                className="px-4 py-2 border border-[#E5E7EB] text-[#1F2937] rounded-lg text-sm hover:bg-[#F9FAFB] transition-colors"
+                            >
                                 Cancel
                             </button>
-                            <button className="px-4 py-2 bg-[#10B981] text-white rounded-lg text-sm hover:bg-[#059669]">
+                            <button 
+                                onClick={handleUploadSubmit}
+                                className="px-4 py-2 bg-[#10B981] text-white rounded-lg text-sm hover:bg-[#059669] transition-colors"
+                            >
                                 Upload Document
                             </button>
                         </div>

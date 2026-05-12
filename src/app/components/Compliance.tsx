@@ -28,7 +28,8 @@ import {
     StickyNote,
     FileText
 } from 'lucide-react';
-import { useState } from 'react';
+import { useState, useRef } from 'react';
+import { toast } from 'sonner';
 import { LocumProfile } from './LocumProfile';
 
 interface ComplianceRecord {
@@ -134,6 +135,37 @@ export function Compliance({ onViewComplianceDetail }: { onViewComplianceDetail?
     const [selectedLocum, setSelectedLocum] = useState<ComplianceRecord | null>(null);
     const [activeTab, setActiveTab] = useState<'information' | 'schedule' | 'compliance' | 'shifts' | 'payments'>('information');
     const [showUploadDialog, setShowUploadDialog] = useState(false);
+
+    const fileInputRef = useRef<HTMLInputElement>(null);
+    const [selectedFile, setSelectedFile] = useState<File | null>(null);
+    const [uploadLocumId, setUploadLocumId] = useState('');
+    const [uploadDocType, setUploadDocType] = useState('');
+    const [uploadExpiryDate, setUploadExpiryDate] = useState('');
+
+    const handleFileSelectClick = () => {
+        fileInputRef.current?.click();
+    };
+
+    const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (file) {
+            setSelectedFile(file);
+            toast.success(`Selected file: ${file.name}`);
+        }
+    };
+
+    const handleUploadSubmit = () => {
+        if (!uploadLocumId || !uploadDocType || !uploadExpiryDate || !selectedFile) {
+            toast.error("Please fill in all fields and select a file.");
+            return;
+        }
+        toast.success(`Successfully uploaded ${selectedFile.name} for compliance validation!`);
+        setShowUploadDialog(false);
+        setSelectedFile(null);
+        setUploadLocumId('');
+        setUploadDocType('');
+        setUploadExpiryDate('');
+    };
 
     // Document management dialogs
     const [showEditDialog, setShowEditDialog] = useState(false);
@@ -541,13 +573,19 @@ export function Compliance({ onViewComplianceDetail }: { onViewComplianceDetail?
 
             {/* Upload Dialog */}
             {showUploadDialog && (
-                <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-                    <div className="bg-white rounded-xl p-6 w-[500px]">
-                        <div className="flex items-center justify-between mb-6">
-                            <h3 className="text-[#1F2937]">Upload Compliance Document</h3>
+                <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-6">
+                    <div className="bg-white rounded-xl p-6 w-full max-w-lg shadow-2xl border border-[#E5E7EB] animate-in fade-in zoom-in-95 duration-150">
+                        <div className="flex items-center justify-between mb-6 border-b border-[#F3F4F6] pb-4">
+                            <h3 className="text-[#1F2937] font-semibold text-lg">Upload Compliance Document</h3>
                             <button
-                                onClick={() => setShowUploadDialog(false)}
-                                className="w-8 h-8 flex items-center justify-center text-[#6B7280] hover:text-[#EF4444] hover:bg-[#FEE2E2] rounded-lg"
+                                onClick={() => {
+                                    setShowUploadDialog(false);
+                                    setSelectedFile(null);
+                                    setUploadLocumId('');
+                                    setUploadDocType('');
+                                    setUploadExpiryDate('');
+                                }}
+                                className="w-8 h-8 flex items-center justify-center text-[#6B7280] hover:text-[#EF4444] hover:bg-[#FEE2E2] rounded-lg transition-colors"
                             >
                                 <X className="w-5 h-5" />
                             </button>
@@ -555,52 +593,103 @@ export function Compliance({ onViewComplianceDetail }: { onViewComplianceDetail?
 
                         <div className="space-y-4">
                             <div>
-                                <label className="block text-sm font-medium text-[#1F2937] mb-2">Select Locum</label>
-                                <select className="w-full px-3 py-2 border border-[#E5E7EB] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#10B981]">
-                                    <option>Choose locum...</option>
+                                <label className="block text-sm font-medium text-[#1F2937] mb-1.5">Select Locum Professional <span className="text-[#EF4444]">*</span></label>
+                                <select 
+                                    value={uploadLocumId}
+                                    onChange={(e) => setUploadLocumId(e.target.value)}
+                                    className="w-full px-3 py-2 border border-[#E5E7EB] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#10B981] text-sm bg-white text-[#1F2937]"
+                                >
+                                    <option value="">Choose locum...</option>
                                     {complianceData.map(locum => (
-                                        <option key={locum.id} value={locum.id}>{locum.locumName}</option>
+                                        <option key={locum.id} value={locum.id}>{locum.locumName} ({locum.specialty})</option>
                                     ))}
                                 </select>
                             </div>
 
                             <div>
-                                <label className="block text-sm font-medium text-[#1F2937] mb-2">Document Type</label>
-                                <select className="w-full px-3 py-2 border border-[#E5E7EB] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#10B981]">
-                                    <option>Choose document type...</option>
-                                    <option>Medical License</option>
-                                    <option>Garda Vetting</option>
-                                    <option>Indemnity Insurance</option>
-                                    <option>CPR Training</option>
+                                <label className="block text-sm font-medium text-[#1F2937] mb-1.5">Document Type <span className="text-[#EF4444]">*</span></label>
+                                <select 
+                                    value={uploadDocType}
+                                    onChange={(e) => setUploadDocType(e.target.value)}
+                                    className="w-full px-3 py-2 border border-[#E5E7EB] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#10B981] text-sm bg-white text-[#1F2937]"
+                                >
+                                    <option value="">Choose document type...</option>
+                                    <option value="medicalLicense">Medical License</option>
+                                    <option value="garda">Garda Vetting</option>
+                                    <option value="indemnityInsurance">Indemnity Insurance</option>
+                                    <option value="cprTraining">CPR Training</option>
                                 </select>
                             </div>
 
                             <div>
-                                <label className="block text-sm font-medium text-[#1F2937] mb-2">Expiry Date</label>
+                                <label className="block text-sm font-medium text-[#1F2937] mb-1.5">Expiry Date <span className="text-[#EF4444]">*</span></label>
                                 <input
                                     type="date"
-                                    className="w-full px-3 py-2 border border-[#E5E7EB] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#10B981]"
+                                    value={uploadExpiryDate}
+                                    onChange={(e) => setUploadExpiryDate(e.target.value)}
+                                    className="w-full px-3 py-2 border border-[#E5E7EB] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#10B981] text-sm bg-white text-[#1F2937]"
                                 />
                             </div>
 
                             <div>
-                                <label className="block text-sm font-medium text-[#1F2937] mb-2">Upload File</label>
-                                <div className="border-2 border-dashed border-[#E5E7EB] rounded-lg p-6 text-center hover:border-[#10B981] cursor-pointer">
-                                    <Upload className="w-8 h-8 text-[#6B7280] mx-auto mb-2" />
-                                    <p className="text-sm text-[#6B7280]">Click to upload or drag and drop</p>
-                                    <p className="text-xs text-[#9CA3AF] mt-1">PDF, JPG, PNG up to 10MB</p>
-                                </div>
+                                <label className="block text-sm font-medium text-[#1F2937] mb-1.5">Upload File <span className="text-[#EF4444]">*</span></label>
+                                <input 
+                                    type="file" 
+                                    ref={fileInputRef} 
+                                    className="hidden" 
+                                    onChange={handleFileChange} 
+                                    accept=".pdf,.png,.jpg,.jpeg" 
+                                />
+                                
+                                {!selectedFile ? (
+                                    <div 
+                                        onClick={handleFileSelectClick}
+                                        className="border-2 border-dashed border-[#E5E7EB] hover:border-[#10B981] hover:bg-[#F0FDF4]/30 rounded-xl p-6 text-center cursor-pointer transition-all duration-200"
+                                    >
+                                        <Upload className="w-8 h-8 text-[#9CA3AF] mx-auto mb-2" />
+                                        <p className="text-sm text-[#374151]" style={{ fontWeight: 500 }}>Click to select a file from your device</p>
+                                        <p className="text-xs text-[#9CA3AF] mt-1">Accepts PDF, JPG, PNG up to 10MB</p>
+                                    </div>
+                                ) : (
+                                    <div className="border border-[#10B981] bg-[#F0FDF4]/50 rounded-xl p-4 flex items-center justify-between">
+                                        <div className="flex items-center gap-3 min-w-0">
+                                            <div className="w-10 h-10 bg-[#D1FAE5] rounded-lg flex items-center justify-center flex-shrink-0">
+                                                <FileText className="w-5 h-5 text-[#10B981]" />
+                                            </div>
+                                            <div className="min-w-0">
+                                                <p className="text-sm font-medium text-[#1F2937] truncate">{selectedFile.name}</p>
+                                                <p className="text-xs text-[#6B7280]">{(selectedFile.size / 1024 / 1024).toFixed(2)} MB</p>
+                                            </div>
+                                        </div>
+                                        <button 
+                                            type="button"
+                                            onClick={() => setSelectedFile(null)}
+                                            className="p-1.5 hover:bg-[#E5E7EB] rounded-lg transition-colors text-[#6B7280] hover:text-[#EF4444]"
+                                        >
+                                            <X className="w-4 h-4" />
+                                        </button>
+                                    </div>
+                                )}
                             </div>
                         </div>
 
-                        <div className="mt-6 flex justify-end gap-2">
+                        <div className="mt-6 pt-4 border-t border-[#F3F4F6] flex justify-end gap-2">
                             <button
-                                onClick={() => setShowUploadDialog(false)}
-                                className="px-4 py-2 border border-[#E5E7EB] text-[#1F2937] rounded-lg hover:bg-[#F9FAFB]"
+                                onClick={() => {
+                                    setShowUploadDialog(false);
+                                    setSelectedFile(null);
+                                    setUploadLocumId('');
+                                    setUploadDocType('');
+                                    setUploadExpiryDate('');
+                                }}
+                                className="px-4 py-2 border border-[#E5E7EB] text-[#1F2937] rounded-lg hover:bg-[#F9FAFB] text-sm font-medium transition-colors"
                             >
                                 Cancel
                             </button>
-                            <button className="px-4 py-2 bg-[#10B981] text-white rounded-lg hover:bg-[#059669]">
+                            <button 
+                                onClick={handleUploadSubmit}
+                                className="px-4 py-2 bg-[#10B981] text-white rounded-lg hover:bg-[#059669] text-sm font-medium transition-colors"
+                            >
                                 Upload Document
                             </button>
                         </div>

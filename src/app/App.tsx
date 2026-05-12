@@ -298,7 +298,7 @@ function AppContent() {
                                                     onClick={() => {
                                                         setNotifications(notifications.map(item => item.id === n.id ? { ...item, unread: false } : item));
                                                         setShowNotifications(false);
-                                                        setCurrentPage('alerts');
+                                                        setCurrentPage('communications');
                                                     }}
                                                     className={`p-3 hover:bg-[#F9FAFB] transition-colors cursor-pointer flex gap-3 text-left ${n.unread ? 'bg-[#ECFDF5]/60' : ''}`}
                                                 >
@@ -321,12 +321,12 @@ function AppContent() {
                                                 type="button"
                                                 onClick={() => {
                                                     setShowNotifications(false);
-                                                    setCurrentPage('alerts');
+                                                    setCurrentPage('communications');
                                                 }}
                                                 className="text-xs text-[#10B981] hover:text-[#059669]"
                                                 style={{ fontWeight: 500 }}
                                             >
-                                                View all active alerts
+                                                View all notifications
                                             </button>
                                         </div>
                                     </div>
