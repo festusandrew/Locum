@@ -23,8 +23,9 @@ import {
     UserPlus,
     Plus
 } from 'lucide-react';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useUserRole, UserRole } from '../contexts/UserRoleContext';
+import { useSystemSettings, RegionType, CurrencyType, DateFormatType, TimeFormatType } from '../contexts/SystemSettingsContext';
 import { toast } from 'sonner';
 
 type SettingsTab = 'profile' | 'notifications' | 'security' | 'system' | 'integrations' | 'access';
@@ -106,20 +107,39 @@ export function Settings() {
         loginNotifications: true
     });
 
+    const { 
+        region, setRegion, 
+        currency, setCurrency, 
+        dateFormat, setDateFormat, 
+        timeFormat, setTimeFormat,
+        autoDetect, setAutoDetect
+    } = useSystemSettings();
+
     // System Settings State
     const [systemSettings, setSystemSettings] = useState({
-        dateFormat: 'DD/MM/YYYY',
-        timeFormat: '24-hour',
-        currency: 'EUR',
+        dateFormat: dateFormat,
+        timeFormat: timeFormat,
+        currency: currency,
         fiscalYearStart: 'January',
         autoBackup: true,
         backupFrequency: 'daily',
         dataRetention: '365'
     });
 
+    useEffect(() => {
+        setSystemSettings(prev => ({
+            ...prev,
+            dateFormat,
+            timeFormat,
+            currency
+        }));
+    }, [dateFormat, timeFormat, currency]);
+
     const handleSave = () => {
-        // Simulate save
-        alert('Settings saved successfully!');
+        setCurrency(systemSettings.currency as any);
+        setDateFormat(systemSettings.dateFormat as any);
+        setTimeFormat(systemSettings.timeFormat as any);
+        toast.success('System settings saved successfully!');
         setHasChanges(false);
     };
 
@@ -640,13 +660,73 @@ export function Settings() {
                                 {/* Regional Settings */}
                                 <div className="mb-6 pb-6 border-b border-[#E5E7EB]">
                                     <h4 className="text-sm font-medium text-[#1F2937] mb-4">Regional Settings</h4>
+
+                                    {/* Auto-detect toggle switch */}
+                                    <div className="flex items-center justify-between p-4 bg-[#F9FAFB] border border-[#E5E7EB] rounded-xl mb-6">
+                                        <div>
+                                            <h5 className="text-sm font-semibold text-[#1F2937]">Auto-Detect Location</h5>
+                                            <p className="text-xs text-[#6B7280] mt-0.5">Use your network IP geolocation to automatically assign your region and local currency.</p>
+                                        </div>
+                                        <button
+                                            onClick={() => {
+                                                setAutoDetect(!autoDetect);
+                                                toast.success(autoDetect ? "Switched to manual override mode" : "Auto-detection enabled!");
+                                            }}
+                                            className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${autoDetect ? 'bg-[#10B981]' : 'bg-[#D1D5DB]'}`}
+                                        >
+                                            <span
+                                                className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${autoDetect ? 'translate-x-5' : 'translate-x-0'}`}
+                                            />
+                                        </button>
+                                    </div>
+
                                     <div className="grid grid-cols-2 gap-4">
+                                        <div className="col-span-2">
+                                            <label className="block text-sm font-medium text-[#1F2937] mb-2">
+                                                System Region {autoDetect && <span className="text-[10px] text-[#10B981] font-semibold ml-1 bg-[#ECFDF5] px-1.5 py-0.5 rounded-full">Auto-Locked</span>}
+                                            </label>
+                                            <select
+                                                disabled={autoDetect}
+                                                value={region}
+                                                onChange={(e) => {
+                                                    const newRegion = e.target.value as RegionType;
+                                                    setRegion(newRegion);
+                                                    
+                                                    let defaultCurrency = 'USD';
+                                                    let defaultDateFormat = 'DD/MM/YYYY';
+                                                    if (newRegion === 'IE') {
+                                                        defaultCurrency = 'EUR';
+                                                        defaultDateFormat = 'DD/MM/YYYY';
+                                                    } else if (newRegion === 'GB') {
+                                                        defaultCurrency = 'GBP';
+                                                        defaultDateFormat = 'DD/MM/YYYY';
+                                                    } else if (newRegion === 'US') {
+                                                        defaultCurrency = 'USD';
+                                                        defaultDateFormat = 'MM/DD/YYYY';
+                                                    }
+                                                    
+                                                    setSystemSettings(prev => ({
+                                                        ...prev,
+                                                        currency: defaultCurrency as CurrencyType,
+                                                        dateFormat: defaultDateFormat as DateFormatType
+                                                    }));
+                                                    setHasChanges(true);
+                                                    toast.success(`Active region changed to ${newRegion === 'global' ? 'Global' : newRegion}`);
+                                                }}
+                                                className={`w-full px-3 py-2 border border-[#E5E7EB] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#10B981] ${autoDetect ? 'bg-[#F3F4F6] text-[#9CA3AF] cursor-not-allowed' : 'bg-white'}`}
+                                            >
+                                                <option value="global">🌐 Global (Worldwide)</option>
+                                                <option value="IE">🇮🇪 Ireland</option>
+                                                <option value="GB">🇬🇧 United Kingdom</option>
+                                                <option value="US">🇺🇸 United States</option>
+                                            </select>
+                                        </div>
                                         <div>
                                             <label className="block text-sm font-medium text-[#1F2937] mb-2">Date Format</label>
                                             <select
                                                 value={systemSettings.dateFormat}
                                                 onChange={(e) => {
-                                                    setSystemSettings({ ...systemSettings, dateFormat: e.target.value });
+                                                    setSystemSettings({ ...systemSettings, dateFormat: e.target.value as DateFormatType });
                                                     setHasChanges(true);
                                                 }}
                                                 className="w-full px-3 py-2 border border-[#E5E7EB] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#10B981]"
@@ -661,7 +741,7 @@ export function Settings() {
                                             <select
                                                 value={systemSettings.timeFormat}
                                                 onChange={(e) => {
-                                                    setSystemSettings({ ...systemSettings, timeFormat: e.target.value });
+                                                    setSystemSettings({ ...systemSettings, timeFormat: e.target.value as TimeFormatType });
                                                     setHasChanges(true);
                                                 }}
                                                 className="w-full px-3 py-2 border border-[#E5E7EB] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#10B981]"
@@ -678,14 +758,17 @@ export function Settings() {
                                     <h4 className="text-sm font-medium text-[#1F2937] mb-4">Financial Settings</h4>
                                     <div className="grid grid-cols-2 gap-4">
                                         <div>
-                                            <label className="block text-sm font-medium text-[#1F2937] mb-2">Currency</label>
+                                            <label className="block text-sm font-medium text-[#1F2937] mb-2">
+                                                Currency {autoDetect && <span className="text-[10px] text-[#10B981] font-semibold ml-1 bg-[#ECFDF5] px-1.5 py-0.5 rounded-full">Auto-Locked</span>}
+                                            </label>
                                             <select
+                                                disabled={autoDetect}
                                                 value={systemSettings.currency}
                                                 onChange={(e) => {
-                                                    setSystemSettings({ ...systemSettings, currency: e.target.value });
+                                                    setSystemSettings({ ...systemSettings, currency: e.target.value as CurrencyType });
                                                     setHasChanges(true);
                                                 }}
-                                                className="w-full px-3 py-2 border border-[#E5E7EB] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#10B981]"
+                                                className={`w-full px-3 py-2 border border-[#E5E7EB] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#10B981] ${autoDetect ? 'bg-[#F3F4F6] text-[#9CA3AF] cursor-not-allowed' : 'bg-white'}`}
                                             >
                                                 <option value="EUR">EUR (€)</option>
                                                 <option value="GBP">GBP (£)</option>

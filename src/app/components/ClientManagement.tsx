@@ -4,10 +4,11 @@ import {
     Building2, Search, Plus, MapPin, Phone, Mail, Star, Users,
     Eye, X, ChevronDown, Download, SlidersHorizontal, MessageCircle,
     FileText, Calendar, DollarSign, Edit, MoreVertical, Archive,
-    Globe, Award, Briefcase, ShieldCheck, Activity
+    Globe, Award, Briefcase, ShieldCheck, Activity, Sparkles
 } from 'lucide-react';
 import { Client } from '../types';
 import { clientService } from '../services/clientService';
+import { useSystemSettings } from '../contexts/SystemSettingsContext';
 
 const feedbackData = [
     { id: 'FB-001', client: "St. James's Hospital", locum: 'Sarah Mitchell', rating: 5, comment: 'Excellent surgeon, highly professional. Would definitely book again.', date: '2026-02-08' },
@@ -31,6 +32,7 @@ const typeColors: Record<string, string> = {
 };
 
 export function ClientManagement({ subPage = 'directory', onViewProfile }: { subPage?: string; onViewProfile?: (id: string) => void }) {
+    const { isWhitelabelActive, brandingFacilityId, setBrandingFacilityId, setIsWhitelabelActive } = useSystemSettings();
     const [clientsList, setClientsList] = useState<Client[]>([]);
     const [searchTerm, setSearchTerm] = useState('');
     const [typeFilter, setTypeFilter] = useState('all');
@@ -91,6 +93,8 @@ export function ClientManagement({ subPage = 'directory', onViewProfile }: { sub
         invoiceFrequency: 'Fortnightly',
         poRequired: true,
         agencyMargin: '15%',
+        logo: '',
+        themeColor: '#10B981',
     });
 
     // Fetch clients on mount
@@ -149,7 +153,9 @@ export function ClientManagement({ subPage = 'directory', onViewProfile }: { sub
             status: formData.status === 'active' ? 'active' : 'inactive',
             monthlySpend: 0,
             preferredLocums: 0,
-            complianceReqs: ['Medical Council of Ireland Registration', 'Garda Vetting (NVB Clearance)', 'Professional Indemnity Insurance', 'BLS / CPR Certification']
+            complianceReqs: ['Medical Council of Ireland Registration', 'Garda Vetting (NVB Clearance)', 'Professional Indemnity Insurance', 'BLS / CPR Certification'],
+            logo: formData.logo,
+            themeColor: formData.themeColor,
         };
 
         // Construct complete facility profile matching FacilityProfilePage.tsx state schema
@@ -158,6 +164,8 @@ export function ClientManagement({ subPage = 'directory', onViewProfile }: { sub
             name: formData.name,
             type: formData.type,
             status: formData.status === 'active' ? 'active' : 'inactive',
+            logo: formData.logo,
+            themeColor: formData.themeColor,
             overview: {
                 address: formData.address || "James's Street, Dublin 8, D08 NHY1",
                 eircode: formData.eircode || "D08 NHY1",
@@ -301,6 +309,8 @@ export function ClientManagement({ subPage = 'directory', onViewProfile }: { sub
                 invoiceFrequency: 'Fortnightly',
                 poRequired: true,
                 agencyMargin: '15%',
+                logo: '',
+                themeColor: '#10B981',
             });
         } catch (err) {
             toast.error('Failed to create facility');
@@ -323,7 +333,9 @@ export function ClientManagement({ subPage = 'directory', onViewProfile }: { sub
             contactPerson: formData.contactPersonName,
             contactEmail: formData.contactPersonEmail,
             contactPhone: formData.contactPersonPhone,
-            status: formData.status === 'active' ? 'active' : 'inactive'
+            status: formData.status === 'active' ? 'active' : 'inactive',
+            logo: formData.logo,
+            themeColor: formData.themeColor,
         };
 
         try {
@@ -338,6 +350,8 @@ export function ClientManagement({ subPage = 'directory', onViewProfile }: { sub
                     name: formData.name,
                     type: formData.type,
                     status: formData.status === 'active' ? 'active' : 'inactive',
+                    logo: formData.logo,
+                    themeColor: formData.themeColor,
                     overview: {
                         ...profile.overview,
                         address: formData.address,
@@ -473,6 +487,8 @@ export function ClientManagement({ subPage = 'directory', onViewProfile }: { sub
             invoiceFrequency: profile?.contract?.invoiceFrequency || 'Fortnightly',
             poRequired: profile?.contract?.poRequired ?? true,
             agencyMargin: profile?.contract?.agencyMargin || '15%',
+            logo: client.logo || profile?.logo || '',
+            themeColor: client.themeColor || profile?.themeColor || '#10B981',
         });
         setModalTab('overview');
         setShowEditModal(true);
@@ -588,8 +604,12 @@ export function ClientManagement({ subPage = 'directory', onViewProfile }: { sub
                                 <tr key={client.id} className="border-b border-[#F3F4F6] hover:bg-[#F9FAFB]">
                                     <td className="px-4 py-3 cursor-pointer" onClick={() => onViewProfile?.(client.id)}>
                                         <div className="flex items-center gap-3">
-                                            <div className="w-9 h-9 bg-[#F3F4F6] rounded-lg flex items-center justify-center">
-                                                <Building2 className="w-4 h-4 text-[#6B7280]" />
+                                            <div className="w-9 h-9 bg-[#F3F4F6] rounded-lg flex items-center justify-center overflow-hidden border border-[#E5E7EB]">
+                                                {client.logo ? (
+                                                    <img src={client.logo} alt={client.name} className="w-full h-full object-cover" />
+                                                ) : (
+                                                    <Building2 className="w-4 h-4 text-[#6B7280]" />
+                                                )}
                                             </div>
                                             <div>
                                                 <p className="text-sm text-[#1F2937]" style={{ fontWeight: 500 }}>{client.name}</p>
@@ -625,6 +645,31 @@ export function ClientManagement({ subPage = 'directory', onViewProfile }: { sub
                                     </td>
                                     <td className="px-4 py-3">
                                         <div className="flex items-center gap-2">
+                                            {/* Commented out whitelabel preview icon button
+                                            <button 
+                                                onClick={() => {
+                                                    const isThisClientActive = isWhitelabelActive && brandingFacilityId === client.id;
+                                                    if (isThisClientActive) {
+                                                        setIsWhitelabelActive(false);
+                                                        setBrandingFacilityId(null);
+                                                        toast.success("Returned to main portal view");
+                                                    } else {
+                                                        setBrandingFacilityId(client.id);
+                                                        setIsWhitelabelActive(true);
+                                                        toast.success(`Active Whitelabel Portal updated to ${client.name}!`);
+                                                    }
+                                                }}
+                                                className={`flex items-center justify-center w-8 h-8 rounded-lg transition-all ${
+                                                    isWhitelabelActive && brandingFacilityId === client.id
+                                                        ? 'text-white shadow-sm' 
+                                                        : 'text-[#6B7280] hover:text-amber-500 hover:bg-amber-50'
+                                                }`}
+                                                style={isWhitelabelActive && brandingFacilityId === client.id ? { backgroundColor: client.themeColor || '#10B981' } : undefined}
+                                                title={isWhitelabelActive && brandingFacilityId === client.id ? "Active Whitelabel Portal (Click to deactivate)" : "Preview Whitelabel Portal"}
+                                            >
+                                                <Sparkles className={`w-4 h-4 ${isWhitelabelActive && brandingFacilityId === client.id ? 'animate-pulse' : ''}`} />
+                                            </button>
+                                            */}
                                             <button onClick={() => onViewProfile?.(client.id)}
                                                 className="flex items-center justify-center w-8 h-8 text-[#6B7280] hover:text-[#10B981] hover:bg-[#ECFDF5] rounded-lg transition-colors"
                                                 title="View Profile">
@@ -697,6 +742,104 @@ export function ClientManagement({ subPage = 'directory', onViewProfile }: { sub
                                             <h4 className="text-sm text-[#1F2937]" style={{ fontWeight: 600 }}>Basic Information</h4>
                                         </div>
                                         <div className="grid grid-cols-2 gap-4">
+                                            <div className="col-span-2 mb-2">
+                                                <label className="block text-xs text-[#6B7280] mb-2 font-medium">Facility Logo</label>
+                                                <div className="flex items-center gap-4">
+                                                    <div className="w-16 h-16 rounded-xl border-2 border-dashed border-[#D1D5DB] bg-[#F9FAFB] flex items-center justify-center overflow-hidden shrink-0">
+                                                        {formData.logo ? (
+                                                            <img src={formData.logo} alt="Preview" className="w-full h-full object-cover" />
+                                                        ) : (
+                                                            <Building2 className="w-6 h-6 text-[#9CA3AF]" />
+                                                        )}
+                                                    </div>
+                                                    <div className="flex-1">
+                                                        <div className="relative inline-block">
+                                                            <input
+                                                                type="file"
+                                                                accept="image/*"
+                                                                onChange={(e) => {
+                                                                    const file = e.target.files?.[0];
+                                                                    if (file) {
+                                                                        const reader = new FileReader();
+                                                                        reader.onloadend = () => {
+                                                                            setFormData({ ...formData, logo: reader.result as string });
+                                                                            toast.success("Logo uploaded successfully!");
+                                                                        };
+                                                                        reader.readAsDataURL(file);
+                                                                    }
+                                                                }}
+                                                                className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
+                                                            />
+                                                            <button
+                                                                type="button"
+                                                                className="px-4 py-2 text-xs font-semibold bg-[#F3F4F6] text-[#4B5563] border border-[#E5E7EB] rounded-lg hover:bg-[#E5E7EB] transition-colors"
+                                                            >
+                                                                Choose Logo Image
+                                                            </button>
+                                                        </div>
+                                                        {formData.logo && (
+                                                            <button
+                                                                type="button"
+                                                                onClick={() => setFormData({ ...formData, logo: '' })}
+                                                                className="ml-3 text-xs text-[#EF4444] hover:underline font-medium"
+                                                            >
+                                                                Remove Logo
+                                                            </button>
+                                                        )}
+                                                        <p className="text-[10px] text-[#9CA3AF] mt-1">Accepts PNG, JPG, or SVG. Max 2MB.</p>
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            <div className="col-span-2 mt-4 border-t border-[#F3F4F6] pt-4">
+                                                <label className="block text-xs text-[#6B7280] mb-2 font-semibold">Custom Brand Theme Color</label>
+                                                <div className="flex flex-wrap items-center gap-3">
+                                                    {[
+                                                        { hex: '#10B981', name: 'HSE Green' },
+                                                        { hex: '#3B82F6', name: 'NHS Blue' },
+                                                        { hex: '#6366F1', name: 'Care Indigo' },
+                                                        { hex: '#7C3AED', name: 'Beacon Purple' },
+                                                        { hex: '#EC4899', name: 'Clinic Pink' },
+                                                        { hex: '#EF4444', name: 'Emergency Red' },
+                                                        { hex: '#F59E0B', name: 'Amber Warning' },
+                                                        { hex: '#0D9488', name: 'Teal Health' },
+                                                    ].map((color) => (
+                                                        <button
+                                                            key={color.hex}
+                                                            type="button"
+                                                            onClick={() => setFormData({ ...formData, themeColor: color.hex })}
+                                                            className="w-8 h-8 rounded-full border-2 transition-all relative flex items-center justify-center hover:scale-110"
+                                                            style={{ 
+                                                                backgroundColor: color.hex,
+                                                                borderColor: formData.themeColor === color.hex ? '#1F2937' : 'transparent',
+                                                                boxShadow: formData.themeColor === color.hex ? '0 0 0 2px rgba(0,0,0,0.1)' : 'none'
+                                                            }}
+                                                            title={color.name}
+                                                        >
+                                                            {formData.themeColor === color.hex && (
+                                                                <span className="w-1.5 h-1.5 rounded-full bg-white" />
+                                                            )}
+                                                        </button>
+                                                    ))}
+
+                                                    <div className="flex items-center gap-2 ml-4 pl-4 border-l border-[#E5E7EB]">
+                                                        <input 
+                                                            type="color" 
+                                                            value={formData.themeColor || '#10B981'}
+                                                            onChange={(e) => setFormData({ ...formData, themeColor: e.target.value })}
+                                                            className="w-8 h-8 rounded cursor-pointer border border-[#D1D5DB] p-0"
+                                                        />
+                                                        <input 
+                                                            type="text" 
+                                                            value={formData.themeColor || '#10B981'}
+                                                            onChange={(e) => setFormData({ ...formData, themeColor: e.target.value })}
+                                                            placeholder="#10B981"
+                                                            className="w-24 px-2 py-1 text-xs border border-[#E5E7EB] rounded-lg uppercase font-mono focus:outline-none focus:ring-1 focus:ring-[#10B981] text-[#1F2937] bg-white text-center"
+                                                        />
+                                                    </div>
+                                                </div>
+                                                <p className="text-[10px] text-[#9CA3AF] mt-2">Pick a brand color which will customize active buttons, navigation tabs, hover highlights, and indicators for this facility's whitelabeled view.</p>
+                                            </div>
                                             <div className="col-span-2">
                                                 <label className="block text-xs text-[#6B7280] mb-1.5 font-medium">Facility Name <span className="text-[#EF4444]">*</span></label>
                                                 <input
@@ -1306,6 +1449,104 @@ export function ClientManagement({ subPage = 'directory', onViewProfile }: { sub
                                             <h4 className="text-sm text-[#1F2937]" style={{ fontWeight: 600 }}>Basic Information</h4>
                                         </div>
                                         <div className="grid grid-cols-2 gap-4">
+                                            <div className="col-span-2 mb-2">
+                                                <label className="block text-xs text-[#6B7280] mb-2 font-medium">Facility Logo</label>
+                                                <div className="flex items-center gap-4">
+                                                    <div className="w-16 h-16 rounded-xl border-2 border-dashed border-[#D1D5DB] bg-[#F9FAFB] flex items-center justify-center overflow-hidden shrink-0">
+                                                        {formData.logo ? (
+                                                            <img src={formData.logo} alt="Preview" className="w-full h-full object-cover" />
+                                                        ) : (
+                                                            <Building2 className="w-6 h-6 text-[#9CA3AF]" />
+                                                        )}
+                                                    </div>
+                                                    <div className="flex-1">
+                                                        <div className="relative inline-block">
+                                                            <input
+                                                                type="file"
+                                                                accept="image/*"
+                                                                onChange={(e) => {
+                                                                    const file = e.target.files?.[0];
+                                                                    if (file) {
+                                                                        const reader = new FileReader();
+                                                                        reader.onloadend = () => {
+                                                                            setFormData({ ...formData, logo: reader.result as string });
+                                                                            toast.success("Logo uploaded successfully!");
+                                                                        };
+                                                                        reader.readAsDataURL(file);
+                                                                    }
+                                                                }}
+                                                                className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
+                                                            />
+                                                            <button
+                                                                type="button"
+                                                                className="px-4 py-2 text-xs font-semibold bg-[#F3F4F6] text-[#4B5563] border border-[#E5E7EB] rounded-lg hover:bg-[#E5E7EB] transition-colors"
+                                                            >
+                                                                Choose Logo Image
+                                                            </button>
+                                                        </div>
+                                                        {formData.logo && (
+                                                            <button
+                                                                type="button"
+                                                                onClick={() => setFormData({ ...formData, logo: '' })}
+                                                                className="ml-3 text-xs text-[#EF4444] hover:underline font-medium"
+                                                            >
+                                                                Remove Logo
+                                                            </button>
+                                                        )}
+                                                        <p className="text-[10px] text-[#9CA3AF] mt-1">Accepts PNG, JPG, or SVG. Max 2MB.</p>
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            <div className="col-span-2 mt-4 border-t border-[#F3F4F6] pt-4">
+                                                <label className="block text-xs text-[#6B7280] mb-2 font-semibold">Custom Brand Theme Color</label>
+                                                <div className="flex flex-wrap items-center gap-3">
+                                                    {[
+                                                        { hex: '#10B981', name: 'HSE Green' },
+                                                        { hex: '#3B82F6', name: 'NHS Blue' },
+                                                        { hex: '#6366F1', name: 'Care Indigo' },
+                                                        { hex: '#7C3AED', name: 'Beacon Purple' },
+                                                        { hex: '#EC4899', name: 'Clinic Pink' },
+                                                        { hex: '#EF4444', name: 'Emergency Red' },
+                                                        { hex: '#F59E0B', name: 'Amber Warning' },
+                                                        { hex: '#0D9488', name: 'Teal Health' },
+                                                    ].map((color) => (
+                                                        <button
+                                                            key={color.hex}
+                                                            type="button"
+                                                            onClick={() => setFormData({ ...formData, themeColor: color.hex })}
+                                                            className="w-8 h-8 rounded-full border-2 transition-all relative flex items-center justify-center hover:scale-110"
+                                                            style={{ 
+                                                                backgroundColor: color.hex,
+                                                                borderColor: formData.themeColor === color.hex ? '#1F2937' : 'transparent',
+                                                                boxShadow: formData.themeColor === color.hex ? '0 0 0 2px rgba(0,0,0,0.1)' : 'none'
+                                                            }}
+                                                            title={color.name}
+                                                        >
+                                                            {formData.themeColor === color.hex && (
+                                                                <span className="w-1.5 h-1.5 rounded-full bg-white" />
+                                                            )}
+                                                        </button>
+                                                    ))}
+
+                                                    <div className="flex items-center gap-2 ml-4 pl-4 border-l border-[#E5E7EB]">
+                                                        <input 
+                                                            type="color" 
+                                                            value={formData.themeColor || '#10B981'}
+                                                            onChange={(e) => setFormData({ ...formData, themeColor: e.target.value })}
+                                                            className="w-8 h-8 rounded cursor-pointer border border-[#D1D5DB] p-0"
+                                                        />
+                                                        <input 
+                                                            type="text" 
+                                                            value={formData.themeColor || '#10B981'}
+                                                            onChange={(e) => setFormData({ ...formData, themeColor: e.target.value })}
+                                                            placeholder="#10B981"
+                                                            className="w-24 px-2 py-1 text-xs border border-[#E5E7EB] rounded-lg uppercase font-mono focus:outline-none focus:ring-1 focus:ring-[#10B981] text-[#1F2937] bg-white text-center"
+                                                        />
+                                                    </div>
+                                                </div>
+                                                <p className="text-[10px] text-[#9CA3AF] mt-2">Pick a brand color which will customize active buttons, navigation tabs, hover highlights, and indicators for this facility's whitelabeled view.</p>
+                                            </div>
                                             <div className="col-span-2">
                                                 <label className="block text-xs text-[#6B7280] mb-1.5 font-medium">Facility Name <span className="text-[#EF4444]">*</span></label>
                                                 <input

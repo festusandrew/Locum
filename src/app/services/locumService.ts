@@ -111,6 +111,15 @@ export const locumService = {
         localStorage.setItem(APPLICANTS_KEY, JSON.stringify(applicants));
     },
 
+    createApplicant: async (applicant: Applicant): Promise<Applicant> => {
+        const stored = localStorage.getItem(APPLICANTS_KEY);
+        const applicants: Applicant[] = stored ? JSON.parse(stored) : defaultApplicants;
+        
+        applicants.push(applicant);
+        localStorage.setItem(APPLICANTS_KEY, JSON.stringify(applicants));
+        return applicant;
+    },
+
     updateApplicantStage: async (id: string, stage: string, status: Applicant['status']): Promise<Applicant> => {
         const stored = localStorage.getItem(APPLICANTS_KEY);
         const applicants: Applicant[] = stored ? JSON.parse(stored) : defaultApplicants;
@@ -144,8 +153,8 @@ export const locumService = {
             specialty: applicant.specialty,
             department: applicant.specialty.includes('Surgery') ? 'Surgery' : 'Internal Medicine',
             location: applicant.location + ', Ireland',
-            phone: '+353 1 555 0199',
-            email: `${applicant.name.toLowerCase().replace(/\s+/g, '.')}@email.com`,
+            phone: applicant.phone || '+353 1 555 0199',
+            email: applicant.email || `${applicant.name.toLowerCase().replace(/\s+/g, '.')}@email.com`,
             status: 'available',
             shifts: 0,
             rating: 5.0,

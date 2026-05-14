@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { UserRoleProvider, useUserRole } from './contexts/UserRoleContext';
+import { SystemSettingsProvider, useSystemSettings, RegionType } from './contexts/SystemSettingsContext';
 import { Sidebar } from './components/Sidebar';
 import { DashboardOverview } from './components/DashboardOverview';
 import { LocumManagement } from './components/LocumManagement';
@@ -21,7 +22,7 @@ import { FacilityProfilePage } from './components/FacilityProfilePage';
 import { ShiftDetailPage } from './components/ShiftDetailPage';
 import { TimesheetDetailPage } from './components/TimesheetDetailPage';
 import { ComplianceDetailPage } from './components/ComplianceDetailPage';
-import { Mail, Bell, Search, Plus, ChevronRight } from 'lucide-react';
+import { Mail, Bell, Search, Plus, ChevronRight, Globe, ChevronDown } from 'lucide-react';
 import { Toaster } from './components/ui/sonner';
 import { toast } from 'sonner';
 
@@ -71,6 +72,11 @@ function AppContent() {
     const [globalSearch, setGlobalSearch] = useState('');
     const [selectedProfileId, setSelectedProfileId] = useState<string>(initialUrl.id);
     const { permissions, role } = useUserRole();
+    const { 
+        region, setRegion, autoDetect, setAutoDetect, detectedInfo, isDetecting,
+        isWhitelabelActive, brandingName, brandingColor, brandingLogo, setIsWhitelabelActive, setBrandingFacilityId 
+    } = useSystemSettings();
+    const [showRegionDropdown, setShowRegionDropdown] = useState(false);
     const [showNotifications, setShowNotifications] = useState(false);
     const [notifications, setNotifications] = useState([
         { id: 1, title: 'Compliance Expired', message: 'Garda Vetting for Emily Chen has expired.', time: '10m ago', unread: true, type: 'critical' },
@@ -78,6 +84,16 @@ function AppContent() {
         { id: 3, title: 'Timesheet Submitted', message: 'Sarah Mitchell submitted timesheet TS-2026-001.', time: '3h ago', unread: true, type: 'info' },
         { id: 4, title: 'Compliance Expiring', message: 'Medical License for David Thompson expires in 3 days.', time: '5h ago', unread: true, type: 'warning' },
     ]);
+
+    // Automatically route to facility dashboard if an administrator enters whitelabel portal view from an invalid client page
+    useEffect(() => {
+        if (isWhitelabelActive) {
+            const allowedPages = ['dashboard', 'shifts', 'locums', 'timesheets', 'payroll', 'settings', 'shiftDetail', 'timesheetDetail'];
+            if (!allowedPages.includes(currentPage)) {
+                setCurrentPageState('dashboard');
+            }
+        }
+    }, [isWhitelabelActive]);
 
     const setCurrentPage = (page: string) => {
         const detailPages = ['locumProfile', 'facilityProfile', 'shiftDetail', 'timesheetDetail', 'complianceDetail'];
@@ -194,6 +210,29 @@ function AppContent() {
         }
     };
 
+    const getPageTitle = () => {
+        if (isWhitelabelActive) {
+            const clientLabels: Record<string, string> = {
+                dashboard: 'Facility Dashboard',
+                shifts: 'Shift Bookings',
+                locums: 'Placed Locums',
+                timesheets: 'Roster Timesheets',
+                payroll: 'Invoices & Billing',
+                settings: 'Facility Settings',
+                shiftDetail: 'Shift Details',
+                timesheetDetail: 'Timesheet Details',
+            };
+            return clientLabels[currentPage] || pageLabels[currentPage] || 'Dashboard';
+        }
+        return pageLabels[currentPage] || 'Dashboard';
+    };
+
+    const handleExitPreview = () => {
+        setIsWhitelabelActive(false);
+        setBrandingFacilityId(null);
+        toast.success("Exited client portal preview. Returned to Agency admin mode.");
+    };
+
     return (
         <div className="min-h-screen bg-[#F5F5F5]">
             <Sidebar 
@@ -204,6 +243,29 @@ function AppContent() {
             />
 
             <div className={`transition-all duration-300 ease-in-out ${sidebarCollapsed ? 'ml-[72px]' : 'ml-[240px]'}`}>
+                {/* Active Client Preview Banner */}
+                {isWhitelabelActive && (
+                    <div className="px-6 py-2.5 bg-[#FEF3C7] border-b border-[#F59E0B] flex items-center justify-between text-xs font-semibold animate-in slide-in-from-top duration-300">
+                        <div className="flex items-center gap-2.5">
+                            <span className="relative flex h-2 w-2">
+                                <span className="animate-ping absolute inline-flex h-full w-full rounded-full opacity-75" style={{ backgroundColor: brandingColor || '#10B981' }}></span>
+                                <span className="relative inline-flex rounded-full h-2 w-2" style={{ backgroundColor: brandingColor || '#10B981' }}></span>
+                            </span>
+                            <span className="text-[#92400E]">
+                                PREVIEW PORTAL ACTIVE: Viewing as <strong className="font-extrabold text-[#78350F]">{brandingName || "Healthcare Client"}</strong>
+                            </span>
+                            <span className="text-[#D97706] font-normal">|</span>
+                            <span className="text-[#B45309] font-medium">Co-branded styles, custom assets, and facility-focused side navigation active.</span>
+                        </div>
+                        <button 
+                            onClick={handleExitPreview}
+                            className="px-3 py-1.5 text-xs font-bold text-white rounded bg-[#D97706] hover:bg-[#B45309] shadow-sm transition-all hover:scale-105 active:scale-95"
+                        >
+                            Exit Preview Mode
+                        </button>
+                    </div>
+                )}
+
                 {/* Top Header */}
                 <div className="bg-white border-b border-[#E5E7EB] px-6 py-3 sticky top-0 z-30">
                     <div className="flex items-center justify-between">
@@ -241,7 +303,7 @@ function AppContent() {
                                         <ChevronRight className="w-3.5 h-3.5 text-[#D1D5DB]" />
                                     </>
                                 )}
-                                <span className="text-[#1F2937]" style={{ fontWeight: 500 }}>{pageLabels[currentPage] || 'Dashboard'}</span>
+                                <span className="text-[#1F2937]" style={{ fontWeight: 500 }}>{getPageTitle()}</span>
                             </nav>
                         </div>
                         <div className="flex items-center gap-3">
@@ -256,6 +318,9 @@ function AppContent() {
                                     className="pl-9 pr-4 py-2 text-sm border border-[#E5E7EB] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#10B981] w-64 bg-[#F9FAFB]"
                                 />
                             </div>
+                            
+
+
                             <button className="relative w-9 h-9 bg-white border border-[#E5E7EB] rounded-lg flex items-center justify-center hover:bg-[#F9FAFB] transition-colors">
                                 <Mail className="w-4 h-4 text-[#6B7280]" />
                             </button>
@@ -365,8 +430,10 @@ function AppContent() {
 export default function App() {
     console.log("App rendered");
     return (
-        <UserRoleProvider>
-            <AppContent />
-        </UserRoleProvider>
+        <SystemSettingsProvider>
+            <UserRoleProvider>
+                <AppContent />
+            </UserRoleProvider>
+        </SystemSettingsProvider>
     );
 }

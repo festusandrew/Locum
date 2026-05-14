@@ -4,8 +4,9 @@ import {
     ArrowLeft, Building2, MapPin, Phone, Mail, Globe, Star, Users,
     Calendar, Clock, FileText, ShieldCheck, Download, Edit, MoreHorizontal,
     CheckCircle, AlertTriangle, User, Banknote, CreditCard, Award,
-    MessageSquare, Activity, Briefcase, Heart, Hash, BadgeCheck, Bed, X
+    MessageSquare, Activity, Briefcase, Heart, Hash, BadgeCheck, Bed, X, Sparkles
 } from 'lucide-react';
+import { useSystemSettings } from '../contexts/SystemSettingsContext';
 
 interface FacilityProfilePageProps {
     facilityId: string;
@@ -253,6 +254,7 @@ function getFacilityProfile(id: string) {
 }
 
 export function FacilityProfilePage({ facilityId, onBack }: FacilityProfilePageProps) {
+    const { isWhitelabelActive, brandingFacilityId, setBrandingFacilityId, setIsWhitelabelActive } = useSystemSettings();
     const [profile, setProfile] = useState<any>(() => {
         const stored = localStorage.getItem(`mployus_facility_profile_${facilityId}`);
         if (stored) return JSON.parse(stored);
@@ -331,7 +333,9 @@ export function FacilityProfilePage({ facilityId, onBack }: FacilityProfilePageP
         poRequired: profile.contract?.poRequired || false,
         agencyMargin: profile.contract?.agencyMargin || '15%',
         vatApplicable: profile.contract?.vatApplicable || false,
-        vatRate: profile.contract?.vatRate || '23%'
+        vatRate: profile.contract?.vatRate || '23%',
+        logo: profile.logo || '',
+        themeColor: profile.themeColor || '#10B981',
     });
 
     const [newNoteAuthor, setNewNoteAuthor] = useState('');
@@ -404,7 +408,9 @@ export function FacilityProfilePage({ facilityId, onBack }: FacilityProfilePageP
             poRequired: currentProfile.contract?.poRequired || false,
             agencyMargin: currentProfile.contract?.agencyMargin || '15%',
             vatApplicable: currentProfile.contract?.vatApplicable || false,
-            vatRate: currentProfile.contract?.vatRate || '23%'
+            vatRate: currentProfile.contract?.vatRate || '23%',
+            logo: currentProfile.logo || '',
+            themeColor: currentProfile.themeColor || '#10B981',
         });
     }, [facilityId]);
 
@@ -426,7 +432,9 @@ export function FacilityProfilePage({ facilityId, onBack }: FacilityProfilePageP
                             address: updated.overview?.address || c.address,
                             contactEmail: updated.overview?.email || c.contactEmail,
                             contactPhone: updated.overview?.phone || c.contactPhone,
-                            type: updated.type || c.type
+                            type: updated.type || c.type,
+                            logo: updated.logo,
+                            themeColor: updated.themeColor
                         };
                     }
                     return c;
@@ -502,7 +510,9 @@ export function FacilityProfilePage({ facilityId, onBack }: FacilityProfilePageP
             poRequired: profile.contract?.poRequired || false,
             agencyMargin: profile.contract?.agencyMargin || '15%',
             vatApplicable: profile.contract?.vatApplicable || false,
-            vatRate: profile.contract?.vatRate || '23%'
+            vatRate: profile.contract?.vatRate || '23%',
+            logo: profile.logo || '',
+            themeColor: profile.themeColor || '#10B981',
         });
         setModalTab('overview');
         setShowEditModal(true);
@@ -515,6 +525,8 @@ export function FacilityProfilePage({ facilityId, onBack }: FacilityProfilePageP
             name: editForm.name,
             type: editForm.type,
             status: editForm.status,
+            logo: editForm.logo,
+            themeColor: editForm.themeColor,
             overview: {
                 ...profile.overview,
                 description: editForm.description,
@@ -655,6 +667,7 @@ export function FacilityProfilePage({ facilityId, onBack }: FacilityProfilePageP
     };
 
     const demandColors: Record<string, string> = { High: 'text-[#EF4444]', Medium: 'text-[#F59E0B]', Low: 'text-[#10B981]' };
+    const isThisFacilityWhitelabelActive = isWhitelabelActive && brandingFacilityId === facilityId;
 
     return (
         <div className="p-6 space-y-6">
@@ -672,6 +685,30 @@ export function FacilityProfilePage({ facilityId, onBack }: FacilityProfilePageP
                     <p className="text-sm text-[#6B7280]">Comprehensive facility information, contracts, and booking history</p>
                 </div>
                 <div className="flex items-center gap-2 relative">
+                    {/* Commented out whitelabeling preview portal trigger button
+                    <button 
+                        onClick={() => {
+                            if (isThisFacilityWhitelabelActive) {
+                                setIsWhitelabelActive(false);
+                                setBrandingFacilityId(null);
+                                toast.success("Returned to main portal view");
+                            } else {
+                                setBrandingFacilityId(facilityId);
+                                setIsWhitelabelActive(true);
+                                toast.success(`Active Whitelabel Portal updated to ${profile.name}!`);
+                            }
+                        }}
+                        className={`flex items-center gap-1.5 px-3 py-2 text-sm rounded-lg transition-all font-semibold ${
+                            isThisFacilityWhitelabelActive 
+                                ? 'text-white shadow-md animate-pulse'
+                                : 'text-[#4B5563] border border-[#E5E7EB] hover:bg-[#F9FAFB]'
+                        }`}
+                        style={isThisFacilityWhitelabelActive ? { backgroundColor: profile.themeColor || '#10B981' } : undefined}
+                    >
+                        <Sparkles className={`w-3.5 h-3.5 ${isThisFacilityWhitelabelActive ? 'animate-spin' : ''}`} />
+                        <span>{isThisFacilityWhitelabelActive ? 'Portal Active' : 'Preview Portal'}</span>
+                    </button>
+                    */}
                     <button onClick={handleOpenEdit} className="flex items-center gap-1.5 px-3 py-2 text-sm border border-[#E5E7EB] rounded-lg hover:bg-[#F9FAFB] transition-colors"><Edit className="w-3.5 h-3.5" /> Edit</button>
                     <button onClick={handleExport} className="flex items-center gap-1.5 px-3 py-2 text-sm border border-[#E5E7EB] rounded-lg hover:bg-[#F9FAFB] transition-colors"><Download className="w-3.5 h-3.5" /> Export</button>
                     <button onClick={() => setShowMoreMenu(!showMoreMenu)} className="p-2 border border-[#E5E7EB] rounded-lg hover:bg-[#F9FAFB] transition-colors"><MoreHorizontal className="w-4 h-4 text-[#6B7280]" /></button>
@@ -706,8 +743,12 @@ export function FacilityProfilePage({ facilityId, onBack }: FacilityProfilePageP
             {/* Header Card */}
             <div className="bg-white rounded-xl border border-[#E5E7EB] p-6">
                 <div className="flex items-start gap-5">
-                    <div className="w-20 h-20 bg-[#EFF6FF] rounded-2xl flex items-center justify-center flex-shrink-0">
-                        <Building2 className="w-10 h-10 text-[#3B82F6]" />
+                    <div className="w-20 h-20 bg-white rounded-2xl flex items-center justify-center flex-shrink-0 overflow-hidden border border-[#E5E7EB]">
+                        {profile.logo ? (
+                            <img src={profile.logo} alt={profile.name} className="w-full h-full object-cover" />
+                        ) : (
+                            <Building2 className="w-10 h-10 text-[#3B82F6]" />
+                        )}
                     </div>
                     <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-3 mb-1">
@@ -741,16 +782,29 @@ export function FacilityProfilePage({ facilityId, onBack }: FacilityProfilePageP
             {/* Tabs */}
             <div className="bg-white rounded-xl border border-[#E5E7EB]">
                 <div className="border-b border-[#E5E7EB] px-5 flex gap-1 overflow-x-auto">
-                    {tabs.map(tab => (
-                        <button
-                            key={tab.id}
-                            onClick={() => setActiveTab(tab.id)}
-                            className={`py-3 px-4 text-sm border-b-2 transition-colors whitespace-nowrap ${activeTab === tab.id ? 'border-[#10B981] text-[#10B981]' : 'border-transparent text-[#6B7280] hover:text-[#1F2937]'}`}
-                            style={{ fontWeight: activeTab === tab.id ? 600 : 400 }}
-                        >
-                            {tab.label}
-                        </button>
-                    ))}
+                    {tabs.map(tab => {
+                        const isActive = activeTab === tab.id;
+                        return (
+                            <button
+                                key={tab.id}
+                                onClick={() => setActiveTab(tab.id)}
+                                className={`py-3 px-4 text-sm border-b-2 transition-colors whitespace-nowrap ${
+                                    isActive 
+                                        ? isWhitelabelActive 
+                                            ? 'text-[#1F2937]'
+                                            : 'border-[#10B981] text-[#10B981]' 
+                                        : 'border-transparent text-[#6B7280] hover:text-[#1F2937]'
+                                }`}
+                                style={{ 
+                                    fontWeight: isActive ? 600 : 400,
+                                    borderColor: isActive && isWhitelabelActive ? (profile.themeColor || '#10B981') : undefined,
+                                    color: isActive && isWhitelabelActive ? (profile.themeColor || '#10B981') : undefined
+                                }}
+                            >
+                                {tab.label}
+                            </button>
+                        );
+                    })}
                 </div>
 
                 <div className="p-6">
@@ -1148,6 +1202,104 @@ export function FacilityProfilePage({ facilityId, onBack }: FacilityProfilePageP
                             <div className="p-6 space-y-4 overflow-y-auto flex-1">
                                 {modalTab === 'overview' && (
                                     <div className="space-y-4">
+                                        <div className="mb-4">
+                                            <label className="block text-xs text-[#6B7280] mb-2 font-medium">Facility Logo</label>
+                                            <div className="flex items-center gap-4">
+                                                <div className="w-16 h-16 rounded-xl border-2 border-dashed border-[#D1D5DB] bg-[#F9FAFB] flex items-center justify-center overflow-hidden shrink-0">
+                                                    {editForm.logo ? (
+                                                        <img src={editForm.logo} alt="Preview" className="w-full h-full object-cover" />
+                                                    ) : (
+                                                        <Building2 className="w-6 h-6 text-[#9CA3AF]" />
+                                                    )}
+                                                </div>
+                                                <div className="flex-1">
+                                                    <div className="relative inline-block">
+                                                        <input
+                                                            type="file"
+                                                            accept="image/*"
+                                                            onChange={(e) => {
+                                                                const file = e.target.files?.[0];
+                                                                if (file) {
+                                                                    const reader = new FileReader();
+                                                                    reader.onloadend = () => {
+                                                                        setEditForm({ ...editForm, logo: reader.result as string });
+                                                                        toast.success("Logo uploaded successfully!");
+                                                                    };
+                                                                    reader.readAsDataURL(file);
+                                                                }
+                                                            }}
+                                                            className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
+                                                        />
+                                                        <button
+                                                            type="button"
+                                                            className="px-4 py-2 text-xs font-semibold bg-[#F3F4F6] text-[#4B5563] border border-[#E5E7EB] rounded-lg hover:bg-[#E5E7EB] transition-colors"
+                                                        >
+                                                            Choose Logo Image
+                                                        </button>
+                                                    </div>
+                                                    {editForm.logo && (
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => setEditForm({ ...editForm, logo: '' })}
+                                                            className="ml-3 text-xs text-[#EF4444] hover:underline font-medium"
+                                                        >
+                                                            Remove Logo
+                                                        </button>
+                                                    )}
+                                                    <p className="text-[10px] text-[#9CA3AF] mt-1">Accepts PNG, JPG, or SVG. Max 2MB.</p>
+                                                </div>
+                                            </div>
+
+                                        <div className="mt-4 border-t border-[#F3F4F6] pt-4">
+                                            <label className="block text-xs text-[#6B7280] mb-2 font-semibold">Custom Brand Theme Color</label>
+                                            <div className="flex flex-wrap items-center gap-3">
+                                                {[
+                                                    { hex: '#10B981', name: 'HSE Green' },
+                                                    { hex: '#3B82F6', name: 'NHS Blue' },
+                                                    { hex: '#6366F1', name: 'Care Indigo' },
+                                                    { hex: '#7C3AED', name: 'Beacon Purple' },
+                                                    { hex: '#EC4899', name: 'Clinic Pink' },
+                                                    { hex: '#EF4444', name: 'Emergency Red' },
+                                                    { hex: '#F59E0B', name: 'Amber Warning' },
+                                                    { hex: '#0D9488', name: 'Teal Health' },
+                                                ].map((color) => (
+                                                    <button
+                                                        key={color.hex}
+                                                        type="button"
+                                                        onClick={() => setEditForm({ ...editForm, themeColor: color.hex })}
+                                                        className="w-8 h-8 rounded-full border-2 transition-all relative flex items-center justify-center hover:scale-110"
+                                                        style={{ 
+                                                            backgroundColor: color.hex,
+                                                            borderColor: editForm.themeColor === color.hex ? '#1F2937' : 'transparent',
+                                                            boxShadow: editForm.themeColor === color.hex ? '0 0 0 2px rgba(0,0,0,0.1)' : 'none'
+                                                        }}
+                                                        title={color.name}
+                                                    >
+                                                        {editForm.themeColor === color.hex && (
+                                                            <span className="w-1.5 h-1.5 rounded-full bg-white" />
+                                                        )}
+                                                    </button>
+                                                ))}
+
+                                                <div className="flex items-center gap-2 ml-4 pl-4 border-l border-[#E5E7EB]">
+                                                    <input 
+                                                        type="color" 
+                                                        value={editForm.themeColor || '#10B981'}
+                                                        onChange={(e) => setEditForm({ ...editForm, themeColor: e.target.value })}
+                                                        className="w-8 h-8 rounded cursor-pointer border border-[#D1D5DB] p-0"
+                                                    />
+                                                    <input 
+                                                        type="text" 
+                                                        value={editForm.themeColor || '#10B981'}
+                                                        onChange={(e) => setEditForm({ ...editForm, themeColor: e.target.value })}
+                                                        placeholder="#10B981"
+                                                        className="w-24 px-2 py-1 text-xs border border-[#E5E7EB] rounded-lg uppercase font-mono focus:outline-none focus:ring-1 focus:ring-[#10B981] text-[#1F2937] bg-white text-center"
+                                                    />
+                                                </div>
+                                            </div>
+                                            <p className="text-[10px] text-[#9CA3AF] mt-2">Pick a brand color which will customize active buttons, navigation tabs, hover highlights, and indicators for this facility's whitelabeled view.</p>
+                                        </div>
+                                        </div>
                                         <div className="grid grid-cols-2 gap-4">
                                             <div>
                                                 <label className="block text-xs text-[#6B7280] font-medium mb-1">Facility Name <span className="text-[#EF4444]">*</span></label>

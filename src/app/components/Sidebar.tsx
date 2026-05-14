@@ -6,6 +6,7 @@ import {
     ChevronLeft, LogOut
 } from 'lucide-react';
 import { useUserRole } from '../contexts/UserRoleContext';
+import { useSystemSettings } from '../contexts/SystemSettingsContext';
 import logoImg from '../logo.png';
 
 interface SidebarProps {
@@ -30,9 +31,10 @@ interface NavItem {
 
 export function Sidebar({ currentPage, onNavigate, isCollapsed, onToggleCollapse }: SidebarProps) {
     const { role, setRole } = useUserRole();
+    const { brandingLogo, brandingName, brandingColor, isWhitelabelActive } = useSystemSettings();
     const [collapsed, setCollapsed] = useState<Record<string, boolean>>({});
 
-    const navGroups: NavGroup[] = [
+    const adminNavGroups: NavGroup[] = [
         {
             label: 'MAIN',
             items: [
@@ -78,6 +80,32 @@ export function Sidebar({ currentPage, onNavigate, isCollapsed, onToggleCollapse
         },
     ];
 
+    const clientNavGroups: NavGroup[] = [
+        {
+            label: 'FACILITY PORTAL',
+            items: [
+                { id: 'dashboard', label: 'Facility Dashboard', icon: LayoutDashboard },
+                { id: 'shifts', label: 'Shift Bookings', icon: Calendar, badge: '3', badgeColor: 'bg-[#EF4444]' },
+            ]
+        },
+        {
+            label: 'STAFFING & OPERATIONS',
+            items: [
+                { id: 'locums', label: 'Placed Locums', icon: Users },
+                { id: 'timesheets', label: 'Roster Timesheets', icon: Clock, badge: '5', badgeColor: 'bg-[#F59E0B]' },
+                { id: 'payroll', label: 'Invoices & Billing', icon: Wallet },
+            ]
+        },
+        {
+            label: 'PREFERENCES',
+            items: [
+                { id: 'settings', label: 'Facility Settings', icon: Settings },
+            ]
+        },
+    ];
+
+    const navGroups = isWhitelabelActive ? clientNavGroups : adminNavGroups;
+
     const toggleGroup = (label: string) => {
         setCollapsed(prev => ({ ...prev, [label]: !prev[label] }));
     };
@@ -93,15 +121,30 @@ export function Sidebar({ currentPage, onNavigate, isCollapsed, onToggleCollapse
             >
                 {isCollapsed ? <ChevronRight className="w-3.5 h-3.5" /> : <ChevronLeft className="w-3.5 h-3.5" />}
             </button>
-
+ 
             {/* Logo area */}
             <div className={`border-b border-[#E5E7EB] flex items-center justify-center transition-all duration-300 ${isCollapsed ? 'px-2 py-5 h-[76px]' : 'px-5 py-4 h-[97px]'}`}>
-                <div className="flex flex-col items-center justify-center overflow-hidden">
-                    <img 
-                        src={logoImg} 
-                        alt="MployUs" 
-                        className={`object-contain transition-all duration-300 ${isCollapsed ? 'h-7 w-7' : 'h-14 w-auto'}`} 
-                    />
+                <div className="flex flex-col items-center justify-center overflow-hidden text-center">
+                    {isWhitelabelActive && brandingLogo ? (
+                        <>
+                            <img 
+                                src={brandingLogo} 
+                                alt={brandingName || "Portal"} 
+                                className={`object-contain rounded transition-all duration-300 ${isCollapsed ? 'h-8 w-8' : 'h-11 max-w-[140px] mb-1'}`} 
+                            />
+                            {!isCollapsed && (
+                                <span className="text-[10px] text-[#6B7280] tracking-wider uppercase font-bold block truncate max-w-[180px]">
+                                    {brandingName || "Facility Portal"}
+                                </span>
+                            )}
+                        </>
+                    ) : (
+                        <img 
+                            src={logoImg} 
+                            alt="MployUs" 
+                            className={`object-contain transition-all duration-300 ${isCollapsed ? 'h-7 w-7' : 'h-14 w-auto'}`} 
+                        />
+                    )}
                 </div>
             </div>
 
@@ -137,16 +180,20 @@ export function Sidebar({ currentPage, onNavigate, isCollapsed, onToggleCollapse
                                             key={item.id}
                                             onClick={() => onNavigate(item.id)}
                                             className={`w-full flex items-center justify-between px-3 py-2 rounded-lg transition-all duration-150 ${isActive
-                                                    ? 'bg-[#10B981] text-white shadow-sm'
+                                                    ? 'text-white shadow-sm'
                                                     : 'text-[#6B7280] hover:bg-[#F3F4F6] hover:text-[#1F2937]'
                                                 }`}
+                                            style={isActive ? { backgroundColor: isWhitelabelActive ? brandingColor : '#10B981' } : undefined}
                                         >
                                             <div className="flex items-center gap-2.5">
                                                 <Icon className="w-[18px] h-[18px]" />
                                                 <span style={{ fontSize: '13px' }}>{item.label}</span>
                                             </div>
                                             {item.badge && (
-                                                <span className={`${item.badgeColor || 'bg-[#10B981]'} text-white text-[10px] px-1.5 py-0.5 rounded-full min-w-[18px] text-center ${isActive ? 'bg-white/25 text-white' : ''}`}>
+                                                <span 
+                                                    className={`text-white text-[10px] px-1.5 py-0.5 rounded-full min-w-[18px] text-center ${isActive ? 'bg-white/25 text-white' : item.badgeColor || 'bg-[#10B981]'}`}
+                                                    style={!isActive ? { backgroundColor: isWhitelabelActive ? brandingColor : '#10B981' } : undefined}
+                                                >
                                                     {item.badge}
                                                 </span>
                                             )}
@@ -166,9 +213,10 @@ export function Sidebar({ currentPage, onNavigate, isCollapsed, onToggleCollapse
                                             key={item.id}
                                             onClick={() => onNavigate(item.id)}
                                             className={`w-10 h-10 mx-auto flex items-center justify-center rounded-lg transition-all duration-150 relative group ${isActive
-                                                    ? 'bg-[#10B981] text-white shadow-sm'
+                                                    ? 'text-white shadow-sm'
                                                     : 'text-[#6B7280] hover:bg-[#F3F4F6] hover:text-[#1F2937]'
                                                 }`}
+                                            style={isActive ? { backgroundColor: isWhitelabelActive ? brandingColor : '#10B981' } : undefined}
                                         >
                                             <Icon className="w-[18px] h-[18px]" />
                                             {item.badge && (
@@ -199,7 +247,13 @@ export function Sidebar({ currentPage, onNavigate, isCollapsed, onToggleCollapse
             <div className="px-3 pb-4 border-t border-[#E5E7EB] pt-4">
                 {isCollapsed ? (
                     <div className="relative group flex items-center justify-center">
-                        <div className="w-9 h-9 bg-[#10B981] rounded-full flex items-center justify-center shadow-sm cursor-pointer hover:ring-2 hover:ring-[#10B981]/30 transition-all">
+                        <div 
+                            className="w-9 h-9 rounded-full flex items-center justify-center shadow-sm cursor-pointer hover:ring-2 transition-all"
+                            style={{ 
+                                backgroundColor: isWhitelabelActive ? brandingColor : '#10B981',
+                                boxShadow: `0 0 0 2px ${isWhitelabelActive ? brandingColor + '20' : '#10B98120'}`
+                            }}
+                        >
                             <span className="text-white text-xs font-semibold">OM</span>
                         </div>
                         
@@ -222,8 +276,11 @@ export function Sidebar({ currentPage, onNavigate, isCollapsed, onToggleCollapse
                     </div>
                 ) : (
                     <div className="flex items-center gap-2.5 px-2">
-                        <div className="w-8 h-8 bg-[#10B981] rounded-full flex items-center justify-center">
-                            <span className="text-white text-xs">OM</span>
+                        <div 
+                            className="w-8 h-8 rounded-full flex items-center justify-center"
+                            style={{ backgroundColor: isWhitelabelActive ? brandingColor : '#10B981' }}
+                        >
+                            <span className="text-white text-xs font-semibold">OM</span>
                         </div>
                         <div className="flex-1 min-w-0">
                             <p className="text-xs text-[#1F2937] truncate" style={{ fontWeight: 600 }}>Omar Murphy</p>

@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useSystemSettings } from '../contexts/SystemSettingsContext';
 import {
     Users, Calendar, Clock, AlertTriangle, ShieldCheck, Wallet,
     TrendingUp, ArrowUp, ArrowDown, Plus, Send, Upload, CheckCircle,
@@ -63,6 +64,39 @@ interface DashboardOverviewProps {
 
 export function DashboardOverview({ onNavigate }: DashboardOverviewProps) {
     const [selectedPeriod, setSelectedPeriod] = useState('7d');
+    const { formatCurrency, getHospitals, t } = useSystemSettings();
+    const hospitals = getHospitals();
+
+    const getLocalFacility = (facilityName: string) => {
+        if (facilityName.includes("St. James's")) return hospitals[0] || facilityName;
+        if (facilityName.includes("Cork University")) return hospitals[1] || facilityName;
+        if (facilityName.includes("Beaumont")) return hospitals[2] || facilityName;
+        if (facilityName.includes("Galway")) return hospitals[3] || facilityName;
+        if (facilityName.includes("Mater")) return hospitals[4] || facilityName;
+        if (facilityName.includes("Waterford")) return hospitals[5] || facilityName;
+        if (facilityName.includes("Limerick")) return hospitals[6] || facilityName;
+        return facilityName;
+    };
+
+    const getLocalMessage = (msg: string) => {
+        let localized = msg;
+        if (localized.includes("Beaumont Hospital")) {
+            localized = localized.replace("Beaumont Hospital", hospitals[2] || "Beaumont Hospital");
+        }
+        if (localized.includes("Waterford University Hospital")) {
+            localized = localized.replace("Waterford University Hospital", hospitals[5] || "Waterford University Hospital");
+        }
+        if (localized.includes("Limerick")) {
+            localized = localized.replace("Limerick", hospitals[6] || "Limerick");
+        }
+        return localized;
+    };
+
+    const formatChartYAxis = (v: number) => {
+        const amountStr = (v / 1000).toFixed(0) + 'k';
+        const sample = formatCurrency(1, 0);
+        return sample.replace('1', amountStr);
+    };
 
     return (
         <div className="p-6 space-y-6">
@@ -79,7 +113,7 @@ export function DashboardOverview({ onNavigate }: DashboardOverviewProps) {
                             <div key={alert.id} className="flex items-center justify-between">
                                 <div className="flex items-center gap-2">
                                     <div className={`w-1.5 h-1.5 rounded-full ${alert.priority === 'high' ? 'bg-[#DC2626]' : 'bg-[#F59E0B]'}`} />
-                                    <p className="text-xs text-[#1F2937]">{alert.message}</p>
+                                    <p className="text-xs text-[#1F2937]">{getLocalMessage(alert.message)}</p>
                                 </div>
                                 <span className="text-[10px] text-[#9CA3AF] whitespace-nowrap ml-4">{alert.time}</span>
                             </div>
@@ -119,8 +153,8 @@ export function DashboardOverview({ onNavigate }: DashboardOverviewProps) {
             {/* KPI Cards Row 2 */}
             <div className="grid grid-cols-5 gap-4">
                 {[
-                    { label: 'Payroll This Month', value: '€245,800', sub: '+12% vs last month', icon: Wallet },
-                    { label: 'Revenue MTD', value: '€368,200', sub: '+18% vs last month', icon: TrendingUp },
+                    { label: 'Payroll This Month', value: formatCurrency(245800, 0), sub: '+12% vs last month', icon: Wallet },
+                    { label: 'Revenue MTD', value: formatCurrency(368200, 0), sub: '+18% vs last month', icon: TrendingUp },
                     { label: 'Total Clients', value: '156', sub: '12 new this month', icon: Building2 },
                     { label: 'Fill Rate', value: '91.5%', sub: '+3.2% improvement', icon: CheckCircle },
                     { label: 'Avg. Time to Fill', value: '4.2h', sub: '-1.8h from last month', icon: Zap },
@@ -276,8 +310,8 @@ export function DashboardOverview({ onNavigate }: DashboardOverviewProps) {
                         <LineChart data={revenueData}>
                             <CartesianGrid strokeDasharray="3 3" stroke="#F3F4F6" vertical={false} />
                             <XAxis dataKey="month" stroke="#9CA3AF" tick={{ fill: '#6B7280', fontSize: 12 }} axisLine={false} tickLine={false} />
-                            <YAxis stroke="#9CA3AF" tick={{ fill: '#6B7280', fontSize: 12 }} axisLine={false} tickLine={false} tickFormatter={(v) => `€${(v / 1000).toFixed(0)}k`} />
-                            <Tooltip contentStyle={{ backgroundColor: 'white', border: '1px solid #E5E7EB', borderRadius: '8px', fontSize: '12px' }} formatter={(value: number) => [`€${value.toLocaleString()}`, '']} />
+                            <YAxis stroke="#9CA3AF" tick={{ fill: '#6B7280', fontSize: 12 }} axisLine={false} tickLine={false} tickFormatter={formatChartYAxis} />
+                            <Tooltip contentStyle={{ backgroundColor: 'white', border: '1px solid #E5E7EB', borderRadius: '8px', fontSize: '12px' }} formatter={(value: number) => [formatCurrency(value, 0), '']} />
                             <Line type="monotone" dataKey="revenue" stroke="#10B981" strokeWidth={2} dot={{ fill: '#10B981', r: 4 }} />
                             <Line type="monotone" dataKey="cost" stroke="#9CA3AF" strokeWidth={2} dot={{ fill: '#9CA3AF', r: 4 }} strokeDasharray="5 5" />
                         </LineChart>
@@ -298,7 +332,7 @@ export function DashboardOverview({ onNavigate }: DashboardOverviewProps) {
                                 <div className={`w-2 h-2 rounded-full mt-1.5 ${alert.severity === 'expired' ? 'bg-[#DC2626]' : alert.severity === 'critical' ? 'bg-[#F59E0B]' : 'bg-[#F59E0B]'}`} />
                                 <div className="flex-1 min-w-0">
                                     <p className="text-xs text-[#1F2937]" style={{ fontWeight: 500 }}>{alert.locum}</p>
-                                    <p className="text-[11px] text-[#6B7280]">{alert.doc}</p>
+                                    <p className="text-[11px] text-[#6B7280]">{alert.doc === 'Garda Vetting' ? t('nationalVettingShort') : alert.doc === 'Medical License' ? t('medicalLicense') : alert.doc}</p>
                                     <p className={`text-[11px] mt-0.5 ${alert.daysLeft < 0 ? 'text-[#DC2626]' : 'text-[#F59E0B]'}`} style={{ fontWeight: 500 }}>
                                         {alert.daysLeft < 0 ? `Expired ${Math.abs(alert.daysLeft)} days ago` : `Expires in ${alert.daysLeft} days`}
                                     </p>
@@ -337,7 +371,7 @@ export function DashboardOverview({ onNavigate }: DashboardOverviewProps) {
                                     <td className="px-4 py-3">
                                         <div className="flex items-center gap-1.5">
                                             <Building2 className="w-3 h-3 text-[#9CA3AF]" />
-                                            <span className="text-xs text-[#6B7280]">{b.facility}</span>
+                                            <span className="text-xs text-[#6B7280]">{getLocalFacility(b.facility)}</span>
                                         </div>
                                     </td>
                                     <td className="px-4 py-3 text-xs text-[#6B7280]">{b.specialty}</td>

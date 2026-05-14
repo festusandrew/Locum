@@ -44,6 +44,8 @@ export interface Applicant {
     status: 'new' | 'interview' | 'verification' | 'onboarding' | 'hired';
     appliedDate: string;
     stage: string;
+    phone?: string;
+    email?: string;
 }
 
 export interface Client {
@@ -62,4 +64,6 @@ export interface Client {
     monthlySpend: number;
     preferredLocums: number;
     complianceReqs: string[];
+    logo?: string;
+    themeColor?: string;
 }

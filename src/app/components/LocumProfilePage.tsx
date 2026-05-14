@@ -6,7 +6,8 @@ import {
     CheckCircle, XCircle, ChevronLeft, ChevronRight, CreditCard,
     Search, SlidersHorizontal, Heart, Globe, Hash, Building2, Award,
     BadgeCheck, Banknote, Activity, MessageSquare, Edit, MoreHorizontal,
-    RefreshCw, Archive, History, ChevronDown, ChevronUp, Paperclip, X, Eye
+    RefreshCw, Archive, History, ChevronDown, ChevronUp, Paperclip, X, Eye,
+    Plus, Trash2, Check, Info, CalendarDays
 } from 'lucide-react';
 
 interface LocumProfilePageProps {
@@ -457,6 +458,38 @@ const locumProfiles: Record<string, any> = {
             { date: '2026-01-20', author: 'Lisa Keane', content: "Updated bank details per Sarah Mitchell's request. Verified via phone callback." },
             { date: '2025-12-10', author: 'Omar Murphy', content: 'Annual review completed. All compliance documents up to date. Excellent performer - consider for preferred locum panel.' },
         ],
+        availability: {
+            recurring: {
+                Monday: ['morning', 'afternoon'],
+                Tuesday: ['morning'],
+                Wednesday: ['morning', 'afternoon'],
+                Thursday: ['afternoon'],
+                Friday: ['morning', 'afternoon', 'night'],
+                Saturday: [],
+                Sunday: [],
+            },
+            exceptions: [
+                { id: '1', date: '2026-02-18', shift: 'morning', status: 'leave', reason: 'Annual Leave' },
+                { id: '2', date: '2026-02-20', shift: 'night', status: 'available', reason: 'Agreed on-call' },
+            ],
+            slots: {
+                '2026-02-12': [
+                    { type: 'morning', status: 'booked', facility: "St. James's Hospital, Dublin", department: 'General Surgery', rate: 85, shiftId: 'SH-3410' },
+                    { type: 'afternoon', status: 'available' },
+                    { type: 'night', status: 'off' },
+                ],
+                '2026-02-14': [
+                    { type: 'morning', status: 'off' },
+                    { type: 'afternoon', status: 'off' },
+                    { type: 'night', status: 'booked', facility: 'Beaumont Hospital, Dublin', department: 'Surgical On-Call', rate: 85, shiftId: 'SH-3415' },
+                ],
+                '2026-02-17': [
+                    { type: 'morning', status: 'booked', facility: "St. James's Hospital, Dublin", department: 'General Surgery', rate: 85, shiftId: 'SH-3420' },
+                    { type: 'afternoon', status: 'available' },
+                    { type: 'night', status: 'off' },
+                ],
+            }
+        },
         joinDate: '2023-03-15',
     },
     '#EC0125D': {
@@ -537,6 +570,27 @@ const locumProfiles: Record<string, any> = {
         notes: [
             { date: '2026-01-15', author: 'Omar Murphy', content: 'James Harrison confirmed for CUH cardiology panel for Q1 2026.' },
         ],
+        availability: {
+            recurring: {
+                Monday: ['morning'],
+                Tuesday: ['morning', 'afternoon'],
+                Wednesday: ['afternoon'],
+                Thursday: ['morning', 'afternoon'],
+                Friday: ['morning', 'afternoon'],
+                Saturday: [],
+                Sunday: [],
+            },
+            exceptions: [
+                { id: '1', date: '2026-02-15', shift: 'morning', status: 'leave', reason: 'Personal' }
+            ],
+            slots: {
+                '2026-02-12': [
+                    { type: 'morning', status: 'booked', facility: 'Cork University Hospital', department: 'Cath Lab', rate: 95, shiftId: 'SH-3425' },
+                    { type: 'afternoon', status: 'available' },
+                    { type: 'night', status: 'off' },
+                ]
+            }
+        },
         joinDate: '2023-01-10',
     },
 };
@@ -960,7 +1014,7 @@ export function LocumProfilePage({ locumId, onBack }: LocumProfilePageProps) {
         setShowActionsDropdown(false);
     };
 
-    const [activeTab, setActiveTab] = useState<'overview' | 'registration' | 'compliance' | 'shifts' | 'financial' | 'performance' | 'notes'>('overview');
+    const [activeTab, setActiveTab] = useState<'overview' | 'registration' | 'compliance' | 'shifts' | 'availability' | 'financial' | 'performance' | 'notes'>('overview');
     const [shiftFilter, setShiftFilter] = useState('all');
     const [paymentFilter, setPaymentFilter] = useState('all');
 
@@ -971,11 +1025,292 @@ export function LocumProfilePage({ locumId, onBack }: LocumProfilePageProps) {
     const [expandedDocs, setExpandedDocs] = useState<Set<number>>(new Set());
     const [historyDoc, setHistoryDoc] = useState<number | null>(null);
 
+    // Availability Management States
+    const [availability, setAvailability] = useState(() => {
+        if (profile.availability) return profile.availability;
+        return {
+            recurring: {
+                Monday: ['morning', 'afternoon'],
+                Tuesday: ['morning', 'afternoon'],
+                Wednesday: ['morning', 'afternoon'],
+                Thursday: ['morning', 'afternoon'],
+                Friday: ['morning', 'afternoon'],
+                Saturday: [],
+                Sunday: [],
+            },
+            exceptions: [],
+            slots: {}
+        };
+    });
+
+    const [weekAnchor, setWeekAnchor] = useState(() => new Date(2026, 1, 10)); // Feb 10, 2026
+    const [recurringSchedule, setRecurringSchedule] = useState(() => availability.recurring || {
+        Monday: [], Tuesday: [], Wednesday: [], Thursday: [], Friday: [], Saturday: [], Sunday: []
+    });
+
+    // Slot Edit Modal States
+    const [showSlotModal, setShowSlotModal] = useState(false);
+    const [selectedSlotDate, setSelectedSlotDate] = useState<string | null>(null);
+    const [selectedSlotType, setSelectedSlotType] = useState<'morning' | 'afternoon' | 'night' | null>(null);
+    const [slotStatus, setSlotStatus] = useState<'available' | 'booked' | 'leave' | 'off'>('available');
+    const [slotFacility, setSlotFacility] = useState('');
+    const [slotDepartment, setSlotDepartment] = useState('');
+    const [slotRate, setSlotRate] = useState<number>(85);
+    const [slotShiftId, setSlotShiftId] = useState('');
+    const [slotNote, setSlotNote] = useState('');
+
+    // Leave form state
+    const [showLeaveForm, setShowLeaveForm] = useState(false);
+    const [leaveDate, setLeaveDate] = useState('2026-02-15');
+    const [leaveShift, setLeaveShift] = useState<'morning' | 'afternoon' | 'night' | 'all'>('all');
+    const [leaveReason, setLeaveReason] = useState('');
+
+    const formatDateKey = (d: Date) => {
+        const year = d.getFullYear();
+        const month = String(d.getMonth() + 1).padStart(2, '0');
+        const day = String(d.getDate()).padStart(2, '0');
+        return `${year}-${month}-${day}`;
+    };
+
+    const getWeekDates = (anchor: Date) => {
+        const days = [];
+        const current = new Date(anchor);
+        const day = current.getDay();
+        const diff = current.getDate() - day + (day === 0 ? -6 : 1);
+        current.setDate(diff);
+
+        for (let i = 0; i < 7; i++) {
+            const d = new Date(current);
+            days.push({
+                name: d.toLocaleDateString('en-IE', { weekday: 'short' }),
+                date: d.getDate(),
+                month: d.toLocaleDateString('en-IE', { month: 'short' }),
+                full: d.toLocaleDateString('en-IE', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }),
+                key: formatDateKey(d),
+                isToday: d.toDateString() === new Date(2026, 1, 10).toDateString(),
+                isWeekend: d.getDay() === 0 || d.getDay() === 6,
+                rawDate: new Date(d),
+            });
+            current.setDate(current.getDate() + 1);
+        }
+        return days;
+    };
+
+    const handleSaveAvailability = (updatedAvail: any) => {
+        setAvailability(updatedAvail);
+        const updatedProfile = {
+            ...profile,
+            availability: updatedAvail
+        };
+        setProfile(updatedProfile);
+        locumProfiles[profile.id] = updatedProfile;
+    };
+
+    const handleSaveSlot = (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!selectedSlotDate || !selectedSlotType) return;
+
+        const updatedSlots = { ...availability.slots };
+        const dateSlots = [...(updatedSlots[selectedSlotDate] || [
+            { type: 'morning', status: 'off' },
+            { type: 'afternoon', status: 'off' },
+            { type: 'night', status: 'off' },
+        ])];
+
+        const idx = dateSlots.findIndex(s => s.type === selectedSlotType);
+        const slotData: any = {
+            type: selectedSlotType,
+            status: slotStatus,
+        };
+
+        if (slotStatus === 'booked') {
+            slotData.facility = slotFacility;
+            slotData.department = slotDepartment;
+            slotData.rate = slotRate;
+            slotData.shiftId = slotShiftId || `SH-${Math.floor(1000 + Math.random() * 9000)}`;
+        } else if (slotStatus === 'leave') {
+            slotData.reason = slotNote || 'Leave';
+        }
+
+        if (idx >= 0) {
+            dateSlots[idx] = slotData;
+        } else {
+            dateSlots.push(slotData);
+        }
+
+        updatedSlots[selectedSlotDate] = dateSlots;
+
+        const updatedAvail = {
+            ...availability,
+            slots: updatedSlots
+        };
+
+        handleSaveAvailability(updatedAvail);
+        setShowSlotModal(false);
+        toast.success("Shift availability status updated!");
+    };
+
+    const handleAddLeave = (e: React.FormEvent) => {
+        e.preventDefault();
+        const newLeave = {
+            id: String(Date.now()),
+            date: leaveDate,
+            shift: leaveShift,
+            status: 'leave' as const,
+            reason: leaveReason || 'Custom Off-Duty'
+        };
+
+        const updatedSlots = { ...availability.slots };
+        const shiftsToBlock = leaveShift === 'all' ? ['morning', 'afternoon', 'night'] : [leaveShift];
+
+        shiftsToBlock.forEach(shift => {
+            const dateSlots = [...(updatedSlots[leaveDate] || [
+                { type: 'morning', status: 'off' },
+                { type: 'afternoon', status: 'off' },
+                { type: 'night', status: 'off' },
+            ])];
+            const idx = dateSlots.findIndex(s => s.type === shift);
+            const slotData = {
+                type: shift,
+                status: 'leave' as const,
+                reason: leaveReason || 'Custom Off-Duty'
+            };
+            if (idx >= 0) {
+                dateSlots[idx] = slotData;
+            } else {
+                dateSlots.push(slotData);
+            }
+            updatedSlots[leaveDate] = dateSlots;
+        });
+
+        const updatedAvail = {
+            ...availability,
+            exceptions: [...(availability.exceptions || []), newLeave],
+            slots: updatedSlots
+        };
+
+        handleSaveAvailability(updatedAvail);
+        setLeaveReason('');
+        setShowLeaveForm(false);
+        toast.success("Leave exception added successfully!");
+    };
+
+    const handleDeleteLeave = (id: string) => {
+        const leaveItem = availability.exceptions?.find((ex: any) => ex.id === id);
+        let updatedSlots = { ...availability.slots };
+
+        if (leaveItem) {
+            const date = leaveItem.date;
+            const shiftsToUnblock = leaveItem.shift === 'all' ? ['morning', 'afternoon', 'night'] : [leaveItem.shift];
+
+            shiftsToUnblock.forEach(shift => {
+                const dateSlots = [...(updatedSlots[date] || [])];
+                const idx = dateSlots.findIndex(s => s.type === shift);
+                if (idx >= 0) {
+                    if (dateSlots[idx].status === 'leave') {
+                        dateSlots[idx].status = shift === 'night' ? 'off' : 'available';
+                    }
+                }
+                updatedSlots[date] = dateSlots;
+            });
+        }
+
+        const updatedAvail = {
+            ...availability,
+            exceptions: (availability.exceptions || []).filter((ex: any) => ex.id !== id),
+            slots: updatedSlots
+        };
+        handleSaveAvailability(updatedAvail);
+        toast.success("Leave exception removed.");
+    };
+
+    const handleToggleRecurring = (day: string, shift: string) => {
+        const currentShifts = recurringSchedule[day] || [];
+        let nextShifts = [];
+        if (currentShifts.includes(shift)) {
+            nextShifts = currentShifts.filter((s: string) => s !== shift);
+        } else {
+            nextShifts = [...currentShifts, shift];
+        }
+
+        const updatedRecurring = {
+            ...recurringSchedule,
+            [day]: nextShifts
+        };
+        setRecurringSchedule(updatedRecurring);
+
+        const updatedAvail = {
+            ...availability,
+            recurring: updatedRecurring
+        };
+        handleSaveAvailability(updatedAvail);
+        toast.success(`Baseline updated: ${day} ${shift} status toggled!`);
+    };
+
+    const handleApplyBaselineToWeek = () => {
+        const days = getWeekDates(weekAnchor);
+        const updatedSlots = { ...availability.slots };
+
+        days.forEach(day => {
+            const dateStr = day.key;
+            const weekdayName = day.rawDate.toLocaleDateString('en-US', { weekday: 'long' });
+            const baselineShifts = recurringSchedule[weekdayName] || [];
+
+            const defaultSlotsForDay = [
+                { type: 'morning', status: baselineShifts.includes('morning') ? 'available' : 'off' },
+                { type: 'afternoon', status: baselineShifts.includes('afternoon') ? 'available' : 'off' },
+                { type: 'night', status: baselineShifts.includes('night') ? 'available' : 'off' },
+            ];
+
+            const existingSlots = updatedSlots[dateStr] || [];
+            const mergedSlots = defaultSlotsForDay.map(defSlot => {
+                const exist = existingSlots.find((s: any) => s.type === defSlot.type);
+                if (exist && (exist.status === 'booked' || exist.status === 'leave')) {
+                    return exist;
+                }
+                return {
+                    type: defSlot.type,
+                    status: defSlot.status
+                };
+            });
+
+            updatedSlots[dateStr] = mergedSlots;
+        });
+
+        const updatedAvail = {
+            ...availability,
+            slots: updatedSlots
+        };
+        handleSaveAvailability(updatedAvail);
+        toast.success("Recurring schedule applied to active week! (Existing bookings & leave preserved)");
+    };
+
+    const handlePrevWeek = () => {
+        setWeekAnchor(prev => {
+            const d = new Date(prev);
+            d.setDate(d.getDate() - 7);
+            return d;
+        });
+    };
+
+    const handleNextWeek = () => {
+        setWeekAnchor(prev => {
+            const d = new Date(prev);
+            d.setDate(d.getDate() + 7);
+            return d;
+        });
+    };
+
+    const handleTodayWeek = () => {
+        setWeekAnchor(new Date(2026, 1, 10));
+    };
+
     const tabs = [
         { id: 'overview' as const, label: 'Overview' },
         { id: 'registration' as const, label: 'Registration & Qualifications' },
         { id: 'compliance' as const, label: 'Compliance & Documents' },
         { id: 'shifts' as const, label: 'Shift History' },
+        { id: 'availability' as const, label: 'Availability Management' },
         { id: 'financial' as const, label: 'Financial' },
         { id: 'performance' as const, label: 'Performance' },
         { id: 'notes' as const, label: 'Notes & Activity' },
@@ -1723,6 +2058,542 @@ export function LocumProfilePage({ locumId, onBack }: LocumProfilePageProps) {
                                     </table>
                                 </div>
                             </div>
+                        </div>
+                    )}
+
+                    {/* === AVAILABILITY MANAGEMENT TAB === */}
+                    {activeTab === 'availability' && (
+                        <div className="space-y-6">
+                            {/* Calendar Header / Actions */}
+                            <div className="bg-[#F9FAFB] rounded-xl p-4 border border-[#E5E7EB] flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+                                <div className="flex items-center gap-3">
+                                    <div className="p-2 bg-[#EDE9FE] rounded-lg text-[#8B5CF6]">
+                                        <CalendarDays className="w-5 h-5" />
+                                    </div>
+                                    <div>
+                                        <h4 className="text-sm text-[#1F2937]" style={{ fontWeight: 600 }}>Weekly Availability Planner</h4>
+                                        <p className="text-xs text-[#6B7280]">Manage shifts, bookings, and leave for the selected week</p>
+                                    </div>
+                                </div>
+
+                                <div className="flex flex-wrap items-center gap-2">
+                                    <div className="flex items-center border border-[#E5E7EB] bg-white rounded-lg p-1 shadow-sm">
+                                        <button 
+                                            type="button"
+                                            onClick={handlePrevWeek} 
+                                            className="p-1.5 hover:bg-[#F3F4F6] text-[#4B5563] rounded-md transition-colors"
+                                            title="Previous Week"
+                                        >
+                                            <ChevronLeft className="w-4 h-4" />
+                                        </button>
+                                        <button 
+                                            type="button"
+                                            onClick={handleTodayWeek} 
+                                            className="px-3 py-1 text-xs font-medium text-[#1F2937] hover:bg-[#F3F4F6] rounded-md transition-colors"
+                                        >
+                                            Today
+                                        </button>
+                                        <button 
+                                            type="button"
+                                            onClick={handleNextWeek} 
+                                            className="p-1.5 hover:bg-[#F3F4F6] text-[#4B5563] rounded-md transition-colors"
+                                            title="Next Week"
+                                        >
+                                            <ChevronRight className="w-4 h-4" />
+                                        </button>
+                                    </div>
+
+                                    <button 
+                                        type="button"
+                                        onClick={() => {
+                                            setLeaveDate(formatDateKey(weekAnchor));
+                                            setLeaveReason('');
+                                            setLeaveShift('all');
+                                            setShowLeaveForm(true);
+                                        }}
+                                        className="px-4 py-2 text-xs bg-[#10B981] text-white hover:bg-[#059669] rounded-lg font-semibold shadow-sm transition-all flex items-center gap-1.5"
+                                    >
+                                        <Plus className="w-4 h-4" /> Book Leave
+                                    </button>
+                                </div>
+                            </div>
+
+                            {/* Weekly Grid */}
+                            <div className="bg-white rounded-xl border border-[#E5E7EB] shadow-sm overflow-hidden">
+                                <div className="p-4 border-b border-[#E5E7EB] bg-[#F9FAFB] flex justify-between items-center">
+                                    <span className="text-xs text-[#4B5563] font-semibold uppercase tracking-wider">
+                                        Week of {getWeekDates(weekAnchor)[0].rawDate.toLocaleDateString('en-IE', { day: 'numeric', month: 'short' })} – {getWeekDates(weekAnchor)[6].rawDate.toLocaleDateString('en-IE', { day: 'numeric', month: 'short', year: 'numeric' })}
+                                    </span>
+                                    <div className="flex gap-4 text-[11px] text-[#6B7280]">
+                                        <span className="flex items-center gap-1"><span className="w-2.5 h-2.5 bg-[#D1FAE5] border border-[#A7F3D0] rounded"></span> Available</span>
+                                        <span className="flex items-center gap-1"><span className="w-2.5 h-2.5 bg-[#DBEAFE] border border-[#BFDBFE] rounded"></span> Booked</span>
+                                        <span className="flex items-center gap-1"><span className="w-2.5 h-2.5 bg-[#FEF3C7] border border-[#FDE68A] rounded"></span> On Leave</span>
+                                        <span className="flex items-center gap-1"><span className="w-2.5 h-2.5 bg-[#F3F4F6] border border-[#E5E7EB] rounded-dashed border"></span> Off / Rest</span>
+                                    </div>
+                                </div>
+
+                                <div className="overflow-x-auto">
+                                    <table className="w-full border-collapse table-fixed min-w-[800px]">
+                                        <thead>
+                                            <tr className="border-b border-[#E5E7EB]">
+                                                <th className="w-32 bg-[#F9FAFB] p-3 text-left text-xs font-semibold text-[#4B5563]">Shift / Time</th>
+                                                {getWeekDates(weekAnchor).map((day) => (
+                                                    <th 
+                                                        key={day.key} 
+                                                        className={`p-3 text-center text-xs font-semibold border-l border-[#E5E7EB] ${day.isToday ? 'bg-[#EDE9FE]/20 text-[#8B5CF6]' : 'bg-[#F9FAFB] text-[#374151]'}`}
+                                                    >
+                                                        <div>{day.name}</div>
+                                                        <div className={`text-base mt-0.5 inline-flex items-center justify-center w-7 h-7 rounded-full ${day.isToday ? 'bg-[#8B5CF6] text-white' : 'text-[#1F2937]'}`}>
+                                                            {day.date}
+                                                        </div>
+                                                    </th>
+                                                ))}
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {([
+                                                { id: 'morning' as const, label: 'Morning', time: '07:00 - 15:00' },
+                                                { id: 'afternoon' as const, label: 'Afternoon', time: '15:00 - 23:00' },
+                                                { id: 'night' as const, label: 'Night', time: '23:00 - 07:00' }
+                                            ]).map((shiftRow) => (
+                                                <tr key={shiftRow.id} className="border-b border-[#E5E7EB] hover:bg-[#F9FAFB]/30">
+                                                    <td className="p-3 bg-[#F9FAFB] border-r border-[#E5E7EB]">
+                                                        <div className="text-xs font-semibold text-[#374151]">{shiftRow.label}</div>
+                                                        <div className="text-[10px] text-[#6B7280] flex items-center gap-1 mt-0.5">
+                                                            <Clock className="w-3 h-3 text-[#9CA3AF]" /> {shiftRow.time}
+                                                        </div>
+                                                    </td>
+                                                    {getWeekDates(weekAnchor).map((day) => {
+                                                        const dateSlots = availability.slots?.[day.key] || [];
+                                                        // Check baseline recurring if there's no custom slot defined for this date
+                                                        const customSlot = dateSlots.find((s: any) => s.type === shiftRow.id);
+                                                        
+                                                        let status: 'available' | 'booked' | 'leave' | 'off' = 'off';
+                                                        let details: any = null;
+
+                                                        if (customSlot) {
+                                                            status = customSlot.status;
+                                                            details = customSlot;
+                                                        } else {
+                                                            // fallback to recurring baseline
+                                                            const weekdayName = day.rawDate.toLocaleDateString('en-US', { weekday: 'long' });
+                                                            const isBaselineAvail = recurringSchedule[weekdayName]?.includes(shiftRow.id);
+                                                            status = isBaselineAvail ? 'available' : 'off';
+                                                        }
+
+                                                        // Slot card style classes
+                                                        let cellClass = '';
+                                                        let statusText = '';
+                                                        if (status === 'available') {
+                                                            cellClass = 'bg-[#ECFDF5] border-[#10B981]/20 text-[#065F46] hover:bg-[#D1FAE5]/60 hover:border-[#10B981]/40';
+                                                            statusText = 'Available';
+                                                        } else if (status === 'booked') {
+                                                            cellClass = 'bg-[#EFF6FF] border-[#3B82F6]/20 text-[#1E40AF] hover:bg-[#DBEAFE]/60 hover:border-[#3B82F6]/40';
+                                                            statusText = 'Booked';
+                                                        } else if (status === 'leave') {
+                                                            cellClass = 'bg-[#FFFBEB] border-[#F59E0B]/20 text-[#92400E] hover:bg-[#FEF3C7]/60 hover:border-[#F59E0B]/40';
+                                                            statusText = 'Leave';
+                                                        } else {
+                                                            cellClass = 'bg-[#F9FAFB] border-dashed border-[#D1D5DB] text-[#6B7280] hover:bg-[#F3F4F6] hover:border-[#9CA3AF]';
+                                                            statusText = 'Off / Rest';
+                                                        }
+
+                                                        return (
+                                                            <td 
+                                                                key={day.key} 
+                                                                className="p-2 border-l border-[#E5E7EB] align-top cursor-pointer transition-all"
+                                                                onClick={() => {
+                                                                    setSelectedSlotDate(day.key);
+                                                                    setSelectedSlotType(shiftRow.id);
+                                                                    setSlotStatus(status);
+                                                                    setSlotFacility(details?.facility || '');
+                                                                    setSlotDepartment(details?.department || '');
+                                                                    setSlotRate(details?.rate || profile.financial.standardDayRate / 10 || 85);
+                                                                    setSlotShiftId(details?.shiftId || '');
+                                                                    setSlotNote(details?.reason || '');
+                                                                    setShowSlotModal(true);
+                                                                }}
+                                                            >
+                                                                <div className={`h-24 p-2 rounded-lg border flex flex-col justify-between text-left transition-all ${cellClass}`}>
+                                                                    <div className="flex justify-between items-start gap-1">
+                                                                        <span className="text-[10px] font-bold uppercase tracking-wide">{statusText}</span>
+                                                                        {status === 'booked' && (
+                                                                            <span className="bg-[#3B82F6] text-white rounded text-[8px] px-1 font-semibold">{details?.shiftId || 'SHIFT'}</span>
+                                                                        )}
+                                                                    </div>
+
+                                                                    {status === 'booked' ? (
+                                                                        <div className="space-y-0.5 flex-1 mt-1.5 flex flex-col justify-center">
+                                                                            <div className="text-[10px] font-semibold truncate leading-tight" title={details?.facility}>
+                                                                                {details?.facility?.split(',')[0]}
+                                                                            </div>
+                                                                            <div className="text-[9px] text-[#2563EB] truncate">{details?.department}</div>
+                                                                            <div className="text-[9px] text-[#059669] font-medium mt-0.5">€{details?.rate || 85}/hr</div>
+                                                                        </div>
+                                                                    ) : status === 'leave' ? (
+                                                                        <div className="text-[10px] italic text-[#B45309] truncate mt-1">
+                                                                            {details?.reason || 'Annual Leave'}
+                                                                        </div>
+                                                                    ) : (
+                                                                        <div className="text-[9px] text-gray-400 mt-1 flex-1 flex items-center justify-start">
+                                                                            {status === 'available' ? 'Open for bookings' : 'Unscheduled rest'}
+                                                                        </div>
+                                                                    )}
+
+                                                                    <div className="text-[8px] text-right text-gray-400 opacity-0 group-hover:opacity-100 transition-opacity font-medium mt-auto self-end">
+                                                                        Click to edit
+                                                                    </div>
+                                                                </div>
+                                                            </td>
+                                                        );
+                                                    })}
+                                                </tr>
+                                            ))}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+
+                            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                                {/* Recurring baseline schedule */}
+                                <div className="lg:col-span-2 bg-white rounded-xl border border-[#E5E7EB] shadow-sm p-5 space-y-4">
+                                    <div className="flex items-center justify-between border-b border-[#F3F4F6] pb-3">
+                                        <div className="flex items-center gap-2">
+                                            <div className="p-1.5 bg-[#ECFDF5] text-[#10B981] rounded-lg">
+                                                <RefreshCw className="w-4 h-4" />
+                                            </div>
+                                            <div>
+                                                <h4 className="text-sm text-[#1F2937]" style={{ fontWeight: 600 }}>Standard Recurring Schedule</h4>
+                                                <p className="text-xs text-[#6B7280]">Set general day-to-day availability limits</p>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div className="bg-[#F0FDF4]/50 border border-[#A7F3D0]/30 rounded-lg p-3 text-xs text-[#065F46] flex gap-2">
+                                        <Info className="w-4 h-4 text-[#10B981] shrink-0 mt-0.5" />
+                                        <p>
+                                            Toggling these shifts updates this locum's baseline. Any blank days on the calendar above automatically fall back to these baseline rules.
+                                        </p>
+                                    </div>
+
+                                    <div className="space-y-2">
+                                        {['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'].map((day) => {
+                                            const activeShifts = recurringSchedule[day] || [];
+                                            const isRestDay = activeShifts.length === 0;
+
+                                            return (
+                                                <div key={day} className="flex flex-col sm:flex-row sm:items-center justify-between p-3 rounded-lg border border-[#F3F4F6] bg-[#F9FAFB]/40 hover:bg-[#F9FAFB]/80 transition-colors gap-2">
+                                                    <span className="text-xs font-semibold text-[#374151] w-24">{day}</span>
+                                                    
+                                                    <div className="flex flex-wrap gap-1.5">
+                                                        {(['morning', 'afternoon', 'night'] as const).map((shift) => {
+                                                            const isActive = activeShifts.includes(shift);
+                                                            return (
+                                                                <button
+                                                                    key={shift}
+                                                                    type="button"
+                                                                    onClick={() => handleToggleRecurring(day, shift)}
+                                                                    className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all flex items-center gap-1 border ${
+                                                                        isActive 
+                                                                            ? 'bg-[#10B981] text-white border-[#10B981] shadow-sm' 
+                                                                            : 'bg-white text-[#4B5563] border-[#E5E7EB] hover:bg-[#F3F4F6]'
+                                                                    }`}
+                                                                >
+                                                                    {isActive && <Check className="w-3 h-3" />}
+                                                                    <span className="capitalize">{shift}</span>
+                                                                </button>
+                                                            );
+                                                        })}
+                                                    </div>
+
+                                                    <span className={`text-[10px] font-semibold uppercase tracking-wider px-2 py-0.5 rounded-full self-start sm:self-center ${isRestDay ? 'bg-[#FEE2E2] text-[#DC2626]' : 'bg-[#D1FAE5] text-[#059669]'}`}>
+                                                        {isRestDay ? 'Rest Only' : 'Active'}
+                                                    </span>
+                                                </div>
+                                            );
+                                        })}
+                                    </div>
+                                </div>
+
+                                {/* Exception tracker & Leave scheduler */}
+                                <div className="space-y-6">
+
+
+                                    {/* Exception Logs */}
+                                    <div className="bg-white rounded-xl border border-[#E5E7EB] shadow-sm p-5 space-y-4">
+                                        <div className="flex items-center justify-between border-b border-[#F3F4F6] pb-3">
+                                            <div className="flex items-center gap-2">
+                                                <div className="p-1.5 bg-[#FEF3C7] text-[#D97706] rounded-lg">
+                                                    <History className="w-4 h-4" />
+                                                </div>
+                                                <div>
+                                                    <h4 className="text-sm text-[#1F2937]" style={{ fontWeight: 600 }}>Leave Exceptions Log</h4>
+                                                    <p className="text-xs text-[#6B7280]">Historical & scheduled leave</p>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <div className="space-y-2 max-h-[400px] overflow-y-auto">
+                                            {availability.exceptions && availability.exceptions.length > 0 ? (
+                                                availability.exceptions.map((ex: any) => (
+                                                    <div key={ex.id} className="p-3 border border-[#E5E7EB] rounded-lg hover:border-[#D1D5DB] transition-all bg-[#F9FAFB]/20 flex justify-between items-start">
+                                                        <div className="space-y-1">
+                                                            <div className="flex items-center gap-2">
+                                                                <span className="text-xs font-bold text-[#1F2937]">
+                                                                    {new Date(ex.date).toLocaleDateString('en-IE', { day: 'numeric', month: 'short', year: 'numeric' })}
+                                                                </span>
+                                                                <span className="text-[9px] bg-[#FEF3C7] text-[#B45309] font-semibold px-1.5 py-0.5 rounded uppercase">
+                                                                    {ex.shift === 'all' ? 'Full Day' : ex.shift}
+                                                                </span>
+                                                            </div>
+                                                            <p className="text-xs text-[#4B5563] leading-normal font-medium">{ex.reason}</p>
+                                                        </div>
+                                                        
+                                                        <button 
+                                                            type="button" 
+                                                            onClick={() => handleDeleteLeave(ex.id)}
+                                                            className="p-1.5 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-md transition-all shrink-0"
+                                                            title="Delete Leave"
+                                                        >
+                                                            <Trash2 className="w-4 h-4" />
+                                                        </button>
+                                                    </div>
+                                                ))
+                                            ) : (
+                                                <div className="text-center p-6 border border-dashed border-[#E5E7EB] rounded-lg">
+                                                    <p className="text-xs text-gray-400">No leave exceptions registered</p>
+                                                </div>
+                                            )}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Slot Edit Modal Overlay */}
+                            {showSlotModal && (
+                                <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-6 animate-in fade-in duration-200">
+                                    <div className="bg-white rounded-xl w-full max-w-md shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200">
+                                        <div className="px-5 py-4 border-b border-[#E5E7EB] flex items-center justify-between bg-[#F9FAFB]">
+                                            <div>
+                                                <h3 className="text-sm font-bold text-[#1F2937] uppercase tracking-wide">Edit Shift Availability</h3>
+                                                <p className="text-xs text-[#6B7280] mt-0.5">
+                                                    {selectedSlotDate && new Date(selectedSlotDate).toLocaleDateString('en-IE', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })} 
+                                                    <span className="capitalize text-[#8B5CF6] font-semibold ml-1">({selectedSlotType})</span>
+                                                </p>
+                                            </div>
+                                            <button type="button" onClick={() => setShowSlotModal(false)} className="p-1.5 hover:bg-[#E5E7EB] rounded-lg transition-colors">
+                                                <X className="w-5 h-5 text-[#6B7280]" />
+                                            </button>
+                                        </div>
+
+                                        <form onSubmit={handleSaveSlot} className="p-5 space-y-4">
+                                            <div>
+                                                <label className="block text-xs font-semibold text-[#4B5563] mb-1.5 uppercase tracking-wide">Availability Status</label>
+                                                <div className="grid grid-cols-2 gap-2">
+                                                    {([
+                                                        { id: 'available' as const, label: 'Available', colorClass: 'border-emerald-200 hover:bg-emerald-50 text-emerald-700' },
+                                                        { id: 'booked' as const, label: 'Booked', colorClass: 'border-blue-200 hover:bg-blue-50 text-blue-700' },
+                                                        { id: 'leave' as const, label: 'On Leave', colorClass: 'border-amber-200 hover:bg-amber-50 text-amber-700' },
+                                                        { id: 'off' as const, label: 'Rest Day / Off', colorClass: 'border-gray-200 hover:bg-gray-50 text-gray-700' }
+                                                    ]).map((st) => (
+                                                        <button
+                                                            key={st.id}
+                                                            type="button"
+                                                            onClick={() => setSlotStatus(st.id)}
+                                                            className={`p-2.5 rounded-lg border text-xs font-semibold transition-all ${
+                                                                slotStatus === st.id 
+                                                                    ? 'bg-[#10B981] text-white border-[#10B981] shadow-sm' 
+                                                                    : `bg-white text-gray-700 ${st.colorClass}`
+                                                            }`}
+                                                        >
+                                                            {st.label}
+                                                        </button>
+                                                    ))}
+                                                </div>
+                                            </div>
+
+                                            {slotStatus === 'booked' && (
+                                                <div className="space-y-3.5 border-t border-[#F3F4F6] pt-3.5 animate-in fade-in duration-150">
+                                                    <div>
+                                                        <label className="block text-xs font-medium text-[#4B5563] mb-1">Hospital / Facility</label>
+                                                        <input 
+                                                            type="text" 
+                                                            value={slotFacility}
+                                                            onChange={e => setSlotFacility(e.target.value)}
+                                                            placeholder="e.g. Cork University Hospital"
+                                                            className="w-full px-3 py-2 text-xs border border-[#E5E7EB] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#10B981]"
+                                                            required
+                                                        />
+                                                    </div>
+
+                                                    <div className="grid grid-cols-2 gap-3">
+                                                        <div>
+                                                            <label className="block text-xs font-medium text-[#4B5563] mb-1">Department</label>
+                                                            <input 
+                                                                type="text" 
+                                                                value={slotDepartment}
+                                                                onChange={e => setSlotDepartment(e.target.value)}
+                                                                placeholder="e.g. Cardiology"
+                                                                className="w-full px-3 py-2 text-xs border border-[#E5E7EB] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#10B981]"
+                                                                required
+                                                            />
+                                                        </div>
+                                                        <div>
+                                                            <label className="block text-xs font-medium text-[#4B5563] mb-1">Hourly Rate (€)</label>
+                                                            <input 
+                                                                type="number" 
+                                                                value={slotRate}
+                                                                onChange={e => setSlotRate(Number(e.target.value))}
+                                                                className="w-full px-3 py-2 text-xs border border-[#E5E7EB] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#10B981]"
+                                                                required
+                                                                min={1}
+                                                            />
+                                                        </div>
+                                                    </div>
+
+                                                    <div>
+                                                        <label className="block text-xs font-medium text-[#4B5563] mb-1">Shift ID (Optional)</label>
+                                                        <input 
+                                                            type="text" 
+                                                            value={slotShiftId}
+                                                            onChange={e => setSlotShiftId(e.target.value)}
+                                                            placeholder="Leave blank to auto-generate"
+                                                            className="w-full px-3 py-2 text-xs border border-[#E5E7EB] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#10B981]"
+                                                        />
+                                                    </div>
+                                                </div>
+                                            )}
+
+                                            {slotStatus === 'leave' && (
+                                                <div className="border-t border-[#F3F4F6] pt-3.5 animate-in fade-in duration-150">
+                                                    <label className="block text-xs font-medium text-[#4B5563] mb-1">Leave Reason</label>
+                                                    <input 
+                                                        type="text" 
+                                                        value={slotNote}
+                                                        onChange={e => setSlotNote(e.target.value)}
+                                                        placeholder="e.g. Annual Leave, Conference"
+                                                        className="w-full px-3 py-2 text-xs border border-[#E5E7EB] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#10B981]"
+                                                        required
+                                                    />
+                                                </div>
+                                            )}
+
+                                            <div className="flex gap-2 pt-2 border-t border-[#F3F4F6]">
+                                                <button 
+                                                    type="button" 
+                                                    onClick={() => setShowSlotModal(false)}
+                                                    className="flex-1 py-2 border border-[#E5E7EB] hover:bg-gray-50 text-gray-700 rounded-lg text-xs font-medium transition-colors"
+                                                >
+                                                    Cancel
+                                                </button>
+                                                <button 
+                                                    type="submit" 
+                                                    className="flex-1 py-2 bg-[#10B981] hover:bg-[#059669] text-white rounded-lg text-xs font-semibold shadow transition-all"
+                                                >
+                                                    Save Status
+                                                </button>
+                                            </div>
+                                        </form>
+                                    </div>
+                                </div>
+                            )}
+
+                            {/* Book Leave Modal Overlay */}
+                            {showLeaveForm && (
+                                <div className="fixed inset-0 bg-black/60 backdrop-blur-xs flex items-center justify-center z-50 p-6 animate-in fade-in duration-200">
+                                    <div className="bg-white rounded-xl w-full max-w-md shadow-2xl overflow-hidden border border-[#E5E7EB] animate-in zoom-in-95 duration-200">
+                                        <div className="px-5 py-4 border-b border-[#E5E7EB] flex items-center justify-between bg-[#F9FAFB]">
+                                            <div className="flex items-center gap-2">
+                                                <div className="p-1.5 bg-[#FEF3C7] text-[#D97706] rounded-lg">
+                                                    <AlertTriangle className="w-4 h-4" />
+                                                </div>
+                                                <div>
+                                                    <h3 className="text-sm font-bold text-[#1F2937]">Book Leave / Exceptions</h3>
+                                                    <p className="text-[11px] text-[#6B7280]">Register planned off-duty or holiday blockouts</p>
+                                                </div>
+                                            </div>
+                                            <button type="button" onClick={() => setShowLeaveForm(false)} className="p-1.5 hover:bg-[#E5E7EB] rounded-lg transition-colors">
+                                                <X className="w-5 h-5 text-[#6B7280]" />
+                                            </button>
+                                        </div>
+
+                                        <form onSubmit={handleAddLeave} className="p-5 space-y-4">
+                                            <div>
+                                                <label className="block text-xs font-semibold text-[#4B5563] mb-1">Target Date</label>
+                                                <input 
+                                                    type="date" 
+                                                    value={leaveDate}
+                                                    onChange={e => setLeaveDate(e.target.value)}
+                                                    className="w-full px-3 py-2 text-xs border border-[#E5E7EB] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#10B981]"
+                                                    required
+                                                />
+                                            </div>
+
+                                            <div>
+                                                <label className="block text-xs font-semibold text-[#4B5563] mb-1">Shifts Impacted</label>
+                                                <select 
+                                                    value={leaveShift}
+                                                    onChange={e => setLeaveShift(e.target.value as any)}
+                                                    className="w-full px-3 py-2 text-xs border border-[#E5E7EB] rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-[#10B981]"
+                                                >
+                                                    <option value="all">All Day (Full Blockout)</option>
+                                                    <option value="morning">Morning Only (07:00 - 15:00)</option>
+                                                    <option value="afternoon">Afternoon Only (15:00 - 23:00)</option>
+                                                    <option value="night">Night Only (23:00 - 07:00)</option>
+                                                </select>
+                                            </div>
+
+                                            <div>
+                                                <label className="block text-xs font-semibold text-[#4B5563] mb-1.5">Quick Templates</label>
+                                                <div className="flex flex-wrap gap-1.5">
+                                                    {['Annual Leave', 'Sick Leave', 'Study Leave', 'Personal Off-Duty'].map((tmpl) => (
+                                                        <button
+                                                            key={tmpl}
+                                                            type="button"
+                                                            onClick={() => setLeaveReason(tmpl)}
+                                                            className={`px-2.5 py-1 rounded-full text-[10px] font-medium border transition-all ${
+                                                                leaveReason === tmpl
+                                                                    ? 'bg-[#FEF3C7] text-[#D97706] border-[#F59E0B] scale-102 shadow-sm'
+                                                                    : 'bg-white text-gray-500 border-[#E5E7EB] hover:bg-gray-50'
+                                                            }`}
+                                                        >
+                                                            {tmpl}
+                                                        </button>
+                                                    ))}
+                                                </div>
+                                            </div>
+
+                                            <div>
+                                                <label className="block text-xs font-semibold text-[#4B5563] mb-1">Reason / Description</label>
+                                                <textarea 
+                                                    value={leaveReason}
+                                                    onChange={e => setLeaveReason(e.target.value)}
+                                                    placeholder="Provide details of the blockout"
+                                                    rows={3}
+                                                    className="w-full px-3 py-2 text-xs border border-[#E5E7EB] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#10B981]"
+                                                    required
+                                                />
+                                            </div>
+
+                                            <div className="flex gap-2 pt-2 border-t border-[#F3F4F6]">
+                                                <button 
+                                                    type="button" 
+                                                    onClick={() => setShowLeaveForm(false)}
+                                                    className="flex-1 py-2 border border-[#E5E7EB] hover:bg-gray-50 text-gray-700 rounded-lg text-xs font-medium transition-colors"
+                                                >
+                                                    Cancel
+                                                </button>
+                                                <button 
+                                                    type="submit" 
+                                                    className="flex-1 py-2 bg-[#F59E0B] hover:bg-[#D97706] text-white rounded-lg text-xs font-semibold shadow transition-all"
+                                                >
+                                                    Save Leave Blockout
+                                                </button>
+                                            </div>
+                                        </form>
+                                    </div>
+                                </div>
+                            )}
                         </div>
                     )}
 

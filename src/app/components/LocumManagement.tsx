@@ -39,7 +39,7 @@ const weekSchedules: LocumWeekSchedule[] = [
             { shifts: [{ type: 'morning', status: 'available' }, { type: 'afternoon', status: 'available' }, { type: 'night', status: 'off' }] },
             { shifts: [{ type: 'morning', status: 'booked', facility: "St. James's Hospital, Dublin", shiftId: 'SH-2047', time: '07:00 - 15:00' }, { type: 'afternoon', status: 'available' }, { type: 'night', status: 'off' }] },
             { shifts: [{ type: 'morning', status: 'available' }, { type: 'afternoon', status: 'off' }, { type: 'night', status: 'off' }] },
-            { shifts: [{ type: 'morning', status: 'blocked' }, { type: 'afternoon', status: 'blocked' }, { type: 'night', status: 'blocked' }] },
+            { shifts: [{ type: 'morning', status: 'off' }, { type: 'afternoon', status: 'off' }, { type: 'night', status: 'off' }] },
         ],
     },
     {
@@ -51,7 +51,7 @@ const weekSchedules: LocumWeekSchedule[] = [
             { shifts: [{ type: 'morning', status: 'booked', facility: "Cork University Hospital", shiftId: 'SH-2053', time: '07:00 - 15:00' }, { type: 'afternoon', status: 'booked', facility: "Cork University Hospital", shiftId: 'SH-2054', time: '15:00 - 23:00' }, { type: 'night', status: 'booked', facility: "Cork University Hospital", shiftId: 'SH-2055', time: '23:00 - 07:00' }] },
             { shifts: [{ type: 'morning', status: 'leave' }, { type: 'afternoon', status: 'leave' }, { type: 'night', status: 'leave' }] },
             { shifts: [{ type: 'morning', status: 'leave' }, { type: 'afternoon', status: 'leave' }, { type: 'night', status: 'off' }] },
-            { shifts: [{ type: 'morning', status: 'blocked' }, { type: 'afternoon', status: 'blocked' }, { type: 'night', status: 'blocked' }] },
+            { shifts: [{ type: 'morning', status: 'off' }, { type: 'afternoon', status: 'off' }, { type: 'night', status: 'off' }] },
         ],
     },
     {
@@ -69,13 +69,13 @@ const weekSchedules: LocumWeekSchedule[] = [
     {
         locumId: '#LW9872P', // Dr. Michael Brooks - Emergency Medicine, heavy shifts
         days: [
-            { shifts: [{ type: 'morning', status: 'blocked' }, { type: 'afternoon', status: 'blocked' }, { type: 'night', status: 'blocked' }] },
+            { shifts: [{ type: 'morning', status: 'off' }, { type: 'afternoon', status: 'off' }, { type: 'night', status: 'off' }] },
             { shifts: [{ type: 'morning', status: 'booked', facility: "University Hospital Limerick", shiftId: 'SH-2070', time: '07:00 - 15:00' }, { type: 'afternoon', status: 'booked', facility: "University Hospital Limerick", shiftId: 'SH-2071', time: '15:00 - 23:00' }, { type: 'night', status: 'booked', facility: "University Hospital Limerick", shiftId: 'SH-2072', time: '23:00 - 07:00' }] },
             { shifts: [{ type: 'morning', status: 'booked', facility: "University Hospital Limerick", shiftId: 'SH-2073', time: '07:00 - 15:00' }, { type: 'afternoon', status: 'available' }, { type: 'night', status: 'off' }] },
             { shifts: [{ type: 'morning', status: 'available' }, { type: 'afternoon', status: 'available' }, { type: 'night', status: 'off' }] },
             { shifts: [{ type: 'morning', status: 'booked', facility: "University Hospital Limerick", shiftId: 'SH-2074', time: '07:00 - 15:00' }, { type: 'afternoon', status: 'booked', facility: "University Hospital Limerick", shiftId: 'SH-2075', time: '15:00 - 23:00' }, { type: 'night', status: 'off' }] },
             { shifts: [{ type: 'morning', status: 'available' }, { type: 'afternoon', status: 'off' }, { type: 'night', status: 'off' }] },
-            { shifts: [{ type: 'morning', status: 'blocked' }, { type: 'afternoon', status: 'blocked' }, { type: 'night', status: 'blocked' }] },
+            { shifts: [{ type: 'morning', status: 'off' }, { type: 'afternoon', status: 'off' }, { type: 'night', status: 'off' }] },
         ],
     },
     {
@@ -87,7 +87,7 @@ const weekSchedules: LocumWeekSchedule[] = [
             { shifts: [{ type: 'morning', status: 'booked', facility: "St. James's Hospital, Dublin", shiftId: 'SH-2083', time: '07:00 - 15:00' }, { type: 'afternoon', status: 'available' }, { type: 'night', status: 'off' }] },
             { shifts: [{ type: 'morning', status: 'leave' }, { type: 'afternoon', status: 'leave' }, { type: 'night', status: 'leave' }] },
             { shifts: [{ type: 'morning', status: 'leave' }, { type: 'afternoon', status: 'leave' }, { type: 'night', status: 'off' }] },
-            { shifts: [{ type: 'morning', status: 'blocked' }, { type: 'afternoon', status: 'blocked' }, { type: 'night', status: 'blocked' }] },
+            { shifts: [{ type: 'morning', status: 'off' }, { type: 'afternoon', status: 'off' }, { type: 'night', status: 'off' }] },
         ],
     },
     {
@@ -97,12 +97,60 @@ const weekSchedules: LocumWeekSchedule[] = [
             { shifts: [{ type: 'morning', status: 'booked', facility: "Waterford University Hospital", shiftId: 'SH-2090', time: '07:00 - 15:00' }, { type: 'afternoon', status: 'booked', facility: "Waterford University Hospital", shiftId: 'SH-2091', time: '15:00 - 23:00' }, { type: 'night', status: 'off' }] },
             { shifts: [{ type: 'morning', status: 'booked', facility: "Waterford University Hospital", shiftId: 'SH-2092', time: '07:00 - 15:00' }, { type: 'afternoon', status: 'available' }, { type: 'night', status: 'off' }] },
             { shifts: [{ type: 'morning', status: 'available' }, { type: 'afternoon', status: 'available' }, { type: 'night', status: 'off' }] },
-            { shifts: [{ type: 'morning', status: 'blocked' }, { type: 'afternoon', status: 'blocked' }, { type: 'night', status: 'blocked' }] },
-            { shifts: [{ type: 'morning', status: 'blocked' }, { type: 'afternoon', status: 'blocked' }, { type: 'night', status: 'blocked' }] },
-            { shifts: [{ type: 'morning', status: 'blocked' }, { type: 'afternoon', status: 'blocked' }, { type: 'night', status: 'blocked' }] },
+            { shifts: [{ type: 'morning', status: 'off' }, { type: 'afternoon', status: 'off' }, { type: 'night', status: 'off' }] },
+            { shifts: [{ type: 'morning', status: 'off' }, { type: 'afternoon', status: 'off' }, { type: 'night', status: 'off' }] },
+            { shifts: [{ type: 'morning', status: 'off' }, { type: 'afternoon', status: 'off' }, { type: 'night', status: 'off' }] },
         ],
     },
 ];
+
+const getDayOfWeekIndex = (date: Date) => {
+    const day = date.getDay(); // 0 = Sun, 1 = Mon...
+    return day === 0 ? 6 : day - 1;
+};
+
+const getMonthDays = (anchorDate: Date) => {
+    const year = anchorDate.getFullYear();
+    const month = anchorDate.getMonth();
+    
+    // First day of current month
+    const firstDay = new Date(year, month, 1);
+    const dayOfWeek = firstDay.getDay(); // 0 = Sun, 1 = Mon...
+    // Mon-start prefix count
+    const prefixCount = dayOfWeek === 0 ? 6 : dayOfWeek - 1;
+    
+    const days = [];
+    
+    // Previous month padding
+    const prevMonthLastDay = new Date(year, month, 0).getDate();
+    for (let i = prefixCount - 1; i >= 0; i--) {
+        days.push({
+            date: new Date(year, month - 1, prevMonthLastDay - i),
+            isCurrentMonth: false
+        });
+    }
+    
+    // Current month days
+    const totalDays = new Date(year, month + 1, 0).getDate();
+    for (let d = 1; d <= totalDays; d++) {
+        days.push({
+            date: new Date(year, month, d),
+            isCurrentMonth: true
+        });
+    }
+    
+    // Suffix padding
+    const totalCells = days.length <= 35 ? 35 : 42;
+    const suffixCount = totalCells - days.length;
+    for (let d = 1; d <= suffixCount; d++) {
+        days.push({
+            date: new Date(year, month + 1, d),
+            isCurrentMonth: false
+        });
+    }
+    
+    return days;
+};
 
 export function LocumManagement({ onViewProfile }: { onViewProfile?: (id: string) => void }) {
     const [locumsList, setLocumsList] = useState<Locum[]>([]);
@@ -117,6 +165,9 @@ export function LocumManagement({ onViewProfile }: { onViewProfile?: (id: string
     const [targetStage, setTargetStage] = useState<string>('');
     const [showApplicantView, setShowApplicantView] = useState(false);
     const [showAdvanceStage, setShowAdvanceStage] = useState(false);
+    const [showAddApplicantDialog, setShowAddApplicantDialog] = useState(false);
+    const [customSpecialtyActive, setCustomSpecialtyActive] = useState(false);
+    const [customLocationActive, setCustomLocationActive] = useState(false);
     const [statusFilter, setStatusFilter] = useState('all');
     const [specialtyFilter, setSpecialtyFilter] = useState('all');
     const [departmentFilter, setDepartmentFilter] = useState('all');
@@ -183,6 +234,51 @@ export function LocumManagement({ onViewProfile }: { onViewProfile?: (id: string
         }
     };
 
+    const handleAddApplicantSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+        e.preventDefault();
+        const formData = new FormData(e.currentTarget);
+        const firstName = formData.get('firstName') as string;
+        const lastName = formData.get('lastName') as string;
+        
+        let specialty = formData.get('specialty') as string;
+        if (specialty === 'other') {
+            specialty = formData.get('customSpecialty') as string || 'General Practice';
+        }
+        
+        let location = formData.get('location') as string;
+        if (location === 'other') {
+            location = formData.get('customLocation') as string || 'Dublin';
+        }
+
+        const phone = formData.get('phone') as string;
+        const email = formData.get('email') as string;
+
+        const newAppId = `APP-${Math.floor(100 + Math.random() * 900)}`;
+        const fullName = `${firstName} ${lastName}`;
+
+        const newApplicant: Applicant = {
+            id: newAppId,
+            name: fullName,
+            specialty: specialty || 'General Practice',
+            location: location || 'Dublin',
+            status: 'new',
+            appliedDate: new Date().toISOString().split('T')[0],
+            stage: 'New Application',
+            phone: phone || undefined,
+            email: email || undefined
+        };
+
+        try {
+            await locumService.createApplicant(newApplicant);
+            const updated = await locumService.getAllApplicants();
+            setApplicantsList(updated);
+            toast.success(`${fullName} added to recruitment pipeline`);
+            setShowAddApplicantDialog(false);
+        } catch (err) {
+            toast.error('Failed to add applicant');
+        }
+    };
+
     const handleEditLocumSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
         const formData = new FormData(e.currentTarget);
@@ -219,9 +315,13 @@ export function LocumManagement({ onViewProfile }: { onViewProfile?: (id: string
 
     // Availability tab state
     const [availWeekOffset, setAvailWeekOffset] = useState(0);
+    const [availSubView, setAvailSubView] = useState<'month' | 'week' | 'day'>('week');
+    const [availAnchorDate, setAvailAnchorDate] = useState<Date>(new Date(2026, 1, 10)); // Feb 10, 2026 (Tuesday)
+    const [selectedLocumIdForMonth, setSelectedLocumIdForMonth] = useState<string>('all');
+    const [hoveredMonthSummary, setHoveredMonthSummary] = useState<{ date: Date; x: number; y: number } | null>(null);
     const [availShiftFilter, setAvailShiftFilter] = useState<'all' | ShiftType>('all');
     const [availStatusFilter, setAvailStatusFilter] = useState<'all' | ShiftSlotStatus>('all');
-    const [hoveredSlot, setHoveredSlot] = useState<{ locumIdx: number; dayIdx: number; shiftIdx: number } | null>(null);
+    const [hoveredSlot, setHoveredSlot] = useState<{ locumIdx: number; dayIdx: number; shiftIdx: number; isMonthView?: boolean; monthDate?: Date } | null>(null);
     const [tooltipPos, setTooltipPos] = useState<{ x: number; y: number }>({ x: 0, y: 0 });
     const tableRef = useRef<HTMLDivElement>(null);
 
@@ -250,10 +350,12 @@ export function LocumManagement({ onViewProfile }: { onViewProfile?: (id: string
     const departments = [...new Set(locumsList.map(l => l.department).filter(Boolean))];
 
     // Compute week dates based on offset
-    const getWeekDates = (offset: number) => {
+    const getWeekDates = (anchor: Date) => {
         const today = new Date(2026, 1, 10); // Feb 10, 2026 (Tuesday)
-        const startOfWeek = new Date(today);
-        startOfWeek.setDate(today.getDate() - today.getDay() + 1 + offset * 7); // Monday
+        const startOfWeek = new Date(anchor);
+        const day = anchor.getDay();
+        const diff = anchor.getDate() - day + (day === 0 ? -6 : 1);
+        startOfWeek.setDate(diff);
         const days = [];
         const dayNames = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
         for (let i = 0; i < 7; i++) {
@@ -266,12 +368,13 @@ export function LocumManagement({ onViewProfile }: { onViewProfile?: (id: string
                 full: d.toLocaleDateString('en-IE', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }),
                 isToday: d.toDateString() === today.toDateString(),
                 isWeekend: i >= 5,
+                rawDate: d,
             });
         }
         return days;
     };
 
-    const weekDates = getWeekDates(availWeekOffset);
+    const weekDates = getWeekDates(availAnchorDate);
 
     // Get week summary stats
     const getWeekStats = () => {
@@ -523,7 +626,7 @@ export function LocumManagement({ onViewProfile }: { onViewProfile?: (id: string
                     <div className="p-5 space-y-4">
                         <div className="flex items-center justify-between">
                             <h4 className="text-[#1F2937]">Recruitment Pipeline</h4>
-                            <button className="flex items-center gap-1.5 px-3 py-1.5 text-sm bg-[#10B981] text-white rounded-lg hover:bg-[#059669]"><UserPlus className="w-4 h-4" /> Add Applicant</button>
+                            <button onClick={() => setShowAddApplicantDialog(true)} className="flex items-center gap-1.5 px-3 py-1.5 text-sm bg-[#10B981] text-white rounded-lg hover:bg-[#059669]"><UserPlus className="w-4 h-4" /> Add Applicant</button>
                         </div>
                         <div className="grid grid-cols-4 gap-4 mb-4">
                             {[
@@ -624,36 +727,124 @@ export function LocumManagement({ onViewProfile }: { onViewProfile?: (id: string
                             </div>
                         </div>
 
-                        {/* Week Navigation & Filters */}
-                        <div className="flex items-center justify-between">
-                            <div className="flex items-center gap-2">
+                        {/* Month / Week / Day Navigation & Filters */}
+                        <div className="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-4">
+                            <div className="flex flex-wrap items-center gap-2">
+                                {/* Sub View Switcher */}
+                                <div className="flex items-center gap-1 bg-white border border-[#E5E7EB] rounded-lg p-1 mr-2">
+                                    {(['month', 'week', 'day'] as const).map(view => (
+                                        <button
+                                            key={view}
+                                            type="button"
+                                            onClick={() => setAvailSubView(view)}
+                                            className={`px-3 py-1 text-xs font-medium rounded-md capitalize transition-all ${
+                                                availSubView === view
+                                                    ? 'bg-[#10B981] text-white shadow-sm'
+                                                    : 'text-[#6B7280] hover:text-[#1F2937] hover:bg-[#F3F4F6]'
+                                            }`}
+                                        >
+                                            {view}
+                                        </button>
+                                    ))}
+                                </div>
+
+                                {/* Navigation Chevrons */}
                                 <button
-                                    onClick={() => setAvailWeekOffset(o => o - 1)}
+                                    onClick={() => {
+                                        if (availSubView === 'week') {
+                                            setAvailAnchorDate(prev => {
+                                                const d = new Date(prev);
+                                                d.setDate(d.getDate() - 7);
+                                                return d;
+                                            });
+                                        } else if (availSubView === 'month') {
+                                            setAvailAnchorDate(prev => {
+                                                const d = new Date(prev);
+                                                d.setMonth(d.getMonth() - 1);
+                                                return d;
+                                            });
+                                        } else {
+                                            setAvailAnchorDate(prev => {
+                                                const d = new Date(prev);
+                                                d.setDate(d.getDate() - 1);
+                                                return d;
+                                            });
+                                        }
+                                    }}
                                     className="p-1.5 border border-[#E5E7EB] rounded-lg hover:bg-[#F9FAFB]"
                                 >
                                     <ChevronLeft className="w-4 h-4 text-[#6B7280]" />
                                 </button>
                                 <button
-                                    onClick={() => setAvailWeekOffset(0)}
-                                    className={`px-3 py-1.5 text-xs rounded-lg border transition-colors ${availWeekOffset === 0 ? 'bg-[#10B981] text-white border-[#10B981]' : 'border-[#E5E7EB] text-[#6B7280] hover:bg-[#F9FAFB]'}`}
+                                    onClick={() => {
+                                        setAvailAnchorDate(new Date(2026, 1, 10));
+                                    }}
+                                    className={`px-3 py-1.5 text-xs rounded-lg border transition-colors ${
+                                        availAnchorDate.toDateString() === new Date(2026, 1, 10).toDateString()
+                                            ? 'bg-[#10B981] text-white border-[#10B981]'
+                                            : 'border-[#E5E7EB] text-[#6B7280] hover:bg-[#F9FAFB]'
+                                    }`}
                                 >
-                                    This Week
+                                    {availSubView === 'week' ? 'This Week' : availSubView === 'month' ? 'This Month' : 'Today'}
                                 </button>
                                 <button
-                                    onClick={() => setAvailWeekOffset(o => o + 1)}
+                                    onClick={() => {
+                                        if (availSubView === 'week') {
+                                            setAvailAnchorDate(prev => {
+                                                const d = new Date(prev);
+                                                d.setDate(d.getDate() + 7);
+                                                return d;
+                                            });
+                                        } else if (availSubView === 'month') {
+                                            setAvailAnchorDate(prev => {
+                                                const d = new Date(prev);
+                                                d.setMonth(d.getMonth() + 1);
+                                                return d;
+                                            });
+                                        } else {
+                                            setAvailAnchorDate(prev => {
+                                                const d = new Date(prev);
+                                                d.setDate(d.getDate() + 1);
+                                                return d;
+                                            });
+                                        }
+                                    }}
                                     className="p-1.5 border border-[#E5E7EB] rounded-lg hover:bg-[#F9FAFB]"
                                 >
                                     <ChevronRight className="w-4 h-4 text-[#6B7280]" />
                                 </button>
                                 <span className="text-sm text-[#1F2937] ml-2" style={{ fontWeight: 500 }}>
-                                    {weekDates[0].date} {weekDates[0].month} – {weekDates[6].date} {weekDates[6].month} 2026
+                                    {availSubView === 'week' ? (
+                                        `${weekDates[0].date} ${weekDates[0].month} – ${weekDates[6].date} ${weekDates[6].month} 2026`
+                                    ) : availSubView === 'month' ? (
+                                        availAnchorDate.toLocaleString('en-IE', { month: 'long', year: 'numeric' })
+                                    ) : (
+                                        availAnchorDate.toLocaleDateString('en-IE', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })
+                                    )}
                                 </span>
                             </div>
+
+                            {/* Filters & Month Locum Selector */}
                             <div className="flex items-center gap-2">
+                                {availSubView === 'month' && (
+                                    <div className="flex items-center gap-1.5 mr-2">
+                                        <span className="text-xs text-[#6B7280]">Show Locum:</span>
+                                        <select
+                                            value={selectedLocumIdForMonth}
+                                            onChange={e => setSelectedLocumIdForMonth(e.target.value)}
+                                            className="px-2.5 py-1.5 text-xs border border-[#E5E7EB] rounded-lg bg-white focus:outline-none focus:ring-1 focus:ring-[#10B981]"
+                                        >
+                                            <option value="all">All Locums Summary</option>
+                                            {locumsList.map(l => (
+                                                <option key={l.id} value={l.id}>{l.name}</option>
+                                            ))}
+                                        </select>
+                                    </div>
+                                )}
                                 <select
                                     value={availShiftFilter}
                                     onChange={e => setAvailShiftFilter(e.target.value as 'all' | ShiftType)}
-                                    className="px-2.5 py-1.5 text-xs border border-[#E5E7EB] rounded-lg"
+                                    className="px-2.5 py-1.5 text-xs border border-[#E5E7EB] rounded-lg bg-white focus:outline-none focus:ring-1 focus:ring-[#10B981]"
                                 >
                                     <option value="all">All Shifts</option>
                                     <option value="morning">Morning (07-15)</option>
@@ -663,13 +854,12 @@ export function LocumManagement({ onViewProfile }: { onViewProfile?: (id: string
                                 <select
                                     value={availStatusFilter}
                                     onChange={e => setAvailStatusFilter(e.target.value as 'all' | ShiftSlotStatus)}
-                                    className="px-2.5 py-1.5 text-xs border border-[#E5E7EB] rounded-lg"
+                                    className="px-2.5 py-1.5 text-xs border border-[#E5E7EB] rounded-lg bg-white focus:outline-none focus:ring-1 focus:ring-[#10B981]"
                                 >
                                     <option value="all">All Statuses</option>
                                     <option value="available">Available</option>
                                     <option value="booked">Booked</option>
                                     <option value="leave">On Leave</option>
-                                    <option value="blocked">Blocked</option>
                                 </select>
                             </div>
                         </div>
@@ -677,7 +867,7 @@ export function LocumManagement({ onViewProfile }: { onViewProfile?: (id: string
                         {/* Legend */}
                         <div className="flex items-center gap-4 text-[10px]">
                             <span className="text-[#9CA3AF]" style={{ fontWeight: 500 }}>LEGEND:</span>
-                            {(['available', 'booked', 'leave', 'blocked', 'off'] as ShiftSlotStatus[]).map(status => (
+                            {(['available', 'booked', 'leave', 'off'] as ShiftSlotStatus[]).map(status => (
                                 <div key={status} className="flex items-center gap-1.5">
                                     <div
                                         className="w-3 h-3 rounded-sm border"
@@ -699,212 +889,593 @@ export function LocumManagement({ onViewProfile }: { onViewProfile?: (id: string
                             </div>
                         </div>
 
-                        {/* Schedule Grid */}
-                        <div className="border border-[#E5E7EB] rounded-lg overflow-hidden relative" ref={tableRef}>
-                            <table className="w-full">
-                                <thead>
-                                    <tr className="bg-[#F9FAFB] border-b border-[#E5E7EB]">
-                                        <th className="px-3 py-2 text-left text-xs text-[#9CA3AF] w-[180px] min-w-[180px]" style={{ fontWeight: 500 }}>Locum</th>
-                                        <th className="px-1 py-2 text-center text-xs text-[#9CA3AF] w-[60px]" style={{ fontWeight: 500 }}>Wk Total</th>
-                                        {weekDates.map((day, idx) => (
-                                            <th
-                                                key={idx}
-                                                className={`px-1 py-2 text-center text-xs min-w-[100px] ${day.isToday ? 'bg-[#F0FDF4]' : day.isWeekend ? 'bg-[#F9FAFB]' : ''}`}
-                                                style={{ fontWeight: day.isToday ? 600 : 500 }}
-                                            >
-                                                <span className={day.isToday ? 'text-[#10B981]' : 'text-[#9CA3AF]'}>{day.name}</span>
-                                                <br />
-                                                <span className={`text-[11px] ${day.isToday ? 'text-[#10B981] bg-[#10B981]/10 px-1.5 py-0.5 rounded-full inline-block' : 'text-[#6B7280]'}`}>
-                                                    {day.date}
-                                                </span>
-                                            </th>
-                                        ))}
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {weekSchedules.map((schedule, locumIdx) => {
-                                        const locum = locumsList.find(l => l.id === schedule.locumId);
-                                        if (!locum) return null;
-                                        const weekTotal = getLocumWeekShiftCount(schedule);
-                                        const maxDaily = getLocumMaxDailyShifts(schedule);
+                        {/* Rendering different subviews */}
+                        {availSubView === 'week' && (
+                            <div className="border border-[#E5E7EB] rounded-lg overflow-hidden relative" ref={tableRef}>
+                                <table className="w-full">
+                                    <thead>
+                                        <tr className="bg-[#F9FAFB] border-b border-[#E5E7EB]">
+                                            <th className="px-3 py-2 text-left text-xs text-[#9CA3AF] w-[180px] min-w-[180px]" style={{ fontWeight: 500 }}>Locum</th>
+                                            <th className="px-1 py-2 text-center text-xs text-[#9CA3AF] w-[60px]" style={{ fontWeight: 500 }}>Wk Total</th>
+                                            {weekDates.map((day, idx) => (
+                                                <th
+                                                    key={idx}
+                                                    className={`px-1 py-2 text-center text-xs min-w-[100px] ${day.isToday ? 'bg-[#F0FDF4]' : day.isWeekend ? 'bg-[#F9FAFB]' : ''}`}
+                                                    style={{ fontWeight: day.isToday ? 600 : 500 }}
+                                                >
+                                                    <span className={day.isToday ? 'text-[#10B981]' : 'text-[#9CA3AF]'}>{day.name}</span>
+                                                    <br />
+                                                    <span className={`text-[11px] ${day.isToday ? 'text-[#10B981] bg-[#10B981]/10 px-1.5 py-0.5 rounded-full inline-block' : 'text-[#6B7280]'}`}>
+                                                        {day.date}
+                                                    </span>
+                                                </th>
+                                            ))}
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {weekSchedules.map((schedule, locumIdx) => {
+                                            const locum = locumsList.find(l => l.id === schedule.locumId);
+                                            if (!locum) return null;
+                                            const weekTotal = getLocumWeekShiftCount(schedule);
+                                            const maxDaily = getLocumMaxDailyShifts(schedule);
 
-                                        return (
-                                            <tr key={schedule.locumId} className="border-b border-[#F3F4F6] hover:bg-[#FAFBFC]">
-                                                <td className="px-3 py-2">
-                                                    <div className="flex items-center gap-2">
-                                                        <div className="w-7 h-7 bg-[#10B981] rounded-full flex items-center justify-center text-white text-[10px] flex-shrink-0">{locum.avatar}</div>
-                                                        <div className="min-w-0">
-                                                            <p className="text-xs text-[#1F2937] truncate" style={{ fontWeight: 500 }}>{locum.name}</p>
-                                                            <p className="text-[10px] text-[#9CA3AF] truncate">{locum.specialty}</p>
+                                            return (
+                                                <tr key={schedule.locumId} className="border-b border-[#F3F4F6] hover:bg-[#FAFBFC]">
+                                                    <td className="px-3 py-2">
+                                                        <div className="flex items-center gap-2">
+                                                            <div className="w-7 h-7 bg-[#10B981] rounded-full flex items-center justify-center text-white text-[10px] flex-shrink-0">{locum.avatar}</div>
+                                                            <div className="min-w-0">
+                                                                <p className="text-xs text-[#1F2937] truncate" style={{ fontWeight: 500 }}>{locum.name}</p>
+                                                                <p className="text-[10px] text-[#9CA3AF] truncate">{locum.specialty}</p>
+                                                            </div>
                                                         </div>
-                                                    </div>
-                                                </td>
-                                                <td className="px-1 py-2 text-center">
-                                                    <div className="flex flex-col items-center">
-                                                        <span className="text-sm text-[#1F2937]" style={{ fontWeight: 600 }}>{weekTotal}</span>
-                                                        <span className="text-[9px] text-[#9CA3AF]">shifts</span>
-                                                        {maxDaily >= 3 && (
-                                                            <span className="text-[8px] px-1 py-0.5 bg-[#FEE2E2] text-[#DC2626] rounded mt-0.5" style={{ fontWeight: 500 }}>
-                                                                3/day
-                                                            </span>
-                                                        )}
-                                                        {maxDaily === 2 && (
-                                                            <span className="text-[8px] px-1 py-0.5 bg-[#FEF3C7] text-[#92400E] rounded mt-0.5" style={{ fontWeight: 500 }}>
-                                                                2/day
-                                                            </span>
-                                                        )}
-                                                    </div>
-                                                </td>
-                                                {schedule.days.map((day, dayIdx) => {
-                                                    const bookedCount = day.shifts.filter(s => s.status === 'booked').length;
-                                                    const filteredShifts = day.shifts.filter(s => {
-                                                        const matchesShift = availShiftFilter === 'all' || s.type === availShiftFilter;
-                                                        const matchesStatus = availStatusFilter === 'all' || s.status === availStatusFilter;
-                                                        return matchesShift && matchesStatus;
-                                                    });
+                                                    </td>
+                                                    <td className="px-1 py-2 text-center">
+                                                        <div className="flex flex-col items-center">
+                                                            <span className="text-sm text-[#1F2937]" style={{ fontWeight: 600 }}>{weekTotal}</span>
+                                                            <span className="text-[9px] text-[#9CA3AF]">shifts</span>
+                                                            {maxDaily >= 3 && (
+                                                                <span className="text-[8px] px-1 py-0.5 bg-[#FEE2E2] text-[#DC2626] rounded mt-0.5" style={{ fontWeight: 500 }}>
+                                                                    3/day
+                                                                </span>
+                                                            )}
+                                                            {maxDaily === 2 && (
+                                                                <span className="text-[8px] px-1 py-0.5 bg-[#FEF3C7] text-[#92400E] rounded mt-0.5" style={{ fontWeight: 500 }}>
+                                                                    2/day
+                                                                </span>
+                                                            )}
+                                                        </div>
+                                                    </td>
+                                                    {schedule.days.map((day, dayIdx) => {
+                                                        const bookedCount = day.shifts.filter(s => s.status === 'booked').length;
+                                                        const filteredShifts = day.shifts.filter(s => {
+                                                            const matchesShift = availShiftFilter === 'all' || s.type === availShiftFilter;
+                                                            const matchesStatus = availStatusFilter === 'all' || s.status === availStatusFilter;
+                                                            return matchesShift && matchesStatus;
+                                                        });
 
-                                                    return (
-                                                        <td
-                                                            key={dayIdx}
-                                                            className={`px-0.5 py-1.5 ${weekDates[dayIdx]?.isToday ? 'bg-[#F0FDF4]/50' : weekDates[dayIdx]?.isWeekend ? 'bg-[#F9FAFB]/50' : ''}`}
-                                                        >
-                                                            <div className="flex flex-col gap-[2px] px-0.5">
-                                                                {filteredShifts.map((shift, shiftIdx) => {
-                                                                    if (shift.status === 'off') {
+                                                        return (
+                                                            <td
+                                                                key={dayIdx}
+                                                                className={`px-0.5 py-1.5 ${weekDates[dayIdx]?.isToday ? 'bg-[#F0FDF4]/50' : weekDates[dayIdx]?.isWeekend ? 'bg-[#F9FAFB]/50' : ''}`}
+                                                            >
+                                                                <div className="flex flex-col gap-[2px] px-0.5">
+                                                                    {filteredShifts.map((shift, shiftIdx) => {
+                                                                        if (shift.status === 'off') {
+                                                                            return (
+                                                                                <div
+                                                                                    key={shiftIdx}
+                                                                                    className="h-[18px] rounded-sm flex items-center justify-center border border-dashed border-[#E5E7EB]"
+                                                                                >
+                                                                                    <span className="text-[8px] text-[#D1D5DB]">{shiftTypeLabels[shift.type].abbr}</span>
+                                                                                </div>
+                                                                            );
+                                                                        }
+                                                                        const cfg = shiftStatusConfig[shift.status];
                                                                         return (
                                                                             <div
                                                                                 key={shiftIdx}
-                                                                                className="h-[18px] rounded-sm flex items-center justify-center border border-dashed border-[#E5E7EB]"
+                                                                                className="h-[18px] rounded-sm flex items-center justify-center cursor-pointer transition-all hover:ring-1 hover:ring-offset-0 relative"
+                                                                                style={{
+                                                                                    backgroundColor: cfg.bg,
+                                                                                    border: `1px solid ${cfg.border}`,
+                                                                                }}
+                                                                                onMouseEnter={(e) => handleSlotHover(e, locumIdx, dayIdx, shiftIdx)}
+                                                                                onMouseLeave={() => setHoveredSlot(null)}
                                                                             >
-                                                                                <span className="text-[8px] text-[#D1D5DB]">{shiftTypeLabels[shift.type].abbr}</span>
+                                                                                <span className="text-[8px]" style={{ color: cfg.color, fontWeight: 500 }}>
+                                                                                    {shiftTypeLabels[shift.type].abbr}
+                                                                                    {shift.status === 'booked' && (
+                                                                                        <span className="ml-0.5 opacity-70">&#9679;</span>
+                                                                                    )}
+                                                                                </span>
                                                                             </div>
                                                                         );
-                                                                    }
-                                                                    const cfg = shiftStatusConfig[shift.status];
-                                                                    return (
-                                                                        <div
-                                                                            key={shiftIdx}
-                                                                            className="h-[18px] rounded-sm flex items-center justify-center cursor-pointer transition-all hover:ring-1 hover:ring-offset-0 relative"
-                                                                            style={{
-                                                                                backgroundColor: cfg.bg,
-                                                                                border: `1px solid ${cfg.border}`,
-                                                                            }}
-                                                                            onMouseEnter={(e) => handleSlotHover(e, locumIdx, dayIdx, shiftIdx)}
-                                                                            onMouseLeave={() => setHoveredSlot(null)}
-                                                                        >
-                                                                            <span className="text-[8px]" style={{ color: cfg.color, fontWeight: 500 }}>
-                                                                                {shiftTypeLabels[shift.type].abbr}
-                                                                                {shift.status === 'booked' && (
-                                                                                    <span className="ml-0.5 opacity-70">&#9679;</span>
-                                                                                )}
-                                                                            </span>
+                                                                    })}
+                                                                    {filteredShifts.length === 0 && (
+                                                                        <div className="h-[18px] flex items-center justify-center">
+                                                                            <span className="text-[8px] text-[#D1D5DB]">--</span>
                                                                         </div>
-                                                                    );
-                                                                })}
-                                                                {filteredShifts.length === 0 && (
-                                                                    <div className="h-[18px] flex items-center justify-center">
-                                                                        <span className="text-[8px] text-[#D1D5DB]">--</span>
+                                                                    )}
+                                                                </div>
+                                                                {bookedCount >= 2 && availShiftFilter === 'all' && availStatusFilter === 'all' && (
+                                                                    <div className="text-center mt-0.5">
+                                                                        <span className={`text-[7px] px-1 py-px rounded ${bookedCount >= 3 ? 'bg-[#FEE2E2] text-[#DC2626]' : 'bg-[#FEF3C7] text-[#92400E]'}`} style={{ fontWeight: 600 }}>
+                                                                            {bookedCount}x
+                                                                        </span>
                                                                     </div>
                                                                 )}
-                                                            </div>
-                                                            {bookedCount >= 2 && availShiftFilter === 'all' && availStatusFilter === 'all' && (
-                                                                <div className="text-center mt-0.5">
-                                                                    <span className={`text-[7px] px-1 py-px rounded ${bookedCount >= 3 ? 'bg-[#FEE2E2] text-[#DC2626]' : 'bg-[#FEF3C7] text-[#92400E]'}`} style={{ fontWeight: 600 }}>
-                                                                        {bookedCount}x
-                                                                    </span>
+                                                            </td>
+                                                        );
+                                                    })}
+                                                </tr>
+                                            );
+                                        })}
+                                    </tbody>
+                                </table>
+
+                                {/* Hover Tooltip for Week View */}
+                                {hoveredSlot && !hoveredSlot.isMonthView && (() => {
+                                    const schedule = weekSchedules[hoveredSlot.locumIdx];
+                                    if (!schedule) return null;
+                                    const day = schedule.days[hoveredSlot.dayIdx];
+                                    if (!day) return null;
+                                    const filteredShifts = day.shifts.filter(s => {
+                                        const matchesShift = availShiftFilter === 'all' || s.type === availShiftFilter;
+                                        const matchesStatus = availStatusFilter === 'all' || s.status === availStatusFilter;
+                                        return matchesShift && matchesStatus;
+                                    });
+                                    const shift = filteredShifts[hoveredSlot.shiftIdx];
+                                    if (!shift || shift.status === 'off') return null;
+                                    const locum = locumsList.find(l => l.id === schedule.locumId);
+                                    const dayInfo = weekDates[hoveredSlot.dayIdx];
+                                    const cfg = shiftStatusConfig[shift.status];
+
+                                    return (
+                                        <div
+                                            className="absolute z-30 bg-white rounded-lg shadow-lg border border-[#E5E7EB] p-3 pointer-events-none"
+                                            style={{
+                                                left: Math.min(Math.max(tooltipPos.x, 120), 900),
+                                                top: tooltipPos.y,
+                                                transform: 'translate(-50%, -100%)',
+                                                minWidth: 240,
+                                            }}
+                                        >
+                                            <div className="flex items-center gap-2 mb-2">
+                                                <div
+                                                    className="w-2 h-2 rounded-full"
+                                                    style={{ backgroundColor: cfg.color }}
+                                                />
+                                                <span className="text-xs text-[#1F2937]" style={{ fontWeight: 600 }}>
+                                                    {shiftTypeLabels[shift.type].label} Shift
+                                                </span>
+                                                <span
+                                                    className="text-[10px] px-1.5 py-0.5 rounded-full border ml-auto"
+                                                    style={{ backgroundColor: cfg.bg, color: cfg.color, borderColor: cfg.border }}
+                                                >
+                                                    {cfg.label}
+                                                </span>
+                                            </div>
+                                            <div className="space-y-1 text-[10px]">
+                                                <div className="flex items-center justify-between">
+                                                    <span className="text-[#9CA3AF]">Locum</span>
+                                                    <span className="text-[#1F2937]" style={{ fontWeight: 500 }}>{locum?.name}</span>
+                                                </div>
+                                                <div className="flex items-center justify-between">
+                                                    <span className="text-[#9CA3AF]">Date</span>
+                                                    <span className="text-[#1F2937]">{dayInfo?.full}</span>
+                                                </div>
+                                                <div className="flex items-center justify-between">
+                                                    <span className="text-[#9CA3AF]">Time</span>
+                                                    <span className="text-[#1F2937]">{shift.time || shiftTypeLabels[shift.type].time}</span>
+                                                </div>
+                                                {shift.facility && (
+                                                    <div className="flex items-center justify-between">
+                                                        <span className="text-[#9CA3AF]">Facility</span>
+                                                        <span className="text-[#1F2937] text-right max-w-[160px]" style={{ fontWeight: 500 }}>{shift.facility}</span>
+                                                    </div>
+                                                )}
+                                                {shift.shiftId && (
+                                                    <div className="flex items-center justify-between">
+                                                        <span className="text-[#9CA3AF]">Shift ID</span>
+                                                        <span className="text-[#3B82F6]">{shift.shiftId}</span>
+                                                    </div>
+                                                )}
+                                            </div>
+                                            {day.shifts.filter(s => s.status === 'booked').length >= 2 && (
+                                                <div className="mt-2 pt-2 border-t border-[#F3F4F6]">
+                                                    <div className="flex items-center gap-1">
+                                                        <Info className="w-3 h-3 text-[#F59E0B] flex-shrink-0" />
+                                                        <span className="text-[9px] text-[#92400E]" style={{ fontWeight: 500 }}>
+                                                            {day.shifts.filter(s => s.status === 'booked').length} shifts booked this day — check WTD compliance
+                                                        </span>
+                                                    </div>
+                                                </div>
+                                            )}
+                                        </div>
+                                    );
+                                })()}
+                            </div>
+                        )}
+
+                        {/* Month View Component */}
+                        {availSubView === 'month' && (
+                            <div className="border border-[#E5E7EB] rounded-lg overflow-hidden relative" ref={tableRef}>
+                                <div className="bg-white border-b border-[#E5E7EB] grid grid-cols-7 text-center">
+                                    {['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map(day => (
+                                        <div key={day} className="py-2.5 text-xs font-semibold text-[#6B7280]">
+                                            {day}
+                                        </div>
+                                    ))}
+                                </div>
+                                <div className="grid grid-cols-7 divide-y divide-x divide-[#E5E7EB] bg-white">
+                                    {getMonthDays(availAnchorDate).map((cell, idx) => {
+                                        const isToday = cell.date.toDateString() === new Date(2026, 1, 10).toDateString();
+                                        const isSelectedMonth = cell.date.getMonth() === availAnchorDate.getMonth();
+                                        const weekdayIdx = getDayOfWeekIndex(cell.date);
+
+                                        let totalAvail = 0;
+                                        let totalBooked = 0;
+                                        let totalLeave = 0;
+
+                                        weekSchedules.forEach(schedule => {
+                                            const daySch = schedule.days[weekdayIdx];
+                                            if (daySch) {
+                                                daySch.shifts.forEach(s => {
+                                                    const matchesShift = availShiftFilter === 'all' || s.type === availShiftFilter;
+                                                    const matchesStatus = availStatusFilter === 'all' || s.status === availStatusFilter;
+                                                    if (matchesShift && matchesStatus) {
+                                                        if (s.status === 'booked') totalBooked++;
+                                                        else if (s.status === 'available') totalAvail++;
+                                                        else if (s.status === 'leave') totalLeave++;
+                                                    }
+                                                });
+                                            }
+                                        });
+
+                                        return (
+                                            <div
+                                                key={idx}
+                                                className={`min-h-[100px] p-2 flex flex-col justify-between transition-all ${
+                                                    isSelectedMonth ? 'bg-white' : 'bg-[#F9FAFB]/60'
+                                                } ${isToday ? 'bg-[#F0FDF4]/30 font-semibold' : ''}`}
+                                            >
+                                                <div className="flex items-center justify-between mb-1">
+                                                    <span
+                                                        className={`text-[11px] font-semibold flex items-center justify-center w-5 h-5 rounded-full ${
+                                                            isToday
+                                                                ? 'bg-[#10B981] text-white'
+                                                                : isSelectedMonth
+                                                                    ? 'text-[#1F2937]'
+                                                                    : 'text-[#9CA3AF]'
+                                                        }`}
+                                                    >
+                                                        {cell.date.getDate()}
+                                                    </span>
+                                                    {isToday && <span className="text-[9px] text-[#10B981] font-semibold">Today</span>}
+                                                </div>
+
+                                                <div className="flex-1 flex flex-col justify-end gap-1 mt-1">
+                                                    {selectedLocumIdForMonth === 'all' ? (
+                                                        <div
+                                                            className="cursor-pointer space-y-1"
+                                                            onMouseEnter={(e) => {
+                                                                const rect = e.currentTarget.getBoundingClientRect();
+                                                                const containerRect = tableRef.current?.getBoundingClientRect();
+                                                                if (containerRect) {
+                                                                    setTooltipPos({
+                                                                        x: rect.left - containerRect.left + rect.width / 2,
+                                                                        y: rect.top - containerRect.top - 8,
+                                                                    });
+                                                                }
+                                                                setHoveredMonthSummary({ date: cell.date, x: rect.left, y: rect.top });
+                                                            }}
+                                                            onMouseLeave={() => setHoveredMonthSummary(null)}
+                                                        >
+                                                            {totalAvail > 0 && (
+                                                                <div className="flex items-center gap-1 text-[9px] text-[#059669] bg-[#E6FDF5] px-1.5 py-0.5 rounded border border-[#A7F3D0]">
+                                                                    <span className="w-1 h-1 rounded-full bg-[#10B981]" />
+                                                                    <span>{totalAvail} Avail</span>
                                                                 </div>
                                                             )}
-                                                        </td>
-                                                    );
-                                                })}
-                                            </tr>
+                                                            {totalBooked > 0 && (
+                                                                <div className="flex items-center gap-1 text-[9px] text-[#1E40AF] bg-[#EFF6FF] px-1.5 py-0.5 rounded border border-[#BFDBFE]">
+                                                                    <span className="w-1 h-1 rounded-full bg-[#3B82F6]" />
+                                                                    <span>{totalBooked} Booked</span>
+                                                                </div>
+                                                            )}
+                                                            {totalLeave > 0 && (
+                                                                <div className="flex items-center gap-1 text-[9px] text-[#92400E] bg-[#FEF3C7] px-1.5 py-0.5 rounded border border-[#FDE68A]">
+                                                                    <span className="w-1 h-1 rounded-full bg-[#F59E0B]" />
+                                                                    <span>{totalLeave} Leave</span>
+                                                                </div>
+                                                            )}
+                                                            {totalAvail === 0 && totalBooked === 0 && totalLeave === 0 && (
+                                                                <span className="text-[9px] text-[#D1D5DB] italic block text-center">--</span>
+                                                            )}
+                                                        </div>
+                                                    ) : (
+                                                        (() => {
+                                                            const scheduleIdx = weekSchedules.findIndex(s => s.locumId === selectedLocumIdForMonth);
+                                                            const schedule = weekSchedules[scheduleIdx];
+                                                            if (!schedule) return null;
+                                                            const daySch = schedule.days[weekdayIdx];
+                                                            if (!daySch) return null;
+                                                            const shifts = daySch.shifts.filter(s => {
+                                                                const matchesShift = availShiftFilter === 'all' || s.type === availShiftFilter;
+                                                                const matchesStatus = availStatusFilter === 'all' || s.status === availStatusFilter;
+                                                                return matchesShift && matchesStatus;
+                                                            });
+
+                                                            return (
+                                                                <div className="space-y-[2px]">
+                                                                    {shifts.map((shift, shiftIdx) => {
+                                                                        if (shift.status === 'off') {
+                                                                            return (
+                                                                                <div key={shiftIdx} className="h-4 rounded-sm flex items-center justify-center border border-dashed border-[#E5E7EB]">
+                                                                                    <span className="text-[8px] text-[#D1D5DB]">{shiftTypeLabels[shift.type].abbr}</span>
+                                                                                </div>
+                                                                            );
+                                                                        }
+                                                                        const cfg = shiftStatusConfig[shift.status];
+                                                                        return (
+                                                                            <div
+                                                                                key={shiftIdx}
+                                                                                className="h-4 rounded-sm flex items-center justify-center cursor-pointer transition-all hover:ring-1 hover:ring-offset-0 relative"
+                                                                                style={{ backgroundColor: cfg.bg, border: `1px solid ${cfg.border}` }}
+                                                                                onMouseEnter={(e) => {
+                                                                                    const rect = e.currentTarget.getBoundingClientRect();
+                                                                                    const containerRect = tableRef.current?.getBoundingClientRect();
+                                                                                    if (containerRect) {
+                                                                                        setTooltipPos({
+                                                                                            x: rect.left - containerRect.left + rect.width / 2,
+                                                                                            y: rect.top - containerRect.top - 8,
+                                                                                        });
+                                                                                    }
+                                                                                    setHoveredSlot({
+                                                                                        locumIdx: scheduleIdx,
+                                                                                        dayIdx: weekdayIdx,
+                                                                                        shiftIdx: shiftIdx,
+                                                                                        isMonthView: true,
+                                                                                        monthDate: cell.date
+                                                                                    });
+                                                                                }}
+                                                                                onMouseLeave={() => setHoveredSlot(null)}
+                                                                            >
+                                                                                <span className="text-[8px] flex items-center" style={{ color: cfg.color, fontWeight: 600 }}>
+                                                                                    {shiftTypeLabels[shift.type].abbr}
+                                                                                    {shift.status === 'booked' && <span className="ml-0.5 opacity-75">&#9679;</span>}
+                                                                                </span>
+                                                                            </div>
+                                                                        );
+                                                                    })}
+                                                                    {shifts.length === 0 && <span className="text-[9px] text-[#D1D5DB] italic block text-center">--</span>}
+                                                                </div>
+                                                            );
+                                                        })()
+                                                    )}
+                                                </div>
+                                            </div>
                                         );
                                     })}
-                                </tbody>
-                            </table>
+                                </div>
 
-                            {/* Hover Tooltip */}
-                            {hoveredSlot && (() => {
-                                const schedule = weekSchedules[hoveredSlot.locumIdx];
-                                if (!schedule) return null;
-                                const day = schedule.days[hoveredSlot.dayIdx];
-                                if (!day) return null;
-                                const filteredShifts = day.shifts.filter(s => {
-                                    const matchesShift = availShiftFilter === 'all' || s.type === availShiftFilter;
-                                    const matchesStatus = availStatusFilter === 'all' || s.status === availStatusFilter;
-                                    return matchesShift && matchesStatus;
-                                });
-                                const shift = filteredShifts[hoveredSlot.shiftIdx];
-                                if (!shift || shift.status === 'off') return null;
-                                const locum = locumsList.find(l => l.id === schedule.locumId);
-                                const dayInfo = weekDates[hoveredSlot.dayIdx];
-                                const cfg = shiftStatusConfig[shift.status];
+                                {/* Month View Summary Hover Tooltip */}
+                                {hoveredMonthSummary && (() => {
+                                    const date = hoveredMonthSummary.date;
+                                    const weekdayIdx = getDayOfWeekIndex(date);
 
-                                return (
-                                    <div
-                                        className="absolute z-30 bg-white rounded-lg shadow-lg border border-[#E5E7EB] p-3 pointer-events-none"
-                                        style={{
-                                            left: Math.min(Math.max(tooltipPos.x, 120), 900),
-                                            top: tooltipPos.y,
-                                            transform: 'translate(-50%, -100%)',
-                                            minWidth: 240,
-                                        }}
-                                    >
-                                        <div className="flex items-center gap-2 mb-2">
-                                            <div
-                                                className="w-2 h-2 rounded-full"
-                                                style={{ backgroundColor: cfg.color }}
-                                            />
-                                            <span className="text-xs text-[#1F2937]" style={{ fontWeight: 600 }}>
-                                                {shiftTypeLabels[shift.type].label} Shift
-                                            </span>
-                                            <span
-                                                className="text-[10px] px-1.5 py-0.5 rounded-full border ml-auto"
-                                                style={{ backgroundColor: cfg.bg, color: cfg.color, borderColor: cfg.border }}
-                                            >
-                                                {cfg.label}
-                                            </span>
+                                    return (
+                                        <div
+                                            className="absolute z-30 bg-white rounded-xl shadow-xl border border-[#E5E7EB] p-3 pointer-events-none"
+                                            style={{
+                                                left: Math.min(Math.max(tooltipPos.x, 150), 850),
+                                                top: tooltipPos.y,
+                                                transform: 'translate(-50%, -100%)',
+                                                width: 280,
+                                            }}
+                                        >
+                                            <div className="border-b border-[#F3F4F6] pb-2 mb-2 flex items-center justify-between">
+                                                <span className="text-xs font-semibold text-[#1F2937]">Locums Availability Summary</span>
+                                                <span className="text-[10px] text-[#6B7280]">
+                                                    {date.toLocaleDateString('en-IE', { weekday: 'short', day: 'numeric', month: 'short' })}
+                                                </span>
+                                            </div>
+                                            <div className="space-y-2 max-h-[220px] overflow-y-auto pr-1">
+                                                {weekSchedules.map(schedule => {
+                                                    const locum = locumsList.find(l => l.id === schedule.locumId);
+                                                    if (!locum) return null;
+                                                    const daySchedule = schedule.days[weekdayIdx];
+                                                    const shifts = daySchedule ? daySchedule.shifts.filter(s => {
+                                                        const matchesShift = availShiftFilter === 'all' || s.type === availShiftFilter;
+                                                        const matchesStatus = availStatusFilter === 'all' || s.status === availStatusFilter;
+                                                        return matchesShift && matchesStatus;
+                                                    }) : [];
+
+                                                    return (
+                                                        <div key={schedule.locumId} className="flex flex-col gap-1 text-[10px] bg-[#F9FAFB] rounded-lg p-1.5">
+                                                            <div className="flex items-center justify-between">
+                                                                <span className="font-semibold text-[#1F2937]">{locum.name}</span>
+                                                                <span className="text-[9px] text-[#9CA3AF]">{locum.specialty}</span>
+                                                            </div>
+                                                            <div className="flex flex-wrap gap-1 mt-0.5">
+                                                                {shifts.map((s, sIdx) => {
+                                                                    const cfg = shiftStatusConfig[s.status];
+                                                                    return (
+                                                                        <span
+                                                                            key={sIdx}
+                                                                            className="px-1.5 py-0.5 rounded text-[8px] border"
+                                                                            style={{ backgroundColor: cfg.bg, color: cfg.color, borderColor: cfg.border }}
+                                                                        >
+                                                                            {shiftTypeLabels[s.type].abbr}: {cfg.label}
+                                                                            {s.facility && ` (${s.facility.split(',')[0]})`}
+                                                                        </span>
+                                                                    );
+                                                                })}
+                                                                {shifts.length === 0 && <span className="text-[8px] text-[#D1D5DB]">No shifts match filters</span>}
+                                                            </div>
+                                                        </div>
+                                                    );
+                                                })}
+                                            </div>
                                         </div>
-                                        <div className="space-y-1 text-[10px]">
-                                            <div className="flex items-center justify-between">
-                                                <span className="text-[#9CA3AF]">Locum</span>
-                                                <span className="text-[#1F2937]" style={{ fontWeight: 500 }}>{locum?.name}</span>
+                                    );
+                                })()}
+
+                                {/* Month View Single Slot Tooltip */}
+                                {hoveredSlot && hoveredSlot.isMonthView && hoveredSlot.monthDate && (() => {
+                                    const schedule = weekSchedules[hoveredSlot.locumIdx];
+                                    if (!schedule) return null;
+                                    const day = schedule.days[hoveredSlot.dayIdx];
+                                    if (!day) return null;
+                                    const filteredShifts = day.shifts.filter(s => {
+                                        const matchesShift = availShiftFilter === 'all' || s.type === availShiftFilter;
+                                        const matchesStatus = availStatusFilter === 'all' || s.status === availStatusFilter;
+                                        return matchesShift && matchesStatus;
+                                    });
+                                    const shift = filteredShifts[hoveredSlot.shiftIdx];
+                                    if (!shift || shift.status === 'off') return null;
+                                    const locum = locumsList.find(l => l.id === schedule.locumId);
+                                    const cfg = shiftStatusConfig[shift.status];
+
+                                    return (
+                                        <div
+                                            className="absolute z-30 bg-white rounded-lg shadow-lg border border-[#E5E7EB] p-3 pointer-events-none"
+                                            style={{
+                                                left: Math.min(Math.max(tooltipPos.x, 120), 900),
+                                                top: tooltipPos.y,
+                                                transform: 'translate(-50%, -100%)',
+                                                minWidth: 240,
+                                            }}
+                                        >
+                                            <div className="flex items-center gap-2 mb-2">
+                                                <div
+                                                    className="w-2 h-2 rounded-full"
+                                                    style={{ backgroundColor: cfg.color }}
+                                                />
+                                                <span className="text-xs text-[#1F2937]" style={{ fontWeight: 600 }}>
+                                                    {shiftTypeLabels[shift.type].label} Shift
+                                                </span>
+                                                <span
+                                                    className="text-[10px] px-1.5 py-0.5 rounded-full border ml-auto"
+                                                    style={{ backgroundColor: cfg.bg, color: cfg.color, borderColor: cfg.border }}
+                                                >
+                                                    {cfg.label}
+                                                </span>
                                             </div>
-                                            <div className="flex items-center justify-between">
-                                                <span className="text-[#9CA3AF]">Date</span>
-                                                <span className="text-[#1F2937]">{dayInfo?.full}</span>
-                                            </div>
-                                            <div className="flex items-center justify-between">
-                                                <span className="text-[#9CA3AF]">Time</span>
-                                                <span className="text-[#1F2937]">{shift.time || shiftTypeLabels[shift.type].time}</span>
-                                            </div>
-                                            {shift.facility && (
+                                            <div className="space-y-1 text-[10px]">
                                                 <div className="flex items-center justify-between">
-                                                    <span className="text-[#9CA3AF]">Facility</span>
-                                                    <span className="text-[#1F2937] text-right max-w-[160px]" style={{ fontWeight: 500 }}>{shift.facility}</span>
+                                                    <span className="text-[#9CA3AF]">Locum</span>
+                                                    <span className="text-[#1F2937]" style={{ fontWeight: 500 }}>{locum?.name}</span>
                                                 </div>
-                                            )}
-                                            {shift.shiftId && (
                                                 <div className="flex items-center justify-between">
-                                                    <span className="text-[#9CA3AF]">Shift ID</span>
-                                                    <span className="text-[#3B82F6]">{shift.shiftId}</span>
-                                                </div>
-                                            )}
-                                        </div>
-                                        {day.shifts.filter(s => s.status === 'booked').length >= 2 && (
-                                            <div className="mt-2 pt-2 border-t border-[#F3F4F6]">
-                                                <div className="flex items-center gap-1">
-                                                    <Info className="w-3 h-3 text-[#F59E0B] flex-shrink-0" />
-                                                    <span className="text-[9px] text-[#92400E]" style={{ fontWeight: 500 }}>
-                                                        {day.shifts.filter(s => s.status === 'booked').length} shifts booked this day — check WTD compliance
+                                                    <span className="text-[#9CA3AF]">Date</span>
+                                                    <span className="text-[#1F2937]">
+                                                        {hoveredSlot.monthDate?.toLocaleDateString('en-IE', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}
                                                     </span>
                                                 </div>
+                                                <div className="flex items-center justify-between">
+                                                    <span className="text-[#9CA3AF]">Time</span>
+                                                    <span className="text-[#1F2937]">{shift.time || shiftTypeLabels[shift.type].time}</span>
+                                                </div>
+                                                {shift.facility && (
+                                                    <div className="flex items-center justify-between">
+                                                        <span className="text-[#9CA3AF]">Facility</span>
+                                                        <span className="text-[#1F2937] text-right max-w-[160px]" style={{ fontWeight: 500 }}>{shift.facility}</span>
+                                                    </div>
+                                                )}
+                                                {shift.shiftId && (
+                                                    <div className="flex items-center justify-between">
+                                                        <span className="text-[#9CA3AF]">Shift ID</span>
+                                                        <span className="text-[#3B82F6]">{shift.shiftId}</span>
+                                                    </div>
+                                                )}
                                             </div>
-                                        )}
-                                    </div>
-                                );
-                            })()}
-                        </div>
+                                        </div>
+                                    );
+                                })()}
+                            </div>
+                        )}
+
+                        {/* Day View Component */}
+                        {availSubView === 'day' && (
+                            <div className="space-y-3">
+                                {filteredLocums.map((locum) => {
+                                    const schedule = weekSchedules.find(s => s.locumId === locum.id);
+                                    if (!schedule) return null;
+                                    const weekdayIdx = getDayOfWeekIndex(availAnchorDate);
+                                    const daySchedule = schedule.days[weekdayIdx];
+                                    if (!daySchedule) return null;
+
+                                    const shifts = daySchedule.shifts.filter(s => {
+                                        const matchesShift = availShiftFilter === 'all' || s.type === availShiftFilter;
+                                        const matchesStatus = availStatusFilter === 'all' || s.status === availStatusFilter;
+                                        return matchesShift && matchesStatus;
+                                    });
+
+                                    return (
+                                        <div key={locum.id} className="bg-white rounded-xl border border-[#E5E7EB] p-4 flex flex-col md:flex-row md:items-center justify-between gap-4 hover:shadow-sm transition-all">
+                                            <div className="flex items-center gap-3 w-[220px] shrink-0">
+                                                <div className="w-9 h-9 bg-[#10B981] rounded-full flex items-center justify-center text-white text-xs font-semibold">
+                                                    {locum.avatar}
+                                                </div>
+                                                <div className="min-w-0">
+                                                    <h4 className="text-sm font-semibold text-[#1F2937] truncate">{locum.name}</h4>
+                                                    <p className="text-xs text-[#6B7280] truncate">{locum.specialty}</p>
+                                                    <span className="text-[10px] text-[#9CA3AF] font-medium">{locum.id}</span>
+                                                </div>
+                                            </div>
+
+                                            <div className="flex-1 grid grid-cols-1 md:grid-cols-3 gap-3">
+                                                {shifts.map((shift, shiftIdx) => {
+                                                    const cfg = shiftStatusConfig[shift.status];
+                                                    const labelInfo = shiftTypeLabels[shift.type];
+                                                    return (
+                                                        <div
+                                                            key={shiftIdx}
+                                                            className="border rounded-lg p-3 flex flex-col justify-between min-h-[90px] transition-all hover:bg-[#FAFBFC]"
+                                                            style={{ borderColor: shift.status === 'off' ? '#E5E7EB' : cfg.border }}
+                                                        >
+                                                            <div className="flex items-center justify-between mb-1.5">
+                                                                <div className="flex items-center gap-1.5">
+                                                                    <span className="text-xs font-semibold text-[#1F2937]">{labelInfo.label}</span>
+                                                                    <span className="text-[10px] text-[#9CA3AF]">({shift.time || labelInfo.time})</span>
+                                                                </div>
+                                                                <span
+                                                                    className="text-[9px] px-1.5 py-0.5 rounded-full border font-medium"
+                                                                    style={{ backgroundColor: cfg.bg, color: cfg.color, borderColor: cfg.border }}
+                                                                >
+                                                                    {cfg.label}
+                                                                </span>
+                                                            </div>
+                                                            <div className="mt-auto">
+                                                                {shift.status === 'booked' ? (
+                                                                    <div className="space-y-0.5">
+                                                                        <p className="text-[11px] font-semibold text-[#1F2937] truncate">{shift.facility}</p>
+                                                                        <p className="text-[9px] text-[#3B82F6] font-medium">ID: {shift.shiftId}</p>
+                                                                    </div>
+                                                                ) : shift.status === 'available' ? (
+                                                                    <p className="text-[10px] text-[#059669] font-medium">🟢 Open for assignment</p>
+                                                                ) : shift.status === 'leave' ? (
+                                                                    <p className="text-[10px] text-[#92400E] font-medium">🟡 Scheduled on leave</p>
+                                                                ) : (
+                                                                    <p className="text-[10px] text-[#9CA3AF] italic">Off-duty</p>
+                                                                )}
+                                                            </div>
+                                                        </div>
+                                                    );
+                                                })}
+                                                {shifts.length === 0 && (
+                                                    <div className="col-span-3 py-6 text-center border border-dashed border-[#E5E7EB] rounded-lg bg-[#F9FAFB]">
+                                                        <p className="text-xs text-[#9CA3AF]">No shifts match the current filters</p>
+                                                    </div>
+                                                )}
+                                            </div>
+                                        </div>
+                                    );
+                                })}
+                            </div>
+                        )}
 
                         {/* Working Time Directive Alerts */}
                         {(() => {
@@ -1371,8 +1942,8 @@ export function LocumManagement({ onViewProfile }: { onViewProfile?: (id: string
                                     <div>
                                         <p className="text-[10px] text-[#9CA3AF] uppercase font-semibold tracking-wider">Contact Details</p>
                                         <div className="space-y-1.5 mt-1">
-                                            <div className="flex items-center gap-1.5 text-sm text-[#6B7280]"><Phone className="w-3.5 h-3.5" /> +353 87 234 {selectedApplicant.id.slice(-4)}</div>
-                                            <div className="flex items-center gap-1.5 text-sm text-[#6B7280]"><Mail className="w-3.5 h-3.5" /> {selectedApplicant.name.toLowerCase().replace(' ', '.')}@email.com</div>
+                                            <div className="flex items-center gap-1.5 text-sm text-[#6B7280]"><Phone className="w-3.5 h-3.5" /> {selectedApplicant.phone || `+353 87 234 ${selectedApplicant.id.slice(-4)}`}</div>
+                                            <div className="flex items-center gap-1.5 text-sm text-[#6B7280]"><Mail className="w-3.5 h-3.5" /> {selectedApplicant.email || `${selectedApplicant.name.toLowerCase().replace(/\s+/g, '.')}@email.com`}</div>
                                         </div>
                                     </div>
                                 </div>
@@ -1504,6 +2075,169 @@ export function LocumManagement({ onViewProfile }: { onViewProfile?: (id: string
                             </button>
                         </div>
                     </div>
+                </div>
+            )}
+
+            {/* Add Applicant Dialog */}
+            {showAddApplicantDialog && (
+                <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 animate-in fade-in duration-200">
+                    <form 
+                        onSubmit={handleAddApplicantSubmit} 
+                        className="bg-white rounded-2xl shadow-2xl border border-[#E5E7EB] w-full max-w-lg overflow-hidden flex flex-col animate-in zoom-in-95 duration-200"
+                    >
+                        {/* Header */}
+                        <div className="p-6 border-b border-[#E5E7EB] flex items-center justify-between bg-[#F9FAFB]">
+                            <div>
+                                <h3 className="text-[#1F2937] text-lg font-bold" style={{ fontWeight: 700 }}>Add New Applicant</h3>
+                                <p className="text-xs text-[#6B7280]">Enter applicant details to add them to the recruitment pipeline</p>
+                            </div>
+                            <button 
+                                type="button" 
+                                onClick={() => {
+                                    setShowAddApplicantDialog(false);
+                                    setCustomSpecialtyActive(false);
+                                    setCustomLocationActive(false);
+                                }} 
+                                className="p-2 hover:bg-[#E5E7EB] rounded-full transition-colors"
+                            >
+                                <X className="w-5 h-5 text-[#6B7280]" />
+                            </button>
+                        </div>
+
+                        {/* Form Fields */}
+                        <div className="p-6 space-y-4 overflow-y-auto max-h-[70vh]">
+                            <div className="grid grid-cols-2 gap-4">
+                                <div>
+                                    <label className="text-xs text-[#6B7280] block mb-1.5 font-semibold">First Name <span className="text-[#EF4444]">*</span></label>
+                                    <input 
+                                        name="firstName" 
+                                        required 
+                                        placeholder="e.g., Jane"
+                                        className="w-full px-3 py-2 text-sm border border-[#E5E7EB] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#10B981] focus:border-transparent transition-all" 
+                                    />
+                                </div>
+                                <div>
+                                    <label className="text-xs text-[#6B7280] block mb-1.5 font-semibold">Last Name <span className="text-[#EF4444]">*</span></label>
+                                    <input 
+                                        name="lastName" 
+                                        required 
+                                        placeholder="e.g., Doe"
+                                        className="w-full px-3 py-2 text-sm border border-[#E5E7EB] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#10B981] focus:border-transparent transition-all" 
+                                    />
+                                </div>
+                            </div>
+
+                            <div className="grid grid-cols-2 gap-4">
+                                <div>
+                                    <label className="text-xs text-[#6B7280] block mb-1.5 font-semibold">Phone Number</label>
+                                    <input 
+                                        name="phone" 
+                                        placeholder="e.g., +353 87 123 4567"
+                                        className="w-full px-3 py-2 text-sm border border-[#E5E7EB] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#10B981] focus:border-transparent transition-all" 
+                                    />
+                                </div>
+                                <div>
+                                    <label className="text-xs text-[#6B7280] block mb-1.5 font-semibold">Email Address</label>
+                                    <input 
+                                        type="email"
+                                        name="email" 
+                                        placeholder="e.g., jane.doe@email.com"
+                                        className="w-full px-3 py-2 text-sm border border-[#E5E7EB] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#10B981] focus:border-transparent transition-all" 
+                                    />
+                                </div>
+                            </div>
+
+                            <div>
+                                <label className="text-xs text-[#6B7280] block mb-1.5 font-semibold">Specialty <span className="text-[#EF4444]">*</span></label>
+                                <select 
+                                    name="specialty" 
+                                    required
+                                    onChange={(e) => setCustomSpecialtyActive(e.target.value === 'other')}
+                                    className="w-full px-3 py-2 text-sm border border-[#E5E7EB] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#10B981] focus:border-transparent transition-all bg-white"
+                                >
+                                    <option value="">Select specialty...</option>
+                                    <option value="Cardiology">Cardiology</option>
+                                    <option value="General Surgery">General Surgery</option>
+                                    <option value="Anesthesiology">Anesthesiology</option>
+                                    <option value="Emergency Medicine">Emergency Medicine</option>
+                                    <option value="Pediatrics">Pediatrics</option>
+                                    <option value="Orthopedics">Orthopedics</option>
+                                    <option value="Dermatology">Dermatology</option>
+                                    <option value="General Practice">General Practice</option>
+                                    <option value="Psychiatry">Psychiatry</option>
+                                    <option value="Radiology">Radiology</option>
+                                    <option value="Oncology">Oncology</option>
+                                    <option value="other">Other / Custom specialty...</option>
+                                </select>
+                            </div>
+
+                            {customSpecialtyActive && (
+                                <div className="animate-in slide-in-from-top-2 duration-200">
+                                    <label className="text-xs text-[#10B981] block mb-1.5 font-semibold">Custom Specialty <span className="text-[#EF4444]">*</span></label>
+                                    <input 
+                                        name="customSpecialty" 
+                                        required 
+                                        placeholder="Enter custom specialty (e.g., Neurology)"
+                                        className="w-full px-3 py-2 text-sm border border-[#10B981] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#10B981] transition-all" 
+                                    />
+                                </div>
+                            )}
+
+                            <div>
+                                <label className="text-xs text-[#6B7280] block mb-1.5 font-semibold">Location <span className="text-[#EF4444]">*</span></label>
+                                <select 
+                                    name="location" 
+                                    required
+                                    onChange={(e) => setCustomLocationActive(e.target.value === 'other')}
+                                    className="w-full px-3 py-2 text-sm border border-[#E5E7EB] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#10B981] focus:border-transparent transition-all bg-white"
+                                >
+                                    <option value="">Select location...</option>
+                                    <option value="Dublin">Dublin</option>
+                                    <option value="Cork">Cork</option>
+                                    <option value="Galway">Galway</option>
+                                    <option value="Limerick">Limerick</option>
+                                    <option value="Waterford">Waterford</option>
+                                    <option value="Kilkenny">Kilkenny</option>
+                                    <option value="other">Other / Custom location...</option>
+                                </select>
+                            </div>
+
+                            {customLocationActive && (
+                                <div className="animate-in slide-in-from-top-2 duration-200">
+                                    <label className="text-xs text-[#10B981] block mb-1.5 font-semibold">Custom Location <span className="text-[#EF4444]">*</span></label>
+                                    <input 
+                                        name="customLocation" 
+                                        required 
+                                        placeholder="Enter custom location (e.g., Wexford)"
+                                        className="w-full px-3 py-2 text-sm border border-[#10B981] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#10B981] transition-all" 
+                                    />
+                                </div>
+                            )}
+                        </div>
+
+                        {/* Footer */}
+                        <div className="p-6 border-t border-[#E5E7EB] bg-[#F9FAFB] flex justify-end gap-3">
+                            <button 
+                                type="button" 
+                                onClick={() => {
+                                    setShowAddApplicantDialog(false);
+                                    setCustomSpecialtyActive(false);
+                                    setCustomLocationActive(false);
+                                }} 
+                                className="px-5 py-2.5 text-sm border border-[#E5E7EB] text-[#6B7280] rounded-xl hover:bg-white transition-colors"
+                                style={{ fontWeight: 500 }}
+                            >
+                                Cancel
+                            </button>
+                            <button 
+                                type="submit" 
+                                className="px-5 py-2.5 text-sm bg-[#10B981] text-white rounded-xl hover:bg-[#059669] shadow-md transition-all active:scale-95"
+                                style={{ fontWeight: 600 }}
+                            >
+                                Add to Pipeline
+                            </button>
+                        </div>
+                    </form>
                 </div>
             )}
         </div>

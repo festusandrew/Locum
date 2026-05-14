@@ -1,4 +1,6 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { locumService } from '../services/locumService';
+import { Locum } from '../types';
 import {
     Wallet, FileText, CreditCard, Download, Search, Eye, X,
     CheckCircle, Clock, AlertCircle, TrendingUp, ArrowUp, ArrowDown,
@@ -83,6 +85,25 @@ export function PayrollInvoicing() {
     const [showPayrollDetail, setShowPayrollDetail] = useState(false);
     const [selectedInvoice, setSelectedInvoice] = useState<Invoice | null>(null);
     const [selectedPayroll, setSelectedPayroll] = useState<PayrollItem | null>(null);
+    const [locumsList, setLocumsList] = useState<Locum[]>([]);
+    const [selectedDepartment, setSelectedDepartment] = useState('');
+
+    useEffect(() => {
+        const fetchLocums = async () => {
+            try {
+                const data = await locumService.getAllLocums();
+                setLocumsList(data);
+            } catch (err) {
+                console.error('Failed to load locums', err);
+            }
+        };
+        fetchLocums();
+    }, []);
+
+    const departments = [...new Set(locumsList.map(l => l.department).filter(Boolean))];
+    const filteredLocums = selectedDepartment
+        ? locumsList.filter(l => l.department === selectedDepartment)
+        : locumsList;
 
     const [payrollForm, setPayrollForm] = useState({
         id: `PAY-${Math.floor(1000 + Math.random() * 9000)}`,
@@ -417,6 +438,22 @@ export function PayrollInvoicing() {
                                     <h4 className="text-xs font-black text-[#1F2937] uppercase tracking-widest border-b border-[#F3F4F6] pb-2">Professional & Period</h4>
                                     <div className="grid grid-cols-1 gap-4">
                                         <div>
+                                            <label className="block text-xs font-bold text-[#6B7280] uppercase tracking-wider mb-1.5">Department</label>
+                                            <select
+                                                value={selectedDepartment}
+                                                onChange={(e) => {
+                                                    setSelectedDepartment(e.target.value);
+                                                    calculatePayroll('locum', '');
+                                                }}
+                                                className="w-full px-4 py-2.5 text-sm border border-[#E5E7EB] rounded-lg focus:ring-2 focus:ring-[#10B981] outline-none transition-all"
+                                            >
+                                                <option value="">All Departments</option>
+                                                {departments.map(dept => (
+                                                    <option key={dept} value={dept}>{dept}</option>
+                                                ))}
+                                            </select>
+                                        </div>
+                                        <div>
                                             <label className="block text-xs font-bold text-[#6B7280] uppercase tracking-wider mb-1.5">Locum Professional</label>
                                             <select
                                                 value={payrollForm.locum}
@@ -424,10 +461,9 @@ export function PayrollInvoicing() {
                                                 className="w-full px-4 py-2.5 text-sm border border-[#E5E7EB] rounded-lg focus:ring-2 focus:ring-[#10B981] outline-none transition-all"
                                             >
                                                 <option value="">Select Locum...</option>
-                                                <option value="Sarah Mitchell">Sarah Mitchell</option>
-                                                <option value="James Harrison">James Harrison</option>
-                                                <option value="Emily Chen">Emily Chen</option>
-                                                <option value="Michael Brooks">Michael Brooks</option>
+                                                {filteredLocums.map(l => (
+                                                    <option key={l.id} value={l.name}>{l.name} ({l.specialty})</option>
+                                                ))}
                                             </select>
                                         </div>
                                         <div className="grid grid-cols-2 gap-4">
