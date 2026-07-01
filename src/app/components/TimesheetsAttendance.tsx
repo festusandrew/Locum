@@ -1,40 +1,11 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
     Clock, CheckCircle, XCircle, AlertCircle, Search, Download,
     Eye, X, FileText, MapPin, Calendar, User, ChevronDown,
     ThumbsUp, ThumbsDown, Timer, Navigation, Upload
 } from 'lucide-react';
-
-interface Timesheet {
-    id: string;
-    locum: string;
-    facility: string;
-    location: string;
-    shiftDate: string;
-    clockIn: string;
-    clockOut: string;
-    scheduledHours: number;
-    actualHours: number;
-    overtime: number;
-    rate: number;
-    total: number;
-    status: 'submitted' | 'approved' | 'rejected' | 'pending_client' | 'auto_approved';
-    gpsVerified: boolean;
-    signature: boolean;
-    supportingDocs: boolean;
-    submittedAt: string;
-    notes?: string;
-}
-
-const timesheets: Timesheet[] = [
-    { id: 'TS-2026-001', locum: 'Sarah Mitchell', facility: "St. James's Hospital", location: 'Dublin', shiftDate: '2026-02-09', clockIn: '07:58', clockOut: '16:05', scheduledHours: 8, actualHours: 8.12, overtime: 0, rate: 55, total: 446.60, status: 'submitted', gpsVerified: true, signature: true, supportingDocs: true, submittedAt: '2026-02-09 16:30' },
-    { id: 'TS-2026-002', locum: 'James Harrison', facility: 'Cork University Hospital', location: 'Cork', shiftDate: '2026-02-09', clockIn: '08:55', clockOut: '21:10', scheduledHours: 12, actualHours: 12.25, overtime: 0.25, rate: 60, total: 735.00, status: 'pending_client', gpsVerified: true, signature: true, supportingDocs: false, submittedAt: '2026-02-09 21:45' },
-    { id: 'TS-2026-003', locum: 'Emily Chen', facility: 'Galway Clinic', location: 'Galway', shiftDate: '2026-02-08', clockIn: '08:00', clockOut: '16:00', scheduledHours: 8, actualHours: 8.0, overtime: 0, rate: 58, total: 464.00, status: 'approved', gpsVerified: true, signature: true, supportingDocs: true, submittedAt: '2026-02-08 16:15' },
-    { id: 'TS-2026-004', locum: 'Michael Brooks', facility: 'Limerick University Hospital', location: 'Limerick', shiftDate: '2026-02-08', clockIn: '09:15', clockOut: '17:30', scheduledHours: 8, actualHours: 8.25, overtime: 0.25, rate: 52, total: 429.00, status: 'rejected', gpsVerified: false, signature: true, supportingDocs: true, submittedAt: '2026-02-08 18:00', notes: 'GPS location did not match facility. Please resubmit with explanation.' },
-    { id: 'TS-2026-005', locum: 'Rachel Martinez', facility: 'Mater Hospital', location: 'Dublin', shiftDate: '2026-02-07', clockIn: '20:00', clockOut: '08:05', scheduledHours: 12, actualHours: 12.08, overtime: 0, rate: 65, total: 785.20, status: 'auto_approved', gpsVerified: true, signature: true, supportingDocs: true, submittedAt: '2026-02-08 08:30' },
-    { id: 'TS-2026-006', locum: 'David Thompson', facility: 'Waterford University Hospital', location: 'Waterford', shiftDate: '2026-02-07', clockIn: '08:00', clockOut: '16:30', scheduledHours: 8, actualHours: 8.5, overtime: 0.5, rate: 52, total: 442.00, status: 'submitted', gpsVerified: true, signature: true, supportingDocs: true, submittedAt: '2026-02-07 17:00' },
-    { id: 'TS-2026-007', locum: 'Sarah Mitchell', facility: 'Beaumont Hospital', location: 'Dublin', shiftDate: '2026-02-06', clockIn: '07:55', clockOut: '16:00', scheduledHours: 8, actualHours: 8.08, overtime: 0, rate: 55, total: 444.40, status: 'approved', gpsVerified: true, signature: true, supportingDocs: true, submittedAt: '2026-02-06 16:20' },
-];
+import { Timesheet } from '../types';
+import { timesheetService } from '../services/timesheetService';
 
 const statusConfig: Record<string, { label: string; color: string; bg: string; border: string }> = {
     submitted: { label: 'Submitted', color: '#3B82F6', bg: '#DBEAFE', border: '#BFDBFE' },
@@ -45,11 +16,27 @@ const statusConfig: Record<string, { label: string; color: string; bg: string; b
 };
 
 export function TimesheetsAttendance({ onViewTimesheetDetail }: { onViewTimesheetDetail?: (id: string) => void }) {
+    const [timesheets, setTimesheets] = useState<Timesheet[]>([]);
+    const [loading, setLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState('');
     const [statusFilter, setStatusFilter] = useState('all');
     const [showDetail, setShowDetail] = useState(false);
     const [selectedTs, setSelectedTs] = useState<Timesheet | null>(null);
     const [activeTab, setActiveTab] = useState<'timesheets' | 'attendance' | 'approval'>('timesheets');
+
+    useEffect(() => {
+        const fetchTimesheets = async () => {
+            try {
+                const data = await timesheetService.getAll();
+                setTimesheets(data);
+            } catch (error) {
+                console.error('Error fetching timesheets:', error);
+            } finally {
+                setLoading(false);
+            }
+        };
+        fetchTimesheets();
+    }, []);
 
     const filtered = timesheets.filter(ts => {
         const matchSearch = ts.locum.toLowerCase().includes(searchTerm.toLowerCase()) ||

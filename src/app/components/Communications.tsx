@@ -1,44 +1,10 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
     Bell, Mail, Megaphone, X, Send, Users, CheckCircle, Eye
 } from 'lucide-react';
-
-interface Notification {
-    id: string;
-    title: string;
-    message: string;
-    time: string;
-    type: 'shift' | 'compliance' | 'booking' | 'payment';
-    read: boolean;
-}
-
-interface EmailLog {
-    id: string;
-    recipient: string;
-    subject: string;
-    type: 'email' | 'sms';
-    sentAt: string;
-    status: 'delivered' | 'opened' | 'failed' | 'bounced';
-    template?: string;
-}
-
-const notifications: Notification[] = [
-    { id: '1', title: 'Urgent Shift Unfilled', message: 'Emergency Medicine night shift at Beaumont Hospital still needs coverage.', time: '1 hour ago', type: 'shift', read: false },
-    { id: '2', title: 'Compliance Alert', message: 'Dr. David Thompson\'s Medical License expires in 3 days.', time: '2 hours ago', type: 'compliance', read: false },
-    { id: '3', title: 'Booking Confirmed', message: 'Dr. Sarah Mitchell confirmed for St. James\'s Hospital, 10 Feb 08:00-16:00.', time: '3 hours ago', type: 'booking', read: true },
-    { id: '4', title: 'Payment Processed', message: '€2,173.60 paid to Dr. Sarah Mitchell for Feb 1-15 period.', time: '5 hours ago', type: 'payment', read: true },
-    { id: '5', title: 'New Shift Request', message: 'Galway Clinic requests 2 locums for General Surgery, 14-15 Feb.', time: '6 hours ago', type: 'shift', read: false },
-    { id: '6', title: 'Timesheet Submitted', message: 'Dr. David Thompson submitted timesheet TS-2026-006 for review.', time: 'Yesterday', type: 'booking', read: true },
-];
-
-const emailLogs: EmailLog[] = [
-    { id: '1', recipient: 'All Active Locums (892)', subject: 'Weekly Shift Availability Update', type: 'email', sentAt: '2026-02-10 08:00', status: 'delivered', template: 'Weekly Broadcast' },
-    { id: '2', recipient: 'Dr. Sarah Mitchell', subject: 'Shift Confirmation - St. James\'s Hospital', type: 'email', sentAt: '2026-02-09 14:30', status: 'opened' },
-    { id: '3', recipient: 'Dr. David Thompson', subject: 'Compliance Reminder: Medical License Expiring', type: 'sms', sentAt: '2026-02-09 10:00', status: 'delivered' },
-    { id: '4', recipient: 'Cork University Hospital', subject: 'Invoice INV-2026-044', type: 'email', sentAt: '2026-02-08 09:00', status: 'opened' },
-    { id: '5', recipient: 'Dr. Emily Chen', subject: 'Garda Vetting Renewal Required', type: 'sms', sentAt: '2026-02-07 11:00', status: 'delivered' },
-    { id: '6', recipient: 'All Dublin Locums (345)', subject: 'New Shifts Available - Beaumont Hospital', type: 'email', sentAt: '2026-02-07 08:00', status: 'delivered', template: 'Shift Alert' },
-];
+import { toast } from 'sonner';
+import { Notification, EmailLog } from '../types';
+import { communicationService } from '../services/communicationService';
 
 const typeColors: Record<string, string> = {
     shift: '#3B82F6',
@@ -49,6 +15,9 @@ const typeColors: Record<string, string> = {
 
 export function Communications() {
     const [activeTab, setActiveTab] = useState<'notifications' | 'logs'>('notifications');
+    const [notifications, setNotifications] = useState<Notification[]>([]);
+    const [emailLogs, setEmailLogs] = useState<EmailLog[]>([]);
+    const [loading, setLoading] = useState(true);
     const [showBroadcastModal, setShowBroadcastModal] = useState(false);
     const [broadcastForm, setBroadcastForm] = useState({
         type: 'email' as 'email' | 'sms',
@@ -60,6 +29,24 @@ export function Communications() {
         scheduleDate: '',
         scheduleTime: '',
     });
+
+    useEffect(() => {
+        const fetchData = async () => {
+            try {
+                const [notifs, logs] = await Promise.all([
+                    communicationService.getNotifications(),
+                    communicationService.getEmailLogs()
+                ]);
+                setNotifications(notifs);
+                setEmailLogs(logs);
+            } catch (err) {
+                console.error("Failed to load communications data", err);
+            } finally {
+                setLoading(false);
+            }
+        };
+        fetchData();
+    }, []);
 
     const unreadCount = notifications.filter(n => !n.read).length;
 
@@ -97,21 +84,65 @@ export function Communications() {
         return group?.count || 0;
     };
 
-    const handleSendBroadcast = () => {
-        console.log('Sending broadcast:', broadcastForm);
-        setShowBroadcastModal(false);
-        // Reset form
-        setBroadcastForm({
-            type: 'email',
-            recipientGroup: 'all_locums',
-            template: '',
-            subject: '',
-            message: '',
-            scheduleSend: false,
-            scheduleDate: '',
-            scheduleTime: '',
-        });
+    const handleMarkAllAsRead = async () => {
+        try {
+            const updated = await communicationService.markAllNotificationsAsRead();
+            setNotifications(updated);
+            toast.success("All notifications marked as read!");
+        } catch (err) {
+            console.error("Mark all as read error:", err);
+            toast.error("Failed to mark notifications as read");
+        }
     };
+
+    const handleSendBroadcast = async () => {
+        if (broadcastForm.type === 'email' && !broadcastForm.subject.trim()) {
+            toast.error("Please enter a subject line.");
+            return;
+        }
+        if (!broadcastForm.message.trim()) {
+            toast.error("Please enter message content.");
+            return;
+        }
+        try {
+            const group = recipientGroups.find(g => g.value === broadcastForm.recipientGroup);
+            const recipientLabel = `${group?.label || 'Custom Group'} (${group?.count || 0})`;
+            const newLog = await communicationService.sendBroadcast({
+                type: broadcastForm.type,
+                recipientGroup: broadcastForm.recipientGroup,
+                subject: broadcastForm.subject,
+                message: broadcastForm.message,
+                template: broadcastForm.template || undefined,
+                recipientLabel
+            });
+            setEmailLogs(prev => [newLog, ...prev]);
+            setShowBroadcastModal(false);
+            // Reset form
+            setBroadcastForm({
+                type: 'email',
+                recipientGroup: 'all_locums',
+                template: '',
+                subject: '',
+                message: '',
+                scheduleSend: false,
+                scheduleDate: '',
+                scheduleTime: '',
+            });
+            toast.success(broadcastForm.scheduleSend ? "Broadcast scheduled successfully!" : "Broadcast sent successfully!");
+        } catch (err) {
+            console.error("Send broadcast error:", err);
+            toast.error("Failed to send broadcast");
+        }
+    };
+
+    if (loading) {
+        return (
+            <div className="p-6 flex flex-col items-center justify-center min-h-[400px] space-y-4">
+                <div className="w-8 h-8 border-4 border-[#10B981] border-t-transparent rounded-full animate-spin font-medium"></div>
+                <p className="text-sm text-[#6B7280]">Loading communications...</p>
+            </div>
+        );
+    }
 
     return (
         <div className="p-6 space-y-6">
@@ -151,7 +182,7 @@ export function Communications() {
                 <div className="bg-white rounded-xl border border-[#E5E7EB]">
                     <div className="p-4 border-b border-[#E5E7EB] flex items-center justify-between">
                         <h3 className="text-[#1F2937]">Notification Center</h3>
-                        <button className="text-xs text-[#10B981] hover:underline">Mark all as read</button>
+                        <button onClick={handleMarkAllAsRead} className="text-xs text-[#10B981] hover:underline">Mark all as read</button>
                     </div>
                     <div className="divide-y divide-[#F3F4F6]">
                         {notifications.map(n => (

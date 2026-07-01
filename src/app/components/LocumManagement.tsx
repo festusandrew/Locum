@@ -175,6 +175,144 @@ export function LocumManagement({ onViewProfile }: { onViewProfile?: (id: string
     const [activeTab, setActiveTab] = useState<'directory' | 'recruitment' | 'availability'>('directory');
     const { permissions } = useUserRole();
 
+    // Edit Form State Variables
+    const [editName, setEditName] = useState<string>('');
+    const [editStatus, setEditStatus] = useState<string>('available');
+
+    // Personal
+    const [editDob, setEditDob] = useState<string>('');
+    const [editNationality, setEditNationality] = useState<string>('');
+    const [editGender, setEditGender] = useState<string>('');
+    const [editAddress, setEditAddress] = useState<string>('');
+    const [editMobile, setEditMobile] = useState<string>('');
+    const [editPhone, setEditPhone] = useState<string>('');
+    const [editEmail, setEditEmail] = useState<string>('');
+    const [editPpsn, setEditPpsn] = useState<string>('');
+    const [editEircode, setEditEircode] = useState<string>('');
+    const [editEmergencyContact, setEditEmergencyContact] = useState<string>('');
+    const [editEmergencyPhone, setEditEmergencyPhone] = useState<string>('');
+
+    // Professional
+    const [editSpecialty, setEditSpecialty] = useState<string>('');
+    const [editSubSpecialty, setEditSubSpecialty] = useState<string>('');
+    const [editExperience, setEditExperience] = useState<string>('');
+    const [editGrade, setEditGrade] = useState<string>('Consultant');
+    const [editImcNumber, setEditImcNumber] = useState<string>('');
+    const [editImcExpiry, setEditImcExpiry] = useState<string>('');
+    const [editGmcNumber, setEditGmcNumber] = useState<string>('');
+    const [editGmcExpiry, setEditGmcExpiry] = useState<string>('');
+    const [editSpecialistRegister, setEditSpecialistRegister] = useState<string>('');
+    const [editLanguages, setEditLanguages] = useState<string>('');
+    const [editMaxWeeklyHours, setEditMaxWeeklyHours] = useState<number>(48);
+    const [editPreferredLocations, setEditPreferredLocations] = useState<string>('');
+    const [editPreferredShifts, setEditPreferredShifts] = useState<string[]>([]);
+    const [editQualifications, setEditQualifications] = useState<string>('');
+
+    // Financial
+    const [editTaxStatus, setEditTaxStatus] = useState<string>('');
+    const [editRevenueRegistered, setEditRevenueRegistered] = useState<boolean>(false);
+    const [editVatRegistered, setEditVatRegistered] = useState<boolean>(false);
+    const [editStandardDayRate, setEditStandardDayRate] = useState<number>(0);
+    const [editStandardNightRate, setEditStandardNightRate] = useState<number>(0);
+    const [editWeekendRate, setEditWeekendRate] = useState<number>(0);
+    const [editOncallRate, setEditOncallRate] = useState<number>(0);
+    const [editBankName, setEditBankName] = useState<string>('');
+    const [editIban, setEditIban] = useState<string>('');
+    const [editBic, setEditBic] = useState<string>('');
+
+    // Populate edit form fields when edit dialog opens
+    useEffect(() => {
+      if (showEditDialog && selectedLocum) {
+        let nameToEdit = selectedLocum.name || '';
+        if (nameToEdit.startsWith('Dr. ')) {
+            nameToEdit = nameToEdit.substring(4);
+        }
+        setEditName(nameToEdit);
+        setEditStatus(selectedLocum.status || 'available');
+
+        // Personal
+        setEditDob(selectedLocum.dob || '1984-06-15');
+        setEditNationality(selectedLocum.nationality || 'Irish');
+        setEditGender(selectedLocum.gender || 'Female');
+        setEditAddress(selectedLocum.address || '42 Pembroke Road, Ballsbridge, Dublin 4');
+        setEditMobile(selectedLocum.phone || '');
+        setEditPhone(selectedLocum.phone || '');
+        setEditEmail(selectedLocum.email || '');
+        setEditPpsn(selectedLocum.ppsn || '1234567T');
+        setEditEircode(selectedLocum.eircode || 'D04 X5K2');
+        setEditEmergencyContact(selectedLocum.emergencyContact || 'John Mitchell (Spouse)');
+        setEditEmergencyPhone(selectedLocum.emergencyPhone || '');
+
+        // Professional
+        setEditSpecialty(selectedLocum.specialty || '');
+        setEditSubSpecialty(selectedLocum.subSpecialty || '');
+        setEditExperience(selectedLocum.experience ? (parseInt(selectedLocum.experience) || 0).toString() : '0');
+        setEditGrade(selectedLocum.grade || 'Consultant');
+        setEditImcNumber(selectedLocum.imcNumber || '');
+        setEditImcExpiry(selectedLocum.imcExpiry || '2027-03-31');
+        setEditGmcNumber(selectedLocum.gmcNumber || '');
+        setEditGmcExpiry(selectedLocum.gmcExpiry || '2027-06-30');
+        setEditSpecialistRegister(selectedLocum.specialistRegister || 'Yes - General Surgery Division');
+        setEditLanguages(selectedLocum.languages ? selectedLocum.languages.join(', ') : 'English');
+        setEditMaxWeeklyHours(selectedLocum.maxWeeklyHours || 48);
+        setEditPreferredLocations(selectedLocum.preferredLocations ? selectedLocum.preferredLocations.join(', ') : 'Dublin');
+        setEditPreferredShifts(selectedLocum.preferredShifts || ['Day', 'On-Call']);
+        setEditQualifications(selectedLocum.qualifications ? (Array.isArray(selectedLocum.qualifications) ? selectedLocum.qualifications.join(', ') : selectedLocum.qualifications) : '');
+
+        // Financial
+        const fin = selectedLocum.financial || {};
+        setEditTaxStatus(fin.taxStatus || 'Self-Employed (Sole Trader)');
+        setEditRevenueRegistered(!!fin.revenueRegistered);
+        setEditVatRegistered(!!fin.vatRegistered);
+        setEditStandardDayRate(fin.standardDayRate ?? 0);
+        setEditStandardNightRate(fin.standardNightRate ?? 0);
+        setEditWeekendRate(fin.weekendRate ?? 0);
+        setEditOncallRate(fin.oncallRate ?? 0);
+        setEditBankName(fin.bankName || '');
+        setEditIban(fin.iban || '');
+        setEditBic(fin.bic || '');
+      } else {
+        // Reset fields when dialog closes
+        setEditName('');
+        setEditStatus('available');
+        setEditDob('');
+        setEditNationality('');
+        setEditGender('');
+        setEditAddress('');
+        setEditMobile('');
+        setEditPhone('');
+        setEditEmail('');
+        setEditPpsn('');
+        setEditEircode('');
+        setEditEmergencyContact('');
+        setEditEmergencyPhone('');
+        setEditSpecialty('');
+        setEditSubSpecialty('');
+        setEditExperience('');
+        setEditGrade('Consultant');
+        setEditImcNumber('');
+        setEditImcExpiry('');
+        setEditGmcNumber('');
+        setEditGmcExpiry('');
+        setEditSpecialistRegister('');
+        setEditLanguages('');
+        setEditMaxWeeklyHours(48);
+        setEditPreferredLocations('');
+        setEditPreferredShifts([]);
+        setEditQualifications('');
+        setEditTaxStatus('');
+        setEditRevenueRegistered(false);
+        setEditVatRegistered(false);
+        setEditStandardDayRate(0);
+        setEditStandardNightRate(0);
+        setEditWeekendRate(0);
+        setEditOncallRate(0);
+        setEditBankName('');
+        setEditIban('');
+        setEditBic('');
+      }
+    }, [showEditDialog, selectedLocum]);
+
     // Fetch locums and applicants on mount
     useEffect(() => {
         const loadData = async () => {
@@ -196,6 +334,7 @@ export function LocumManagement({ onViewProfile }: { onViewProfile?: (id: string
         const firstName = formData.get('firstName') as string;
         const lastName = formData.get('lastName') as string;
         const specialty = formData.get('specialty') as string;
+        const department = formData.get('department') as string;
         const location = formData.get('location') as string;
         const phone = formData.get('phone') as string;
         const email = formData.get('email') as string;
@@ -210,7 +349,7 @@ export function LocumManagement({ onViewProfile }: { onViewProfile?: (id: string
             name: fullName,
             avatar: avatarLetters,
             specialty: specialty || 'General Practice',
-            department: 'Internal Medicine',
+            department: department || 'Internal Medicine',
             location: location || 'Dublin, Ireland',
             phone: phone || '+353 1 123 4567',
             email: email || `${firstName.toLowerCase()}.${lastName.toLowerCase()}@email.com`,
@@ -245,6 +384,8 @@ export function LocumManagement({ onViewProfile }: { onViewProfile?: (id: string
             specialty = formData.get('customSpecialty') as string || 'General Practice';
         }
         
+        const department = formData.get('department') as string;
+
         let location = formData.get('location') as string;
         if (location === 'other') {
             location = formData.get('customLocation') as string || 'Dublin';
@@ -260,6 +401,7 @@ export function LocumManagement({ onViewProfile }: { onViewProfile?: (id: string
             id: newAppId,
             name: fullName,
             specialty: specialty || 'General Practice',
+            department: department || undefined,
             location: location || 'Dublin',
             status: 'new',
             appliedDate: new Date().toISOString().split('T')[0],
@@ -281,32 +423,63 @@ export function LocumManagement({ onViewProfile }: { onViewProfile?: (id: string
 
     const handleEditLocumSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
-        const formData = new FormData(e.currentTarget);
-        const firstName = formData.get('firstName') as string;
-        const lastName = formData.get('lastName') as string;
-        const status = formData.get('status') as string;
-        const specialty = formData.get('specialty') as string;
-        const qualifications = formData.get('qualifications') as string;
-        const experience = formData.get('experience') as string;
+        
+        let cleanedName = editName;
+        if (cleanedName.startsWith('Dr. ')) {
+            cleanedName = cleanedName.substring(4);
+        }
 
-        const fullName = `${firstName} ${lastName}`;
-        const avatarLetters = `${firstName[0] || ''}${lastName[0] || ''}`.toUpperCase() || 'LP';
+        const avatarLetters = cleanedName.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2) || 'LP';
 
         const updatedLocum: Locum = {
             ...selectedLocum,
-            name: fullName,
+            name: cleanedName,
             avatar: avatarLetters,
-            status: status as any,
-            specialty: specialty || selectedLocum.specialty,
-            qualifications: qualifications ? qualifications.split(',').map(q => q.trim()) : selectedLocum.qualifications,
-            experience: experience ? `${experience} years` : selectedLocum.experience
+            status: editStatus as any,
+            phone: editPhone || editMobile,
+            email: editEmail,
+            dob: editDob,
+            gender: editGender,
+            nationality: editNationality,
+            ppsn: editPpsn,
+            address: editAddress,
+            eircode: editEircode,
+            emergencyContact: editEmergencyContact,
+            emergencyPhone: editEmergencyPhone,
+            specialty: editSpecialty || selectedLocum.specialty,
+            subSpecialty: editSubSpecialty || selectedLocum.subSpecialty,
+            experience: editExperience ? `${editExperience} years` : selectedLocum.experience,
+            grade: editGrade || selectedLocum.grade,
+            imcNumber: editImcNumber || selectedLocum.imcNumber,
+            gmcNumber: editGmcNumber || selectedLocum.gmcNumber,
+            languages: editLanguages.split(',').map(s => s.trim()).filter(Boolean),
+            maxWeeklyHours: Number(editMaxWeeklyHours),
+            preferredLocations: editPreferredLocations.split(',').map(s => s.trim()).filter(Boolean),
+            preferredShifts: editPreferredShifts,
+            imcExpiry: editImcExpiry,
+            gmcExpiry: editGmcExpiry,
+            specialistRegister: editSpecialistRegister,
+            qualifications: editQualifications ? editQualifications.split(',').map(q => q.trim()).filter(Boolean) : selectedLocum.qualifications,
+            financial: {
+                ...selectedLocum.financial,
+                taxStatus: editTaxStatus,
+                revenueRegistered: editRevenueRegistered,
+                vatRegistered: editVatRegistered,
+                standardDayRate: Number(editStandardDayRate),
+                standardNightRate: Number(editStandardNightRate),
+                weekendRate: Number(editWeekendRate),
+                oncallRate: Number(editOncallRate),
+                bankName: editBankName,
+                iban: editIban,
+                bic: editBic,
+            }
         };
 
         try {
             await locumService.updateLocum(updatedLocum);
             const updated = await locumService.getAllLocums();
             setLocumsList(updated);
-            toast.success(`Profile updated for ${fullName}`);
+            toast.success(`Profile updated for ${cleanedName}`);
             setShowEditDialog(false);
         } catch (err) {
             toast.error('Failed to save profile changes');
@@ -516,7 +689,7 @@ export function LocumManagement({ onViewProfile }: { onViewProfile?: (id: string
                         <table className="w-full">
                             <thead>
                                 <tr className="border-b border-[#E5E7EB]">
-                                    {['Locum', 'Specialty', 'Location', 'Experience', 'Shifts', 'Rating', 'Compliance', 'Status', 'Actions'].map(h => (
+                                    {['Locum', 'Specialty', 'Department', 'Location', 'Experience', 'Shifts', 'Rating', 'Compliance', 'Status', 'Actions'].map(h => (
                                         <th key={h} className="px-4 py-2.5 text-left text-xs text-[#9CA3AF]" style={{ fontWeight: 500 }}>{h}</th>
                                     ))}
                                 </tr>
@@ -534,6 +707,7 @@ export function LocumManagement({ onViewProfile }: { onViewProfile?: (id: string
                                             </div>
                                         </td>
                                         <td className="px-4 py-3 text-xs text-[#6B7280]">{locum.specialty}</td>
+                                        <td className="px-4 py-3 text-xs text-[#6B7280]">{locum.department}</td>
                                         <td className="px-4 py-3">
                                             <div className="flex items-center gap-1"><MapPin className="w-3 h-3 text-[#9CA3AF]" /><span className="text-xs text-[#6B7280]">{locum.location}</span></div>
                                         </td>
@@ -645,7 +819,7 @@ export function LocumManagement({ onViewProfile }: { onViewProfile?: (id: string
                             <table className="w-full">
                                 <thead>
                                     <tr className="bg-[#F9FAFB] border-b border-[#E5E7EB]">
-                                        {['Applicant', 'Specialty', 'Location', 'Applied Date', 'Stage', 'Actions'].map(h => (
+                                        {['Applicant', 'Specialty', 'Department', 'Location', 'Applied Date', 'Stage', 'Actions'].map(h => (
                                             <th key={h} className="px-4 py-2.5 text-left text-xs text-[#9CA3AF]" style={{ fontWeight: 500 }}>{h}</th>
                                         ))}
                                     </tr>
@@ -660,6 +834,7 @@ export function LocumManagement({ onViewProfile }: { onViewProfile?: (id: string
                                                     <p className="text-[11px] text-[#9CA3AF]">{a.id}</p>
                                                 </td>
                                                 <td className="px-4 py-3 text-xs text-[#6B7280]">{a.specialty}</td>
+                                                <td className="px-4 py-3 text-xs text-[#6B7280]">{a.department || '-'}</td>
                                                 <td className="px-4 py-3 text-xs text-[#6B7280]">{a.location}</td>
                                                 <td className="px-4 py-3 text-xs text-[#6B7280]">{a.appliedDate}</td>
                                                 <td className="px-4 py-3">
@@ -1625,6 +1800,12 @@ export function LocumManagement({ onViewProfile }: { onViewProfile?: (id: string
                                     {specialties.map(s => <option key={s} value={s}>{s}</option>)}
                                 </select>
                             </div>
+                            <div><label className="text-xs text-[#6B7280] block mb-1">Department</label>
+                                <select name="department" className="w-full px-3 py-2 text-sm border border-[#E5E7EB] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#10B981]">
+                                    <option value="">Select department...</option>
+                                    {departments.map(d => <option key={d} value={d}>{d}</option>)}
+                                </select>
+                            </div>
                             <div><label className="text-xs text-[#6B7280] block mb-1">Location</label><input name="location" className="w-full px-3 py-2 text-sm border border-[#E5E7EB] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#10B981]" placeholder="e.g., Dublin, Ireland" /></div>
                             <div className="grid grid-cols-2 gap-3">
                                 <div><label className="text-xs text-[#6B7280] block mb-1">Phone</label><input name="phone" className="w-full px-3 py-2 text-sm border border-[#E5E7EB] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#10B981]" placeholder="+353" /></div>
@@ -1642,216 +1823,501 @@ export function LocumManagement({ onViewProfile }: { onViewProfile?: (id: string
 
             {/* Edit Locum Dialog */}
             {showEditDialog && selectedLocum && (
-                <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-                    <form onSubmit={handleEditLocumSubmit} className="bg-white rounded-xl shadow-2xl w-full max-w-2xl overflow-hidden flex flex-col max-h-[90vh]">
-                        <div className="p-6 border-b border-[#E5E7EB] flex items-center justify-between bg-[#F9FAFB]">
+                <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-6">
+                    <form onSubmit={handleEditLocumSubmit} className="bg-white rounded-xl w-full max-w-2xl shadow-xl overflow-hidden flex flex-col max-h-[90vh]">
+                        <div className="p-5 border-b border-[#E5E7EB] flex items-center justify-between flex-shrink-0">
                             <div>
-                                <h3 className="text-[#1F2937] text-lg" style={{ fontWeight: 600 }}>Edit Locum Profile</h3>
-                                <p className="text-xs text-[#6B7280]">Updating records for {selectedLocum.name} ({selectedLocum.id})</p>
+                                <h3 className="text-lg text-[#1F2937]" style={{ fontWeight: 600 }}>Edit Locum Profile</h3>
+                                <p className="text-xs text-[#9CA3AF]">Modify contact, registration, and rates for {selectedLocum.id}</p>
                             </div>
-                            <button type="button" onClick={() => setShowEditDialog(false)} className="p-2 hover:bg-[#E5E7EB] rounded-full transition-colors">
+                            <button type="button" onClick={() => setShowEditDialog(false)} className="p-2 hover:bg-[#F3F4F6] rounded-lg">
                                 <X className="w-5 h-5 text-[#6B7280]" />
                             </button>
                         </div>
 
-                        <div className="flex border-b border-[#E5E7EB] bg-white px-6">
-                            {[
-                                { id: 'personal', label: 'Personal Information', icon: User },
-                                { id: 'professional', label: 'Professional Details', icon: Briefcase },
-                                { id: 'financial', label: 'Financial & Rates', icon: CreditCard },
-                            ].map(tab => (
+                        {/* Modal Sub-navigation Tabs */}
+                        <div className="flex border-b border-[#E5E7EB] bg-[#F9FAFB] px-4 flex-shrink-0">
+                            {(['personal', 'professional', 'financial'] as const).map((tab) => (
                                 <button
+                                    key={tab}
                                     type="button"
-                                    key={tab.id}
-                                    onClick={() => setEditTab(tab.id as any)}
-                                    className={`flex items-center gap-2 py-4 px-4 text-sm border-b-2 transition-all ${editTab === tab.id ? 'border-[#10B981] text-[#10B981]' : 'border-transparent text-[#6B7280] hover:text-[#1F2937]'}`}
-                                    style={{ fontWeight: editTab === tab.id ? 600 : 400 }}
+                                    onClick={() => setEditTab(tab)}
+                                    className={`px-4 py-3 text-sm font-medium border-b-2 transition-colors capitalize ${
+                                        editTab === tab
+                                            ? 'border-[#10B981] text-[#10B981]'
+                                            : 'border-transparent text-[#6B7280] hover:text-[#1F2937] hover:border-[#E5E7EB]'
+                                    }`}
                                 >
-                                    <tab.icon className="w-4 h-4" />
-                                    {tab.label}
+                                    {tab} Details
                                 </button>
                             ))}
                         </div>
-
-                        <div className="p-6 overflow-y-auto bg-white flex-1">
-                            <div className={`space-y-5 animate-in fade-in slide-in-from-bottom-2 duration-300 ${editTab !== 'personal' ? 'hidden' : ''}`}>
-                                <div className="space-y-5 animate-in fade-in slide-in-from-bottom-2 duration-300">
+                        
+                        <div className="p-6 space-y-5 overflow-y-auto flex-1 bg-white">
+                            {/* PERSONAL DETAILS TAB */}
+                            {editTab === 'personal' && (
+                                <div className="space-y-4">
+                                    <h4 className="text-xs font-semibold text-[#374151] uppercase tracking-wider border-b border-[#F3F4F6] pb-1">Core Account Information</h4>
                                     <div className="grid grid-cols-2 gap-4">
                                         <div>
-                                            <label className="text-xs text-[#6B7280] block mb-1.5" style={{ fontWeight: 500 }}>First Name</label>
-                                            <input name="firstName" required defaultValue={selectedLocum.name.split(' ')[1]} className="w-full px-3 py-2 text-sm border border-[#E5E7EB] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#10B981]" />
+                                            <label className="block text-xs text-[#4B5563] mb-1 font-medium">Full Name</label>
+                                            <input 
+                                                type="text" 
+                                                value={editName}
+                                                onChange={e => setEditName(e.target.value)}
+                                                className="w-full px-3 py-2 border border-[#E5E7EB] rounded-lg text-sm bg-white text-[#1F2937] focus:outline-none focus:ring-2 focus:ring-[#10B981]"
+                                                required
+                                            />
                                         </div>
                                         <div>
-                                            <label className="text-xs text-[#6B7280] block mb-1.5" style={{ fontWeight: 500 }}>Last Name</label>
-                                            <input name="lastName" required defaultValue={selectedLocum.name.split(' ')[2] || selectedLocum.name.split(' ')[1]} className="w-full px-3 py-2 text-sm border border-[#E5E7EB] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#10B981]" />
-                                        </div>
-                                    </div>
-                                    <div className="grid grid-cols-2 gap-4">
-                                        <div>
-                                            <label className="text-xs text-[#6B7280] block mb-1.5" style={{ fontWeight: 500 }}>Date of Birth</label>
-                                            <input type="date" defaultValue="1984-06-15" className="w-full px-3 py-2 text-sm border border-[#E5E7EB] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#10B981]" />
-                                        </div>
-                                        <div>
-                                            <label className="text-xs text-[#6B7280] block mb-1.5" style={{ fontWeight: 500 }}>Gender</label>
-                                            <select className="w-full px-3 py-2 text-sm border border-[#E5E7EB] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#10B981]">
-                                                <option>Female</option>
-                                                <option>Male</option>
-                                                <option>Other</option>
-                                                <option>Prefer not to say</option>
-                                            </select>
-                                        </div>
-                                    </div>
-                                    <div className="grid grid-cols-2 gap-4">
-                                        <div>
-                                            <label className="text-xs text-[#6B7280] block mb-1.5" style={{ fontWeight: 500 }}>Nationality</label>
-                                            <input defaultValue="Irish" className="w-full px-3 py-2 text-sm border border-[#E5E7EB] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#10B981]" />
-                                        </div>
-                                        <div>
-                                            <label className="text-xs text-[#6B7280] block mb-1.5" style={{ fontWeight: 500 }}>PPSN (Ireland)</label>
-                                            <input defaultValue="1234567T" className="w-full px-3 py-2 text-sm border border-[#E5E7EB] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#10B981]" />
-                                        </div>
-                                    </div>
-                                    <div>
-                                        <label className="text-xs text-[#6B7280] block mb-1.5" style={{ fontWeight: 500 }}>Home Address</label>
-                                        <textarea defaultValue="42 Pembroke Road, Ballsbridge, Dublin 4" rows={2} className="w-full px-3 py-2 text-sm border border-[#E5E7EB] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#10B981] resize-none" />
-                                    </div>
-                                    <div className="grid grid-cols-2 gap-4">
-                                        <div>
-                                            <label className="text-xs text-[#6B7280] block mb-1.5" style={{ fontWeight: 500 }}>Eircode / Postcode</label>
-                                            <input defaultValue="D04 X5K2" className="w-full px-3 py-2 text-sm border border-[#E5E7EB] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#10B981]" />
-                                        </div>
-                                        <div>
-                                            <label className="text-xs text-[#6B7280] block mb-1.5" style={{ fontWeight: 500 }}>Emergency Contact</label>
-                                            <input defaultValue="John Mitchell (Spouse)" className="w-full px-3 py-2 text-sm border border-[#E5E7EB] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#10B981]" />
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <div className={`space-y-5 animate-in fade-in slide-in-from-bottom-2 duration-300 ${editTab !== 'professional' ? 'hidden' : ''}`}>
-                                    <div className="grid grid-cols-2 gap-4">
-                                        <div>
-                                            <label className="text-xs text-[#6B7280] block mb-1.5" style={{ fontWeight: 500 }}>Grade / Level</label>
-                                            <select defaultValue="Consultant" className="w-full px-3 py-2 text-sm border border-[#E5E7EB] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#10B981]">
-                                                <option>Consultant</option>
-                                                <option>Registrar</option>
-                                                <option>SHO (Senior House Officer)</option>
-                                                <option>Intern</option>
-                                                <option>Nurse (Advanced Practitioner)</option>
-                                            </select>
-                                        </div>
-                                        <div>
-                                            <label className="text-xs text-[#6B7280] block mb-1.5" style={{ fontWeight: 500 }}>Status</label>
-                                            <select name="status" defaultValue={selectedLocum.status} className="w-full px-3 py-2 text-sm border border-[#E5E7EB] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#10B981]">
+                                            <label className="block text-xs text-[#4B5563] mb-1 font-medium">Availability Status</label>
+                                            <select 
+                                                value={editStatus}
+                                                onChange={e => setEditStatus(e.target.value as any)}
+                                                className="w-full px-3 py-2 border border-[#E5E7EB] rounded-lg text-sm bg-white text-[#1F2937] focus:outline-none focus:ring-2 focus:ring-[#10B981]"
+                                            >
                                                 <option value="available">Available</option>
                                                 <option value="booked">Booked</option>
                                                 <option value="unavailable">Unavailable</option>
                                             </select>
                                         </div>
                                     </div>
-                                    <div className="grid grid-cols-2 gap-4">
-                                        <div>
-                                            <label className="text-xs text-[#6B7280] block mb-1.5" style={{ fontWeight: 500 }}>Specialty</label>
-                                            <select name="specialty" defaultValue={selectedLocum.specialty} className="w-full px-3 py-2 text-sm border border-[#E5E7EB] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#10B981]">
-                                                {specialties.map(s => <option key={s} value={s}>{s}</option>)}
-                                            </select>
-                                        </div>
-                                        <div>
-                                            <label className="text-xs text-[#6B7280] block mb-1.5" style={{ fontWeight: 500 }}>Sub-Specialty</label>
-                                            <input name="subSpecialty" defaultValue="Laparoscopic Surgery" className="w-full px-3 py-2 text-sm border border-[#E5E7EB] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#10B981]" />
-                                        </div>
-                                    </div>
-                                    <div className="grid grid-cols-2 gap-4">
-                                        <div>
-                                            <label className="text-xs text-[#6B7280] block mb-1.5" style={{ fontWeight: 500 }}>IMC Number (Ireland)</label>
-                                            <input name="imcNumber" defaultValue="IMC-34521" className="w-full px-3 py-2 text-sm border border-[#E5E7EB] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#10B981]" />
-                                        </div>
-                                        <div>
-                                            <label className="text-xs text-[#6B7280] block mb-1.5" style={{ fontWeight: 500 }}>GMC Number (UK)</label>
-                                            <input name="gmcNumber" defaultValue="GMC-7654321" className="w-full px-3 py-2 text-sm border border-[#E5E7EB] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#10B981]" />
-                                        </div>
-                                    </div>
-                                    <div>
-                                        <label className="text-xs text-[#6B7280] block mb-1.5" style={{ fontWeight: 500 }}>Qualifications</label>
-                                        <input name="qualifications" defaultValue="FRCS, MB BCh BAO" className="w-full px-3 py-2 text-sm border border-[#E5E7EB] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#10B981]" placeholder="e.g. MRCPI, FRCS, MD" />
-                                    </div>
-                                    <div className="grid grid-cols-2 gap-4">
-                                        <div>
-                                            <label className="text-xs text-[#6B7280] block mb-1.5" style={{ fontWeight: 500 }}>Years of Experience</label>
-                                            <input name="experience" defaultValue={selectedLocum.experience.split(' ')[0]} type="number" className="w-full px-3 py-2 text-sm border border-[#E5E7EB] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#10B981]" />
-                                        </div>
-                                        <div>
-                                            <label className="text-xs text-[#6B7280] block mb-1.5" style={{ fontWeight: 500 }}>Primary Language</label>
-                                            <input defaultValue="English" className="w-full px-3 py-2 text-sm border border-[#E5E7EB] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#10B981]" />
-                                        </div>
-                                    </div>
-                                </div>
 
-                                <div className={`space-y-5 animate-in fade-in slide-in-from-bottom-2 duration-300 ${editTab !== 'financial' ? 'hidden' : ''}`}>
-                                    <div className="grid grid-cols-2 gap-4">
+                                    <div className="grid grid-cols-3 gap-4">
                                         <div>
-                                            <label className="text-xs text-[#6B7280] block mb-1.5" style={{ fontWeight: 500 }}>Tax Status</label>
-                                            <select className="w-full px-3 py-2 text-sm border border-[#E5E7EB] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#10B981]">
-                                                <option>Self-Employed (Sole Trader)</option>
-                                                <option>Limited Company (Umbrella)</option>
-                                                <option>PAYE (Agency Worker)</option>
+                                            <label className="block text-xs text-[#4B5563] mb-1 font-medium">Date of Birth</label>
+                                            <input 
+                                                type="date" 
+                                                value={editDob}
+                                                onChange={e => setEditDob(e.target.value)}
+                                                className="w-full px-3 py-2 border border-[#E5E7EB] rounded-lg text-sm bg-white text-[#1F2937] focus:outline-none focus:ring-2 focus:ring-[#10B981]"
+                                            />
+                                        </div>
+                                        <div>
+                                            <label className="block text-xs text-[#4B5563] mb-1 font-medium">Nationality</label>
+                                            <input 
+                                                type="text" 
+                                                value={editNationality}
+                                                onChange={e => setEditNationality(e.target.value)}
+                                                className="w-full px-3 py-2 border border-[#E5E7EB] rounded-lg text-sm bg-white text-[#1F2937] focus:outline-none focus:ring-2 focus:ring-[#10B981]"
+                                            />
+                                        </div>
+                                        <div>
+                                            <label className="block text-xs text-[#4B5563] mb-1 font-medium">Gender</label>
+                                            <select 
+                                                value={editGender}
+                                                onChange={e => setEditGender(e.target.value)}
+                                                className="w-full px-3 py-2 border border-[#E5E7EB] rounded-lg text-sm bg-white text-[#1F2937] focus:outline-none focus:ring-2 focus:ring-[#10B981]"
+                                            >
+                                                <option value="">Select Gender</option>
+                                                <option value="Female">Female</option>
+                                                <option value="Male">Male</option>
+                                                <option value="Other">Other</option>
                                             </select>
                                         </div>
-                                        <div>
-                                            <label className="text-xs text-[#6B7280] block mb-1.5" style={{ fontWeight: 500 }}>Revenue Registered</label>
-                                            <div className="flex items-center gap-2 mt-2">
-                                                <input type="checkbox" defaultChecked className="w-4 h-4 text-[#10B981] focus:ring-[#10B981] border-[#E5E7EB] rounded" />
-                                                <span className="text-xs text-[#1F2937]">Registered for Tax in Ireland</span>
-                                            </div>
-                                        </div>
                                     </div>
-                                    <div>
-                                        <label className="text-xs text-[#6B7280] block mb-1.5" style={{ fontWeight: 500 }}>Bank Name</label>
-                                        <input defaultValue="AIB" className="w-full px-3 py-2 text-sm border border-[#E5E7EB] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#10B981]" />
-                                    </div>
+
+                                    <h4 className="text-xs font-semibold text-[#374151] uppercase tracking-wider border-b border-[#F3F4F6] pb-1 pt-2">Contact & Location</h4>
                                     <div className="grid grid-cols-2 gap-4">
                                         <div>
-                                            <label className="text-xs text-[#6B7280] block mb-1.5" style={{ fontWeight: 500 }}>IBAN</label>
-                                            <input defaultValue="IE29 AIBK 9311 5212 3456 78" className="w-full px-3 py-2 text-sm border border-[#E5E7EB] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#10B981]" />
+                                            <label className="block text-xs text-[#4B5563] mb-1 font-medium">Mobile Number</label>
+                                            <input 
+                                                type="text" 
+                                                value={editMobile}
+                                                onChange={e => setEditMobile(e.target.value)}
+                                                className="w-full px-3 py-2 border border-[#E5E7EB] rounded-lg text-sm bg-white text-[#1F2937] focus:outline-none focus:ring-2 focus:ring-[#10B981]"
+                                                required
+                                            />
                                         </div>
                                         <div>
-                                            <label className="text-xs text-[#6B7280] block mb-1.5" style={{ fontWeight: 500 }}>BIC / SWIFT</label>
-                                            <input defaultValue="AIBKIE2D" className="w-full px-3 py-2 text-sm border border-[#E5E7EB] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#10B981]" />
+                                            <label className="block text-xs text-[#4B5563] mb-1 font-medium">Landline Phone</label>
+                                            <input 
+                                                type="text" 
+                                                value={editPhone}
+                                                onChange={e => setEditPhone(e.target.value)}
+                                                className="w-full px-3 py-2 border border-[#E5E7EB] rounded-lg text-sm bg-white text-[#1F2937] focus:outline-none focus:ring-2 focus:ring-[#10B981]"
+                                            />
                                         </div>
                                     </div>
-                                    <div className="pt-4 border-t border-[#E5E7EB]">
-                                        <h4 className="text-xs text-[#1F2937] mb-3" style={{ fontWeight: 600 }}>Standard Rates (\u20AC)</h4>
-                                        <div className="grid grid-cols-4 gap-3">
-                                            <div>
-                                                <label className="text-[10px] text-[#6B7280] block mb-1">Day Rate (/hr)</label>
-                                                <input defaultValue="85" type="number" className="w-full px-2 py-1.5 text-xs border border-[#E5E7EB] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#10B981]" />
-                                            </div>
-                                            <div>
-                                                <label className="text-[10px] text-[#6B7280] block mb-1">Night Rate (/hr)</label>
-                                                <input defaultValue="105" type="number" className="w-full px-2 py-1.5 text-xs border border-[#E5E7EB] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#10B981]" />
-                                            </div>
-                                            <div>
-                                                <label className="text-[10px] text-[#6B7280] block mb-1">Weekend (/hr)</label>
-                                                <input defaultValue="110" type="number" className="w-full px-2 py-1.5 text-xs border border-[#E5E7EB] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#10B981]" />
-                                            </div>
-                                            <div>
-                                                <label className="text-[10px] text-[#6B7280] block mb-1">On-Call (/hr)</label>
-                                                <input defaultValue="45" type="number" className="w-full px-2 py-1.5 text-xs border border-[#E5E7EB] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#10B981]" />
-                                            </div>
+
+                                    <div className="grid grid-cols-1 gap-4">
+                                        <div>
+                                            <label className="block text-xs text-[#4B5563] mb-1 font-medium">Email Address</label>
+                                            <input 
+                                                type="email" 
+                                                value={editEmail}
+                                                onChange={e => setEditEmail(e.target.value)}
+                                                className="w-full px-3 py-2 border border-[#E5E7EB] rounded-lg text-sm bg-white text-[#1F2937] focus:outline-none focus:ring-2 focus:ring-[#10B981]"
+                                                required
+                                            />
+                                        </div>
+                                    </div>
+
+                                    <div className="grid grid-cols-3 gap-4">
+                                        <div className="col-span-2">
+                                            <label className="block text-xs text-[#4B5563] mb-1 font-medium">Postal Address</label>
+                                            <input 
+                                                type="text" 
+                                                value={editAddress}
+                                                onChange={e => setEditAddress(e.target.value)}
+                                                className="w-full px-3 py-2 border border-[#E5E7EB] rounded-lg text-sm bg-white text-[#1F2937] focus:outline-none focus:ring-2 focus:ring-[#10B981]"
+                                            />
+                                        </div>
+                                        <div>
+                                            <label className="block text-xs text-[#4B5563] mb-1 font-medium">Eircode / Postcode</label>
+                                            <input 
+                                                type="text" 
+                                                value={editEircode}
+                                                onChange={e => setEditEircode(e.target.value)}
+                                                className="w-full px-3 py-2 border border-[#E5E7EB] rounded-lg text-sm bg-white text-[#1F2937] focus:outline-none focus:ring-2 focus:ring-[#10B981]"
+                                            />
+                                        </div>
+                                    </div>
+
+                                    <div className="grid grid-cols-3 gap-4">
+                                        <div>
+                                            <label className="block text-xs text-[#4B5563] mb-1 font-medium">PPS Number</label>
+                                            <input 
+                                                type="text" 
+                                                value={editPpsn}
+                                                onChange={e => setEditPpsn(e.target.value)}
+                                                className="w-full px-3 py-2 border border-[#E5E7EB] rounded-lg text-sm bg-white text-[#1F2937] focus:outline-none focus:ring-2 focus:ring-[#10B981]"
+                                            />
+                                        </div>
+                                        <div>
+                                            <label className="block text-xs text-[#4B5563] mb-1 font-medium">Emergency Contact Name</label>
+                                            <input 
+                                                type="text" 
+                                                value={editEmergencyContact}
+                                                onChange={e => setEditEmergencyContact(e.target.value)}
+                                                className="w-full px-3 py-2 border border-[#E5E7EB] rounded-lg text-sm bg-white text-[#1F2937] focus:outline-none focus:ring-2 focus:ring-[#10B981]"
+                                            />
+                                        </div>
+                                        <div>
+                                            <label className="block text-xs text-[#4B5563] mb-1 font-medium">Emergency Phone</label>
+                                            <input 
+                                                type="text" 
+                                                value={editEmergencyPhone}
+                                                onChange={e => setEditEmergencyPhone(e.target.value)}
+                                                className="w-full px-3 py-2 border border-[#E5E7EB] rounded-lg text-sm bg-white text-[#1F2937] focus:outline-none focus:ring-2 focus:ring-[#10B981]"
+                                            />
                                         </div>
                                     </div>
                                 </div>
-                            </div>
+                            )}
+
+                            {/* PROFESSIONAL DETAILS TAB */}
+                            {editTab === 'professional' && (
+                                <div className="space-y-4">
+                                    <h4 className="text-xs font-semibold text-[#374151] uppercase tracking-wider border-b border-[#F3F4F6] pb-1">Specialization & Experience</h4>
+                                    <div className="grid grid-cols-2 gap-4">
+                                        <div>
+                                            <label className="block text-xs text-[#4B5563] mb-1 font-medium">Primary Specialty</label>
+                                            <input 
+                                                type="text" 
+                                                value={editSpecialty}
+                                                onChange={e => setEditSpecialty(e.target.value)}
+                                                className="w-full px-3 py-2 border border-[#E5E7EB] rounded-lg text-sm bg-white text-[#1F2937] focus:outline-none focus:ring-2 focus:ring-[#10B981]"
+                                                required
+                                            />
+                                        </div>
+                                        <div>
+                                            <label className="block text-xs text-[#4B5563] mb-1 font-medium">Sub-Specialty</label>
+                                            <input 
+                                                type="text" 
+                                                value={editSubSpecialty}
+                                                onChange={e => setEditSubSpecialty(e.target.value)}
+                                                className="w-full px-3 py-2 border border-[#E5E7EB] rounded-lg text-sm bg-white text-[#1F2937] focus:outline-none focus:ring-2 focus:ring-[#10B981]"
+                                            />
+                                        </div>
+                                    </div>
+
+                                    <div className="grid grid-cols-2 gap-4">
+                                        <div>
+                                            <label className="block text-xs text-[#4B5563] mb-1 font-medium">Staff Grade</label>
+                                            <input 
+                                                type="text" 
+                                                value={editGrade}
+                                                onChange={e => setEditGrade(e.target.value)}
+                                                className="w-full px-3 py-2 border border-[#E5E7EB] rounded-lg text-sm bg-white text-[#1F2937] focus:outline-none focus:ring-2 focus:ring-[#10B981]"
+                                                required
+                                            />
+                                        </div>
+                                        <div>
+                                            <label className="block text-xs text-[#4B5563] mb-1 font-medium">Total Experience (Years)</label>
+                                            <input 
+                                                type="text" 
+                                                value={editExperience}
+                                                onChange={e => setEditExperience(e.target.value)}
+                                                className="w-full px-3 py-2 border border-[#E5E7EB] rounded-lg text-sm bg-white text-[#1F2937] focus:outline-none focus:ring-2 focus:ring-[#10B981]"
+                                            />
+                                        </div>
+                                    </div>
+
+                                    <h4 className="text-xs font-semibold text-[#374151] uppercase tracking-wider border-b border-[#F3F4F6] pb-1 pt-2">Work Preferences & Capabilities</h4>
+                                    <div className="grid grid-cols-2 gap-4">
+                                        <div>
+                                            <label className="block text-xs text-[#4B5563] mb-1 font-medium">Languages Spoken (comma-separated)</label>
+                                            <input 
+                                                type="text" 
+                                                value={editLanguages}
+                                                onChange={e => setEditLanguages(e.target.value)}
+                                                className="w-full px-3 py-2 border border-[#E5E7EB] rounded-lg text-sm bg-white text-[#1F2937] focus:outline-none focus:ring-2 focus:ring-[#10B981]"
+                                                placeholder="e.g. English, Spanish"
+                                            />
+                                        </div>
+                                        <div>
+                                            <label className="block text-xs text-[#4B5563] mb-1 font-medium">EWTD Max Hours (weekly)</label>
+                                            <input 
+                                                type="number" 
+                                                value={editMaxWeeklyHours}
+                                                onChange={e => setEditMaxWeeklyHours(Number(e.target.value))}
+                                                className="w-full px-3 py-2 border border-[#E5E7EB] rounded-lg text-sm bg-white text-[#1F2937] focus:outline-none focus:ring-2 focus:ring-[#10B981]"
+                                            />
+                                        </div>
+                                    </div>
+
+                                    <div>
+                                        <label className="block text-xs text-[#4B5563] mb-1 font-medium">Preferred Locations (comma-separated)</label>
+                                        <input 
+                                            type="text" 
+                                            value={editPreferredLocations}
+                                            onChange={e => setEditPreferredLocations(e.target.value)}
+                                            className="w-full px-3 py-2 border border-[#E5E7EB] rounded-lg text-sm bg-white text-[#1F2937] focus:outline-none focus:ring-2 focus:ring-[#10B981]"
+                                            placeholder="e.g. Dublin, Galway, Cork"
+                                        />
+                                    </div>
+
+                                    <div>
+                                        <label className="block text-xs text-[#4B5563] mb-2 font-medium">Preferred Shifts</label>
+                                        <div className="flex flex-wrap gap-2">
+                                            {['Day', 'Night', 'Weekend', 'On-Call'].map(shift => {
+                                                const isSelected = editPreferredShifts.includes(shift);
+                                                return (
+                                                    <button
+                                                        key={shift}
+                                                        type="button"
+                                                        onClick={() => {
+                                                            if (isSelected) {
+                                                                setEditPreferredShifts(editPreferredShifts.filter(s => s !== shift));
+                                                            } else {
+                                                                setEditPreferredShifts([...editPreferredShifts, shift]);
+                                                            }
+                                                        }}
+                                                        className={`px-3 py-1.5 rounded-full text-xs font-semibold border transition-all ${
+                                                            isSelected 
+                                                                ? 'bg-[#E0F2FE] text-[#0369A1] border-[#BAE6FD]'
+                                                                : 'bg-[#F9FAFB] text-[#4B5563] border-[#E5E7EB] hover:bg-[#F3F4F6]'
+                                                        }`}
+                                                    >
+                                                        {shift}
+                                                    </button>
+                                                );
+                                            })}
+                                        </div>
+                                    </div>
+
+                                    <h4 className="text-xs font-semibold text-[#374151] uppercase tracking-wider border-b border-[#F3F4F6] pb-1 pt-2">Qualifications</h4>
+                                    <div>
+                                        <label className="block text-xs text-[#4B5563] mb-1 font-medium">Qualifications (comma-separated)</label>
+                                        <input 
+                                            type="text" 
+                                            value={editQualifications}
+                                            onChange={e => setEditQualifications(e.target.value)}
+                                            className="w-full px-3 py-2 border border-[#E5E7EB] rounded-lg text-sm bg-white text-[#1F2937] focus:outline-none focus:ring-2 focus:ring-[#10B981]"
+                                            placeholder="e.g. MRCPI, FRCS, MD"
+                                        />
+                                    </div>
+
+                                    <h4 className="text-xs font-semibold text-[#374151] uppercase tracking-wider border-b border-[#F3F4F6] pb-1 pt-2">Medical Board Registrations</h4>
+                                    <div className="grid grid-cols-2 gap-4">
+                                        <div>
+                                            <label className="block text-xs text-[#4B5563] mb-1 font-medium">IMC Number (Ireland)</label>
+                                            <input 
+                                                type="text" 
+                                                value={editImcNumber}
+                                                onChange={e => setEditImcNumber(e.target.value)}
+                                                className="w-full px-3 py-2 border border-[#E5E7EB] rounded-lg text-sm bg-white text-[#1F2937] focus:outline-none focus:ring-2 focus:ring-[#10B981]"
+                                            />
+                                        </div>
+                                        <div>
+                                            <label className="block text-xs text-[#4B5563] mb-1 font-medium">IMC Expiry Date</label>
+                                            <input 
+                                                type="date" 
+                                                value={editImcExpiry}
+                                                onChange={e => setEditImcExpiry(e.target.value)}
+                                                className="w-full px-3 py-2 border border-[#E5E7EB] rounded-lg text-sm bg-white text-[#1F2937] focus:outline-none focus:ring-2 focus:ring-[#10B981]"
+                                            />
+                                        </div>
+                                    </div>
+
+                                    <div className="grid grid-cols-2 gap-4">
+                                        <div>
+                                            <label className="block text-xs text-[#4B5563] mb-1 font-medium">GMC Number (UK)</label>
+                                            <input 
+                                                type="text" 
+                                                value={editGmcNumber}
+                                                onChange={e => setEditGmcNumber(e.target.value)}
+                                                className="w-full px-3 py-2 border border-[#E5E7EB] rounded-lg text-sm bg-white text-[#1F2937] focus:outline-none focus:ring-2 focus:ring-[#10B981]"
+                                            />
+                                        </div>
+                                        <div>
+                                            <label className="block text-xs text-[#4B5563] mb-1 font-medium">GMC Expiry Date</label>
+                                            <input 
+                                                type="date" 
+                                                value={editGmcExpiry}
+                                                onChange={e => setEditGmcExpiry(e.target.value)}
+                                                className="w-full px-3 py-2 border border-[#E5E7EB] rounded-lg text-sm bg-white text-[#1F2937] focus:outline-none focus:ring-2 focus:ring-[#10B981]"
+                                            />
+                                        </div>
+                                    </div>
+
+                                    <div>
+                                        <label className="block text-xs text-[#4B5563] mb-1 font-medium">Specialist Register Details</label>
+                                        <input 
+                                            type="text" 
+                                            value={editSpecialistRegister}
+                                            onChange={e => setEditSpecialistRegister(e.target.value)}
+                                            className="w-full px-3 py-2 border border-[#E5E7EB] rounded-lg text-sm bg-white text-[#1F2937] focus:outline-none focus:ring-2 focus:ring-[#10B981]"
+                                        />
+                                    </div>
+                                </div>
+                            )}
+
+                            {/* FINANCIAL DETAILS TAB */}
+                            {editTab === 'financial' && (
+                                <div className="space-y-4">
+                                    <h4 className="text-xs font-semibold text-[#374151] uppercase tracking-wider border-b border-[#F3F4F6] pb-1">Tax & Payment Setup</h4>
+                                    <div className="grid grid-cols-1 gap-4">
+                                        <div>
+                                            <label className="block text-xs text-[#4B5563] mb-1 font-medium">Tax Classification Status</label>
+                                            <input 
+                                                type="text" 
+                                                value={editTaxStatus}
+                                                onChange={e => setEditTaxStatus(e.target.value)}
+                                                className="w-full px-3 py-2 border border-[#E5E7EB] rounded-lg text-sm bg-white text-[#1F2937] focus:outline-none focus:ring-2 focus:ring-[#10B981]"
+                                                placeholder="e.g. Self-Employed (Sole Trader)"
+                                            />
+                                        </div>
+                                    </div>
+
+                                    <div className="grid grid-cols-2 gap-4 pt-1">
+                                        <div className="flex items-center gap-3 p-3 bg-[#F9FAFB] border border-[#E5E7EB] rounded-xl">
+                                            <input 
+                                                type="checkbox"
+                                                id="editRevenueRegistered"
+                                                checked={editRevenueRegistered}
+                                                onChange={e => setEditRevenueRegistered(e.target.checked)}
+                                                className="w-4 h-4 text-[#10B981] focus:ring-[#10B981] border-[#E5E7EB] rounded"
+                                            />
+                                            <label htmlFor="editRevenueRegistered" className="text-xs text-[#374151] font-semibold cursor-pointer select-none">
+                                                Revenue Registered Status
+                                            </label>
+                                        </div>
+                                        <div className="flex items-center gap-3 p-3 bg-[#F9FAFB] border border-[#E5E7EB] rounded-xl">
+                                            <input 
+                                                type="checkbox"
+                                                id="editVatRegistered"
+                                                checked={editVatRegistered}
+                                                onChange={e => setEditVatRegistered(e.target.checked)}
+                                                className="w-4 h-4 text-[#10B981] focus:ring-[#10B981] border-[#E5E7EB] rounded"
+                                            />
+                                            <label htmlFor="editVatRegistered" className="text-xs text-[#374151] font-semibold cursor-pointer select-none">
+                                                VAT Registered Status
+                                            </label>
+                                        </div>
+                                    </div>
+
+                                    <h4 className="text-xs font-semibold text-[#374151] uppercase tracking-wider border-b border-[#F3F4F6] pb-1 pt-2">Default Shift Rates (€)</h4>
+                                    <div className="grid grid-cols-4 gap-4">
+                                        <div>
+                                            <label className="block text-xs text-[#4B5563] mb-1 font-medium">Standard Day Rate</label>
+                                            <input 
+                                                type="number" 
+                                                value={editStandardDayRate}
+                                                onChange={e => setEditStandardDayRate(Number(e.target.value))}
+                                                className="w-full px-3 py-2 border border-[#E5E7EB] rounded-lg text-sm bg-white text-[#1F2937] focus:outline-none focus:ring-2 focus:ring-[#10B981]"
+                                            />
+                                        </div>
+                                        <div>
+                                            <label className="block text-xs text-[#4B5563] mb-1 font-medium">Standard Night Rate</label>
+                                            <input 
+                                                type="number" 
+                                                value={editStandardNightRate}
+                                                onChange={e => setEditStandardNightRate(Number(e.target.value))}
+                                                className="w-full px-3 py-2 border border-[#E5E7EB] rounded-lg text-sm bg-white text-[#1F2937] focus:outline-none focus:ring-2 focus:ring-[#10B981]"
+                                            />
+                                        </div>
+                                        <div>
+                                            <label className="block text-xs text-[#4B5563] mb-1 font-medium">Weekend Rate</label>
+                                            <input 
+                                                type="number" 
+                                                value={editWeekendRate}
+                                                onChange={e => setEditWeekendRate(Number(e.target.value))}
+                                                className="w-full px-3 py-2 border border-[#E5E7EB] rounded-lg text-sm bg-white text-[#1F2937] focus:outline-none focus:ring-2 focus:ring-[#10B981]"
+                                            />
+                                        </div>
+                                        <div>
+                                            <label className="block text-xs text-[#4B5563] mb-1 font-medium">On-Call Rate</label>
+                                            <input 
+                                                type="number" 
+                                                value={editOncallRate}
+                                                onChange={e => setEditOncallRate(Number(e.target.value))}
+                                                className="w-full px-3 py-2 border border-[#E5E7EB] rounded-lg text-sm bg-white text-[#1F2937] focus:outline-none focus:ring-2 focus:ring-[#10B981]"
+                                            />
+                                        </div>
+                                    </div>
+
+                                    <h4 className="text-xs font-semibold text-[#374151] uppercase tracking-wider border-b border-[#F3F4F6] pb-1 pt-2">Bank Routing & Coordinates</h4>
+                                    <div className="grid grid-cols-2 gap-4">
+                                        <div>
+                                            <label className="block text-xs text-[#4B5563] mb-1 font-medium font-medium">Bank Name</label>
+                                            <input 
+                                                type="text" 
+                                                value={editBankName}
+                                                onChange={e => setEditBankName(e.target.value)}
+                                                className="w-full px-3 py-2 border border-[#E5E7EB] rounded-lg text-sm bg-white text-[#1F2937] focus:outline-none focus:ring-2 focus:ring-[#10B981]"
+                                            />
+                                        </div>
+                                        <div>
+                                            <label className="block text-xs text-[#4B5563] mb-1 font-medium">BIC (SWIFT)</label>
+                                            <input 
+                                                type="text" 
+                                                value={editBic}
+                                                onChange={e => setEditBic(e.target.value)}
+                                                className="w-full px-3 py-2 border border-[#E5E7EB] rounded-lg text-sm bg-white text-[#1F2937] focus:outline-none focus:ring-2 focus:ring-[#10B981]"
+                                            />
+                                        </div>
+                                    </div>
+
+                                    <div>
+                                        <label className="block text-xs text-[#4B5563] mb-1 font-medium">IBAN Number</label>
+                                        <input 
+                                            type="text" 
+                                            value={editIban}
+                                            onChange={e => setEditIban(e.target.value)}
+                                            className="w-full px-3 py-2 border border-[#E5E7EB] rounded-lg text-sm bg-white text-[#1F2937] focus:outline-none focus:ring-2 focus:ring-[#10B981]"
+                                        />
+                                    </div>
+                                </div>
+                            )}
                         </div>
 
-                        <div className="p-6 border-t border-[#E5E7EB] bg-[#F9FAFB] flex items-center justify-between">
-                            <div className="flex items-center gap-2 text-xs text-[#6B7280]">
-                                <Clock className="w-3.5 h-3.5" />
-                                Last updated: May 8, 2026
-                            </div>
-                            <div className="flex gap-3">
-                                <button type="button" onClick={() => setShowEditDialog(false)} className="px-5 py-2 text-sm border border-[#E5E7EB] text-[#6B7280] rounded-lg hover:bg-white transition-colors" style={{ fontWeight: 500 }}>Cancel</button>
-                                <button type="submit" className="px-5 py-2 text-sm bg-[#10B981] text-white rounded-lg hover:bg-[#059669] shadow-md transition-all active:scale-95" style={{ fontWeight: 600 }}>Save Changes</button>
-                            </div>
+                        <div className="p-5 border-t border-[#E5E7EB] flex justify-end gap-2 bg-[#F9FAFB] flex-shrink-0">
+                            <button 
+                                type="button" 
+                                onClick={() => setShowEditDialog(false)}
+                                className="px-4 py-2 border border-[#E5E7EB] rounded-lg text-sm text-[#4B5563] bg-white hover:bg-[#F3F4F6]"
+                            >
+                                Cancel
+                            </button>
+                            <button 
+                                type="submit"
+                                className="px-4 py-2 bg-[#10B981] hover:bg-[#059669] text-white rounded-lg text-sm flex items-center gap-1.5"
+                                style={{ fontWeight: 500 }}
+                            >
+                                <CheckCircle className="w-4 h-4" /> Save Changes
+                            </button>
                         </div>
                     </form>
                 </div>
@@ -2182,6 +2648,18 @@ export function LocumManagement({ onViewProfile }: { onViewProfile?: (id: string
                                     />
                                 </div>
                             )}
+
+                            <div>
+                                <label className="text-xs text-[#6B7280] block mb-1.5 font-semibold">Department <span className="text-[#EF4444]">*</span></label>
+                                <select 
+                                    name="department" 
+                                    required
+                                    className="w-full px-3 py-2 text-sm border border-[#E5E7EB] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#10B981] focus:border-transparent transition-all bg-white"
+                                >
+                                    <option value="">Select department...</option>
+                                    {departments.map(d => <option key={d} value={d}>{d}</option>)}
+                                </select>
+                            </div>
 
                             <div>
                                 <label className="text-xs text-[#6B7280] block mb-1.5 font-semibold">Location <span className="text-[#EF4444]">*</span></label>

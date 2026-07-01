@@ -1,37 +1,11 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
-    Calendar, Clock, Plus, Search, MapPin, Users, AlertTriangle,
-    CheckCircle, XCircle, X, ChevronLeft, ChevronRight, Download,
-    MoreVertical, Building2, DollarSign, Filter, RefreshCw, Edit2,
-    Trash2, UserPlus, Eye, Ban
+    Calendar, Clock, Plus, Search, MapPin, CheckCircle, XCircle, X, ChevronLeft, ChevronRight, Download,
+    MoreVertical, Building2, Edit2, UserPlus, Eye, Ban, RefreshCw
 } from 'lucide-react';
-
-interface Shift {
-    id: string;
-    facility: string;
-    location: string;
-    specialty: string;
-    date: string;
-    time: string;
-    hours: number;
-    rate: number;
-    status: 'open' | 'filled' | 'cancelled' | 'urgent' | 'recurring';
-    locum: string | null;
-    requiredCompliance: string[];
-}
-
-const shifts: Shift[] = [
-    { id: 'SH-001', facility: "St. James's Hospital", location: 'Dublin', specialty: 'General Surgery', date: '2026-02-10', time: '08:00 - 16:00', hours: 8, rate: 55, status: 'filled', locum: 'Sarah Mitchell', requiredCompliance: ['Medical License', 'Garda Vetting'] },
-    { id: 'SH-002', facility: 'Cork University Hospital', location: 'Cork', specialty: 'Cardiology', date: '2026-02-10', time: '09:00 - 21:00', hours: 12, rate: 60, status: 'filled', locum: 'James Harrison', requiredCompliance: ['Medical License', 'Indemnity Insurance'] },
-    { id: 'SH-003', facility: 'Beaumont Hospital', location: 'Dublin', specialty: 'Emergency Medicine', date: '2026-02-10', time: '20:00 - 08:00', hours: 12, rate: 65, status: 'urgent', locum: null, requiredCompliance: ['Medical License', 'Garda Vetting', 'CPR Training'] },
-    { id: 'SH-004', facility: 'University Hospital Galway', location: 'Galway', specialty: 'Anesthesiology', date: '2026-02-11', time: '07:00 - 19:00', hours: 12, rate: 58, status: 'open', locum: null, requiredCompliance: ['Medical License', 'Indemnity Insurance'] },
-    { id: 'SH-005', facility: 'Mater Hospital', location: 'Dublin', specialty: 'Pediatrics', date: '2026-02-11', time: '08:00 - 20:00', hours: 12, rate: 55, status: 'open', locum: null, requiredCompliance: ['Medical License', 'Garda Vetting'] },
-    { id: 'SH-006', facility: "St. James's Hospital", location: 'Dublin', specialty: 'General Surgery', date: '2026-02-12', time: '08:00 - 16:00', hours: 8, rate: 55, status: 'recurring', locum: 'Sarah Mitchell', requiredCompliance: ['Medical License', 'Garda Vetting'] },
-    { id: 'SH-007', facility: 'Limerick University Hospital', location: 'Limerick', specialty: 'Orthopedics', date: '2026-02-09', time: '09:00 - 17:00', hours: 8, rate: 52, status: 'cancelled', locum: null, requiredCompliance: ['Medical License'] },
-    { id: 'SH-008', facility: 'Waterford University Hospital', location: 'Waterford', specialty: 'Emergency Medicine', date: '2026-02-12', time: '20:00 - 08:00', hours: 12, rate: 65, status: 'urgent', locum: null, requiredCompliance: ['Medical License', 'CPR Training'] },
-    { id: 'SH-009', facility: 'Galway Clinic', location: 'Galway', specialty: 'General Surgery', date: '2026-02-13', time: '08:00 - 16:00', hours: 8, rate: 58, status: 'open', locum: null, requiredCompliance: ['Medical License', 'Indemnity Insurance'] },
-    { id: 'SH-010', facility: 'Beacon Hospital', location: 'Dublin', specialty: 'Cardiology', date: '2026-02-13', time: '09:00 - 17:00', hours: 8, rate: 60, status: 'filled', locum: 'Emily Chen', requiredCompliance: ['Medical License'] },
-];
+import { Shift } from '../types';
+import { shiftService } from '../services/shiftService';
+import { toast } from 'sonner';
 
 const statusConfig: Record<string, { label: string; color: string; bg: string; border: string }> = {
     open: { label: 'Open', color: '#3B82F6', bg: '#DBEAFE', border: '#BFDBFE' },
@@ -41,36 +15,68 @@ const statusConfig: Record<string, { label: string; color: string; bg: string; b
     recurring: { label: 'Recurring', color: '#7C3AED', bg: '#EDE9FE', border: '#DDD6FE' },
 };
 
+const specialtiesList = ['General Surgery', 'Cardiology', 'Emergency Medicine', 'Anesthesiology', 'Pediatrics', 'Orthopedics'];
+const departmentsList = ['Surgery', 'Cardiology', 'Emergency (A&E)', 'Pediatrics', 'Outpatients', 'Internal Medicine'];
+
 export function ShiftBooking({ subPage = 'board', onViewShiftDetail }: { subPage?: string; onViewShiftDetail?: (id: string) => void }) {
+    const [shifts, setShifts] = useState<Shift[]>([]);
+    const [loading, setLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState('');
     const [statusFilter, setStatusFilter] = useState('all');
+    const [specialtyFilter, setSpecialtyFilter] = useState('all');
+    const [departmentFilter, setDepartmentFilter] = useState('all');
     const [showCreateShift, setShowCreateShift] = useState(false);
     const [viewMode, setViewMode] = useState<'board' | 'calendar'>(subPage === 'calendar' ? 'calendar' : 'board');
     const [openActionMenu, setOpenActionMenu] = useState<string | null>(null);
+    
+    // Actions modals & inputs
     const [showAssignModal, setShowAssignModal] = useState(false);
     const [showCancelModal, setShowCancelModal] = useState(false);
     const [selectedShift, setSelectedShift] = useState<Shift | null>(null);
+    const [assignLocumName, setAssignLocumName] = useState('');
     const [cancelReason, setCancelReason] = useState('');
+    
     const [formData, setFormData] = useState({
         facility: '',
         specialty: '',
-        date: '',
-        startTime: '',
-        endTime: '',
-        rate: '',
-        shiftType: 'one-time' as 'one-time' | 'recurring' | 'urgent',
         department: '',
-        grade: '',
-        description: '',
+        date: '',
+        startTime: '08:00',
+        endTime: '16:00',
+        rate: '',
+        shiftType: 'open' as 'open' | 'recurring' | 'urgent',
         compliance: [] as string[],
     });
+
+    // Calendar view states
+    const [calendarSubView, setCalendarSubView] = useState<'month' | 'week' | 'day'>('week');
+    const [calendarAnchorDate, setCalendarAnchorDate] = useState<Date>(new Date(2026, 1, 9)); // Mon 9 Feb 2026
+
+    // Fetch shifts on mount
+    useEffect(() => {
+        const fetchShifts = async () => {
+            setLoading(true);
+            try {
+                const data = await shiftService.getAll();
+                setShifts(data);
+            } catch (err) {
+                console.error(err);
+                toast.error("Failed to load shifts");
+            } finally {
+                setLoading(false);
+            }
+        };
+        fetchShifts();
+    }, []);
 
     const filteredShifts = shifts.filter(s => {
         const matchesSearch = s.facility.toLowerCase().includes(searchTerm.toLowerCase()) ||
             s.specialty.toLowerCase().includes(searchTerm.toLowerCase()) ||
             (s.locum || '').toLowerCase().includes(searchTerm.toLowerCase());
         const matchesStatus = statusFilter === 'all' || s.status === statusFilter;
-        return matchesSearch && matchesStatus;
+        const matchesSpecialty = specialtyFilter === 'all' || s.specialty === specialtyFilter;
+        const matchesDepartment = departmentFilter === 'all' || s.department === departmentFilter;
+        return matchesSearch && matchesStatus && matchesSpecialty && matchesDepartment;
     });
 
     const statusCounts = {
@@ -94,9 +100,84 @@ export function ShiftBooking({ subPage = 'board', onViewShiftDetail }: { subPage
         a.click();
     };
 
-    // Calendar view states
-    const [calendarSubView, setCalendarSubView] = useState<'month' | 'week' | 'day'>('week');
-    const [calendarAnchorDate, setCalendarAnchorDate] = useState<Date>(new Date(2026, 1, 9)); // Mon 9 Feb 2026
+    // Create new shift submit handler
+    const handleCreateShiftSubmit = async (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!formData.facility || !formData.specialty || !formData.date || !formData.rate) {
+            toast.error("Please fill in all required fields.");
+            return;
+        }
+
+        const calculatedHours = 8; // dummy calculation
+        const newShift: Shift = {
+            id: `SH-${Math.floor(100 + Math.random() * 900)}`,
+            facility: formData.facility,
+            location: formData.facility.includes('Cork') ? 'Cork' : formData.facility.includes('Galway') ? 'Galway' : 'Dublin',
+            specialty: formData.specialty,
+            department: formData.department || undefined,
+            date: formData.date,
+            time: `${formData.startTime} - ${formData.endTime}`,
+            hours: calculatedHours,
+            rate: parseFloat(formData.rate) || 55,
+            status: formData.shiftType,
+            locum: null,
+            requiredCompliance: ['Medical License']
+        };
+
+        try {
+            await shiftService.create(newShift);
+            const data = await shiftService.getAll();
+            setShifts(data);
+            setShowCreateShift(false);
+            setFormData({
+                facility: '',
+                specialty: '',
+                department: '',
+                date: '',
+                startTime: '08:00',
+                endTime: '16:00',
+                rate: '',
+                shiftType: 'open',
+                compliance: [],
+            });
+            toast.success("Shift created successfully!");
+        } catch (error) {
+            toast.error("Failed to create shift");
+        }
+    };
+
+    // Assign Locum submit handler
+    const handleAssignLocumSubmit = async () => {
+        if (!selectedShift || !assignLocumName) {
+            toast.error("Please select a locum.");
+            return;
+        }
+        try {
+            await shiftService.assignLocum(selectedShift.id, assignLocumName);
+            const data = await shiftService.getAll();
+            setShifts(data);
+            setShowAssignModal(false);
+            setAssignLocumName('');
+            toast.success(`Locum assigned to shift ${selectedShift.id}`);
+        } catch (error) {
+            toast.error("Failed to assign locum");
+        }
+    };
+
+    // Cancel Shift submit handler
+    const handleCancelShiftSubmit = async () => {
+        if (!selectedShift) return;
+        try {
+            await shiftService.cancel(selectedShift.id, cancelReason);
+            const data = await shiftService.getAll();
+            setShifts(data);
+            setShowCancelModal(false);
+            setCancelReason('');
+            toast.success(`Shift ${selectedShift.id} cancelled successfully.`);
+        } catch (error) {
+            toast.error("Failed to cancel shift");
+        }
+    };
 
     const daysOfWeek = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
 
@@ -126,17 +207,13 @@ export function ShiftBooking({ subPage = 'board', onViewShiftDetail }: { subPage
         const year = calendarAnchorDate.getFullYear();
         const month = calendarAnchorDate.getMonth();
         const firstDayIndex = new Date(year, month, 1).getDay(); // Sun = 0, Mon = 1, etc.
-        // Convert Sun = 0 to Monday-start (Mon = 0, Tue = 1, ... Sun = 6)
         const prefixEmptyCount = firstDayIndex === 0 ? 6 : firstDayIndex - 1;
-        
         const totalDays = new Date(year, month + 1, 0).getDate();
         
         const list = [];
-        // Empty prefix blocks
         for (let i = 0; i < prefixEmptyCount; i++) {
             list.push({ isEmpty: true, key: `empty-${i}`, dateStr: '' });
         }
-        // Month days
         for (let day = 1; day <= totalDays; day++) {
             const d = new Date(year, month, day);
             list.push({
@@ -191,6 +268,15 @@ export function ShiftBooking({ subPage = 'board', onViewShiftDetail }: { subPage
         }
     };
 
+    if (loading) {
+        return (
+            <div className="p-6 flex flex-col items-center justify-center min-h-[350px] space-y-3">
+                <RefreshCw className="w-8 h-8 text-[#10B981] animate-spin" />
+                <p className="text-xs text-zinc-500 font-semibold animate-pulse">Consulting schedule rosters...</p>
+            </div>
+        );
+    }
+
     return (
         <div className="p-6">
             <div className="flex items-center justify-between mb-6">
@@ -242,6 +328,16 @@ export function ShiftBooking({ subPage = 'board', onViewShiftDetail }: { subPage
                                 <option value="urgent">Urgent</option>
                                 <option value="cancelled">Cancelled</option>
                                 <option value="recurring">Recurring</option>
+                            </select>
+                            <select value={specialtyFilter} onChange={e => setSpecialtyFilter(e.target.value)}
+                                className="px-3 py-2 text-sm border border-[#E5E7EB] rounded-lg bg-white">
+                                <option value="all">All Specialties</option>
+                                {specialtiesList.map(s => <option key={s} value={s}>{s}</option>)}
+                            </select>
+                            <select value={departmentFilter} onChange={e => setDepartmentFilter(e.target.value)}
+                                className="px-3 py-2 text-sm border border-[#E5E7EB] rounded-lg bg-white">
+                                <option value="all">All Departments</option>
+                                {departmentsList.map(d => <option key={d} value={d}>{d}</option>)}
                             </select>
                             <button onClick={handleExport} className="flex items-center gap-2 px-3 py-2 text-sm text-[#6B7280] border border-[#E5E7EB] rounded-lg hover:bg-[#F9FAFB]">
                                 <Download className="w-4 h-4" />Export
@@ -328,15 +424,6 @@ export function ShiftBooking({ subPage = 'board', onViewShiftDetail }: { subPage
                                                                     View Details
                                                                 </button>
                                                                 {shift.status !== 'cancelled' && (
-                                                                    <button
-                                                                        className="w-full flex items-center gap-2 px-4 py-2 text-sm text-[#1F2937] hover:bg-[#F9FAFB] transition-colors text-left"
-                                                                        onClick={() => { setSelectedShift(shift); setOpenActionMenu(null); }}
-                                                                    >
-                                                                        <Edit2 className="w-4 h-4 text-[#F59E0B]" />
-                                                                        Edit Shift
-                                                                    </button>
-                                                                )}
-                                                                {shift.status !== 'cancelled' && (
                                                                     <>
                                                                         <div className="border-t border-[#E5E7EB] my-1" />
                                                                         <button
@@ -360,24 +447,17 @@ export function ShiftBooking({ subPage = 'board', onViewShiftDetail }: { subPage
                         </table>
                     </div>
                 </div>
-            )}            {viewMode === 'calendar' && (
+            )}
+
+            {viewMode === 'calendar' && (
                 <div className="bg-white rounded-xl border border-[#E5E7EB] shadow-sm overflow-hidden">
-                    {/* Calendar Header with Subview Selectors & Navigation */}
                     <div className="p-4 border-b border-[#E5E7EB] bg-[#F9FAFB] flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                         <div className="flex items-center gap-3">
                             <div className="flex items-center gap-1 bg-white border border-[#E5E7EB] rounded-lg p-0.5">
-                                <button 
-                                    type="button"
-                                    onClick={handlePrevCalendar} 
-                                    className="p-1.5 hover:bg-[#F3F4F6] rounded text-[#6B7280] transition-colors"
-                                >
+                                <button type="button" onClick={handlePrevCalendar} className="p-1.5 hover:bg-[#F3F4F6] rounded text-[#6B7280] transition-colors">
                                     <ChevronLeft className="w-4 h-4" />
                                 </button>
-                                <button 
-                                    type="button"
-                                    onClick={handleNextCalendar} 
-                                    className="p-1.5 hover:bg-[#F3F4F6] rounded text-[#6B7280] transition-colors"
-                                >
+                                <button type="button" onClick={handleNextCalendar} className="p-1.5 hover:bg-[#F3F4F6] rounded text-[#6B7280] transition-colors">
                                     <ChevronRight className="w-4 h-4" />
                                 </button>
                             </div>
@@ -386,7 +466,6 @@ export function ShiftBooking({ subPage = 'board', onViewShiftDetail }: { subPage
                             </h3>
                         </div>
 
-                        {/* Month / Week / Day view switchers */}
                         <div className="flex items-center gap-1 bg-white border border-[#E5E7EB] rounded-lg p-1">
                             {(['month', 'week', 'day'] as const).map(view => (
                                 <button
@@ -413,24 +492,21 @@ export function ShiftBooking({ subPage = 'board', onViewShiftDetail }: { subPage
                         </button>
                     </div>
 
-                    {/* === MONTH VIEW === */}
                     {calendarSubView === 'month' && (
                         <div className="divide-y divide-[#E5E7EB]">
-                            {/* Days Header */}
                             <div className="grid grid-cols-7 bg-[#F9FAFB] text-center py-2.5">
                                 {daysOfWeek.map(dayName => (
                                     <span key={dayName} className="text-xs font-semibold text-[#4B5563] uppercase tracking-wider">{dayName}</span>
                                 ))}
                             </div>
-                            {/* Days Grid */}
                             <div className="grid grid-cols-7 bg-white auto-rows-[110px] divide-x divide-y divide-[#E5E7EB] border-t border-[#E5E7EB]">
-                                {getMonthDays().map((cell, idx) => {
+                                {getMonthDays().map((cell) => {
                                     if (cell.isEmpty) {
                                         return <div key={cell.key} className="bg-[#FAFAFA] border-r border-b border-[#E5E7EB]" />;
                                     }
 
                                     const dayShifts = shifts.filter(s => s.date === cell.dateStr);
-                                    const isToday = cell.dateStr === '2026-02-09'; // highlighting mock "today"
+                                    const isToday = cell.dateStr === '2026-02-09';
 
                                     return (
                                         <div 
@@ -458,7 +534,6 @@ export function ShiftBooking({ subPage = 'board', onViewShiftDetail }: { subPage
                                                             key={shift.id} 
                                                             className="px-1 py-0.5 rounded text-[9px] border truncate"
                                                             style={{ backgroundColor: config.bg, borderColor: config.border, color: config.color, fontWeight: 500 }}
-                                                            title={`${shift.specialty} at ${shift.facility}`}
                                                         >
                                                             {shift.specialty}
                                                         </div>
@@ -477,10 +552,8 @@ export function ShiftBooking({ subPage = 'board', onViewShiftDetail }: { subPage
                         </div>
                     )}
 
-                    {/* === WEEK VIEW === */}
                     {calendarSubView === 'week' && (
                         <div className="divide-y divide-[#E5E7EB]">
-                            {/* Days Header */}
                             <div className="grid grid-cols-7 border-b border-[#E5E7EB] bg-[#FAFAFA]">
                                 {getWeekDays().map(day => {
                                     const isToday = day.dateStr === '2026-02-09';
@@ -496,7 +569,6 @@ export function ShiftBooking({ subPage = 'board', onViewShiftDetail }: { subPage
                                     );
                                 })}
                             </div>
-                            {/* Week Columns */}
                             <div className="grid grid-cols-7 min-h-[450px] divide-x divide-[#E5E7EB] bg-white">
                                 {getWeekDays().map(day => {
                                     const dayShifts = shifts.filter(s => s.date === day.dateStr);
@@ -545,7 +617,6 @@ export function ShiftBooking({ subPage = 'board', onViewShiftDetail }: { subPage
                         </div>
                     )}
 
-                    {/* === DAILY VIEW === */}
                     {calendarSubView === 'day' && (
                         <div className="bg-white p-6">
                             <div className="max-w-2xl mx-auto space-y-4">
@@ -584,8 +655,8 @@ export function ShiftBooking({ subPage = 'board', onViewShiftDetail }: { subPage
                                                         </div>
                                                         <div>
                                                             <div className="flex items-center gap-2 mb-1">
-                                                                <h5 className="font-bold text-sm text-[#1F2937]">{shift.specialty}</h5>
-                                                                <span className="px-2 py-0.5 text-[10px] font-semibold rounded-full"
+                                                                 <h5 className="font-bold text-sm text-[#1F2937]">{shift.specialty}</h5>
+                                                                 <span className="px-2 py-0.5 text-[10px] font-semibold rounded-full"
                                                                     style={{ backgroundColor: config.bg, color: config.color }}>
                                                                     {config.label}
                                                                 </span>
@@ -626,134 +697,179 @@ export function ShiftBooking({ subPage = 'board', onViewShiftDetail }: { subPage
 
             {/* Create Shift Modal */}
             {showCreateShift && (
-                <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-                    <div className="bg-white rounded-xl w-[550px] max-h-[80vh] overflow-y-auto">
-                        <div className="p-5 border-b border-[#E5E7EB] flex items-center justify-between">
-                            <h3 className="text-[#1F2937]">Create New Shift</h3>
-                            <button onClick={() => setShowCreateShift(false)} className="w-8 h-8 flex items-center justify-center text-[#6B7280] hover:text-[#EF4444] hover:bg-[#FEE2E2] rounded-lg">
+                <div className="fixed inset-0 bg-black/55 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-in fade-in duration-200">
+                    <form onSubmit={handleCreateShiftSubmit} className="bg-white rounded-xl w-full max-w-lg max-h-[85vh] overflow-y-auto shadow-2xl border border-zinc-200 animate-in zoom-in-95 duration-200">
+                        <div className="p-5 border-b border-[#E5E7EB] flex items-center justify-between sticky top-0 bg-white">
+                            <h3 className="text-[#1F2937] font-semibold">Create New Shift</h3>
+                            <button type="button" onClick={() => setShowCreateShift(false)} className="w-8 h-8 flex items-center justify-center text-[#6B7280] hover:text-[#EF4444] hover:bg-[#FEE2E2] rounded-lg">
                                 <X className="w-5 h-5" />
                             </button>
                         </div>
                         <div className="p-5 space-y-4">
                             <div>
-                                <label className="block text-sm text-[#1F2937] mb-1" style={{ fontWeight: 500 }}>Facility</label>
-                                <select className="w-full px-3 py-2 border border-[#E5E7EB] rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#10B981]">
-                                    <option>Select facility...</option>
-                                    <option>St. James's Hospital, Dublin</option>
-                                    <option>Cork University Hospital</option>
-                                    <option>University Hospital Galway</option>
-                                    <option>Beaumont Hospital, Dublin</option>
-                                    <option>Mater Hospital, Dublin</option>
+                                <label className="block text-xs font-bold text-[#6B7280] uppercase tracking-wider mb-1">Facility *</label>
+                                <select 
+                                    value={formData.facility}
+                                    onChange={e => setFormData({ ...formData, facility: e.target.value })}
+                                    required
+                                    className="w-full px-3 py-2 border border-[#E5E7EB] rounded-lg text-sm bg-white focus:outline-none focus:ring-2 focus:ring-[#10B981]"
+                                >
+                                    <option value="">Select facility...</option>
+                                    <option value="St. James's Hospital">St. James's Hospital, Dublin</option>
+                                    <option value="Cork University Hospital">Cork University Hospital</option>
+                                    <option value="University Hospital Galway">University Hospital Galway</option>
+                                    <option value="Beaumont Hospital">Beaumont Hospital, Dublin</option>
+                                    <option value="Mater Hospital">Mater Hospital, Dublin</option>
                                 </select>
                             </div>
                             <div>
-                                <label className="block text-sm text-[#1F2937] mb-1" style={{ fontWeight: 500 }}>Specialty Requirement</label>
-                                <select className="w-full px-3 py-2 border border-[#E5E7EB] rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#10B981]">
-                                    <option>Select specialty...</option>
-                                    <option>General Surgery</option>
-                                    <option>Cardiology</option>
-                                    <option>Emergency Medicine</option>
-                                    <option>Anesthesiology</option>
-                                    <option>Pediatrics</option>
-                                    <option>Orthopedics</option>
+                                <label className="block text-xs font-bold text-[#6B7280] uppercase tracking-wider mb-1">Specialty Requirement *</label>
+                                <select 
+                                    value={formData.specialty}
+                                    onChange={e => setFormData({ ...formData, specialty: e.target.value })}
+                                    required
+                                    className="w-full px-3 py-2 border border-[#E5E7EB] rounded-lg text-sm bg-white focus:outline-none focus:ring-2 focus:ring-[#10B981]"
+                                >
+                                    <option value="">Select specialty...</option>
+                                    <option value="General Surgery">General Surgery</option>
+                                    <option value="Cardiology">Cardiology</option>
+                                    <option value="Emergency Medicine">Emergency Medicine</option>
+                                    <option value="Anesthesiology">Anesthesiology</option>
+                                    <option value="Pediatrics">Pediatrics</option>
+                                    <option value="Orthopedics">Orthopedics</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label className="block text-xs font-bold text-[#6B7280] uppercase tracking-wider mb-1">Department Requirement *</label>
+                                <select 
+                                    value={formData.department}
+                                    onChange={e => setFormData({ ...formData, department: e.target.value })}
+                                    required
+                                    className="w-full px-3 py-2 border border-[#E5E7EB] rounded-lg text-sm bg-white focus:outline-none focus:ring-2 focus:ring-[#10B981]"
+                                >
+                                    <option value="">Select department...</option>
+                                    {departmentsList.map(d => <option key={d} value={d}>{d}</option>)}
                                 </select>
                             </div>
                             <div className="grid grid-cols-2 gap-4">
                                 <div>
-                                    <label className="block text-sm text-[#1F2937] mb-1" style={{ fontWeight: 500 }}>Date</label>
-                                    <input type="date" className="w-full px-3 py-2 border border-[#E5E7EB] rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#10B981]" />
+                                    <label className="block text-xs font-bold text-[#6B7280] uppercase tracking-wider mb-1">Date *</label>
+                                    <input 
+                                        type="date" 
+                                        value={formData.date}
+                                        onChange={e => setFormData({ ...formData, date: e.target.value })}
+                                        required
+                                        className="w-full px-3 py-2 border border-[#E5E7EB] rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#10B981]" 
+                                    />
                                 </div>
                                 <div>
-                                    <label className="block text-sm text-[#1F2937] mb-1" style={{ fontWeight: 500 }}>Pay Rate (€/hr)</label>
-                                    <input type="number" placeholder="55" className="w-full px-3 py-2 border border-[#E5E7EB] rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#10B981]" />
+                                    <label className="block text-xs font-bold text-[#6B7280] uppercase tracking-wider mb-1">Pay Rate (€/hr) *</label>
+                                    <input 
+                                        type="number" 
+                                        placeholder="55" 
+                                        value={formData.rate}
+                                        onChange={e => setFormData({ ...formData, rate: e.target.value })}
+                                        required
+                                        className="w-full px-3 py-2 border border-[#E5E7EB] rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#10B981]" 
+                                    />
                                 </div>
                             </div>
                             <div className="grid grid-cols-2 gap-4">
                                 <div>
-                                    <label className="block text-sm text-[#1F2937] mb-1" style={{ fontWeight: 500 }}>Start Time</label>
-                                    <input type="time" className="w-full px-3 py-2 border border-[#E5E7EB] rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#10B981]" />
+                                    <label className="block text-xs font-bold text-[#6B7280] uppercase tracking-wider mb-1">Start Time</label>
+                                    <input 
+                                        type="time" 
+                                        value={formData.startTime}
+                                        onChange={e => setFormData({ ...formData, startTime: e.target.value })}
+                                        className="w-full px-3 py-2 border border-[#E5E7EB] rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#10B981]" 
+                                    />
                                 </div>
                                 <div>
-                                    <label className="block text-sm text-[#1F2937] mb-1" style={{ fontWeight: 500 }}>End Time</label>
-                                    <input type="time" className="w-full px-3 py-2 border border-[#E5E7EB] rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#10B981]" />
+                                    <label className="block text-xs font-bold text-[#6B7280] uppercase tracking-wider mb-1">End Time</label>
+                                    <input 
+                                        type="time" 
+                                        value={formData.endTime}
+                                        onChange={e => setFormData({ ...formData, endTime: e.target.value })}
+                                        className="w-full px-3 py-2 border border-[#E5E7EB] rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#10B981]" 
+                                    />
                                 </div>
                             </div>
                             <div>
-                                <label className="block text-sm text-[#1F2937] mb-1" style={{ fontWeight: 500 }}>Shift Type</label>
+                                <label className="block text-xs font-bold text-[#6B7280] uppercase tracking-wider mb-2">Shift Type</label>
                                 <div className="flex gap-3">
-                                    {['One-time', 'Recurring', 'Urgent'].map(type => (
-                                        <label key={type} className="flex items-center gap-2 px-3 py-2 border border-[#E5E7EB] rounded-lg cursor-pointer hover:bg-[#F9FAFB]">
-                                            <input type="radio" name="shiftType" className="accent-[#10B981]" />
-                                            <span className="text-sm text-[#6B7280]">{type}</span>
+                                    {(['open', 'recurring', 'urgent'] as const).map(type => (
+                                        <label key={type} className={`flex-1 flex items-center justify-center gap-2 px-3 py-2 border rounded-lg cursor-pointer transition-colors ${formData.shiftType === type ? 'border-[#10B981] bg-[#ECFDF5] text-[#10B981]' : 'border-[#E5E7EB] hover:bg-[#F9FAFB] text-zinc-650'}`}>
+                                            <input 
+                                                type="radio" 
+                                                name="shiftType" 
+                                                checked={formData.shiftType === type}
+                                                onChange={() => setFormData({ ...formData, shiftType: type })}
+                                                className="accent-[#10B981] hidden" 
+                                            />
+                                            <span className="text-sm font-semibold capitalize">{type}</span>
                                         </label>
                                     ))}
                                 </div>
                             </div>
                         </div>
-                        <div className="p-5 border-t border-[#E5E7EB] flex justify-end gap-2">
-                            <button onClick={() => setShowCreateShift(false)} className="px-4 py-2 border border-[#E5E7EB] text-[#1F2937] rounded-lg text-sm hover:bg-[#F9FAFB]">Cancel</button>
-                            <button className="px-4 py-2 bg-[#10B981] text-white rounded-lg text-sm hover:bg-[#059669]">Create Shift</button>
+                        <div className="p-5 border-t border-[#E5E7EB] flex justify-end gap-2 bg-zinc-50">
+                            <button type="button" onClick={() => setShowCreateShift(false)} className="px-4 py-2 border border-[#E5E7EB] text-[#1F2937] rounded-lg text-sm hover:bg-[#F9FAFB] font-semibold transition-colors">Cancel</button>
+                            <button type="submit" className="px-4 py-2 bg-[#10B981] text-white rounded-lg text-sm hover:bg-[#059669] font-bold shadow-md transition-all">Create Shift</button>
                         </div>
-                    </div>
+                    </form>
                 </div>
             )}
 
             {/* Assign Shift Modal */}
             {showAssignModal && selectedShift && (
-                <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-                    <div className="bg-white rounded-xl w-[550px] max-h-[80vh] overflow-y-auto">
-                        <div className="p-5 border-b border-[#E5E7EB] flex items-center justify-between">
-                            <h3 className="text-[#1F2937]">Assign Shift: {selectedShift.id}</h3>
-                            <button onClick={() => setShowAssignModal(false)} className="w-8 h-8 flex items-center justify-center text-[#6B7280] hover:text-[#EF4444] hover:bg-[#FEE2E2] rounded-lg">
+                <div className="fixed inset-0 bg-black/55 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-in fade-in duration-200">
+                    <div className="bg-white rounded-xl w-full max-w-lg shadow-2xl border border-zinc-200 overflow-hidden animate-in zoom-in-95 duration-200">
+                        <div className="p-5 border-b border-[#E5E7EB] flex items-center justify-between sticky top-0 bg-white">
+                            <h3 className="text-[#1F2937] font-semibold">Assign Shift: {selectedShift.id}</h3>
+                            <button type="button" onClick={() => setShowAssignModal(false)} className="w-8 h-8 flex items-center justify-center text-[#6B7280] hover:text-[#EF4444] hover:bg-[#FEE2E2] rounded-lg">
                                 <X className="w-5 h-5" />
                             </button>
                         </div>
                         <div className="p-5 space-y-4">
-                            <div>
-                                <label className="block text-sm text-[#1F2937] mb-1" style={{ fontWeight: 500 }}>Facility</label>
-                                <p className="text-sm text-[#1F2937]">{selectedShift.facility}</p>
-                            </div>
-                            <div>
-                                <label className="block text-sm text-[#1F2937] mb-1" style={{ fontWeight: 500 }}>Specialty Requirement</label>
-                                <p className="text-sm text-[#1F2937]">{selectedShift.specialty}</p>
-                            </div>
                             <div className="grid grid-cols-2 gap-4">
                                 <div>
-                                    <label className="block text-sm text-[#1F2937] mb-1" style={{ fontWeight: 500 }}>Date</label>
-                                    <p className="text-sm text-[#1F2937]">{selectedShift.date}</p>
+                                    <label className="block text-xs font-bold text-[#6B7280] mb-0.5">Facility</label>
+                                    <p className="text-sm text-[#1F2937] font-semibold">{selectedShift.facility}</p>
                                 </div>
                                 <div>
-                                    <label className="block text-sm text-[#1F2937] mb-1" style={{ fontWeight: 500 }}>Pay Rate (€/hr)</label>
-                                    <p className="text-sm text-[#1F2937]">€{selectedShift.rate}</p>
+                                    <label className="block text-xs font-bold text-[#6B7280] mb-0.5">Specialty Requirement</label>
+                                    <p className="text-sm text-[#1F2937] font-semibold">{selectedShift.specialty}</p>
                                 </div>
                             </div>
                             <div className="grid grid-cols-2 gap-4">
                                 <div>
-                                    <label className="block text-sm text-[#1F2937] mb-1" style={{ fontWeight: 500 }}>Start Time</label>
-                                    <p className="text-sm text-[#1F2937]">{selectedShift.time.split(' - ')[0]}</p>
+                                    <label className="block text-xs font-bold text-[#6B7280] mb-0.5">Date</label>
+                                    <p className="text-sm text-[#1F2937] font-semibold">{selectedShift.date}</p>
                                 </div>
                                 <div>
-                                    <label className="block text-sm text-[#1F2937] mb-1" style={{ fontWeight: 500 }}>End Time</label>
-                                    <p className="text-sm text-[#1F2937]">{selectedShift.time.split(' - ')[1]}</p>
+                                    <label className="block text-xs font-bold text-[#6B7280] mb-0.5">Pay Rate</label>
+                                    <p className="text-sm text-[#1F2937] font-semibold">€{selectedShift.rate}/hr</p>
                                 </div>
                             </div>
                             <div>
-                                <label className="block text-sm text-[#1F2937] mb-1" style={{ fontWeight: 500 }}>Shift Type</label>
-                                <p className="text-sm text-[#1F2937]">{selectedShift.status}</p>
-                            </div>
-                            <div>
-                                <label className="block text-sm text-[#1F2937] mb-1" style={{ fontWeight: 500 }}>Locum</label>
-                                <select className="w-full px-3 py-2 border border-[#E5E7EB] rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#10B981]">
-                                    <option>Select locum...</option>
-                                    <option>Sarah Mitchell</option>
-                                    <option>James Harrison</option>
-                                    <option>Emily Chen</option>
+                                <label className="block text-xs font-bold text-[#6B7280] mb-1">Locum Professional Assignment *</label>
+                                <select 
+                                    value={assignLocumName}
+                                    onChange={e => setAssignLocumName(e.target.value)}
+                                    className="w-full px-3 py-2 border border-[#E5E7EB] rounded-lg text-sm bg-white focus:outline-none focus:ring-2 focus:ring-[#10B981]"
+                                >
+                                    <option value="">Select locum...</option>
+                                    <option value="Sarah Mitchell">Sarah Mitchell (General Surgery)</option>
+                                    <option value="James Harrison">James Harrison (Cardiology)</option>
+                                    <option value="Emily Chen">Emily Chen (Anesthesiology)</option>
+                                    <option value="Rachel Martinez">Rachel Martinez (Pediatrics)</option>
+                                    <option value="David Thompson">David Thompson (Orthopedics)</option>
                                 </select>
                             </div>
                         </div>
-                        <div className="p-5 border-t border-[#E5E7EB] flex justify-end gap-2">
-                            <button onClick={() => setShowAssignModal(false)} className="px-4 py-2 border border-[#E5E7EB] text-[#1F2937] rounded-lg text-sm hover:bg-[#F9FAFB]">Cancel</button>
-                            <button className="px-4 py-2 bg-[#10B981] text-white rounded-lg text-sm hover:bg-[#059669]">Assign Shift</button>
+                        <div className="p-5 border-t border-[#E5E7EB] flex justify-end gap-2 bg-zinc-50">
+                            <button type="button" onClick={() => setShowAssignModal(false)} className="px-4 py-2 border border-[#E5E7EB] text-[#1F2937] rounded-lg text-sm hover:bg-[#F9FAFB] font-semibold transition-colors">Cancel</button>
+                            <button type="button" onClick={handleAssignLocumSubmit} className="px-4 py-2 bg-[#10B981] text-white rounded-lg text-sm hover:bg-[#059669] font-bold shadow-md transition-all">Assign Shift</button>
                         </div>
                     </div>
                 </div>
@@ -761,56 +877,39 @@ export function ShiftBooking({ subPage = 'board', onViewShiftDetail }: { subPage
 
             {/* Cancel Shift Modal */}
             {showCancelModal && selectedShift && (
-                <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-                    <div className="bg-white rounded-xl w-[550px] max-h-[80vh] overflow-y-auto">
-                        <div className="p-5 border-b border-[#E5E7EB] flex items-center justify-between">
-                            <h3 className="text-[#1F2937]">Cancel Shift: {selectedShift.id}</h3>
-                            <button onClick={() => setShowCancelModal(false)} className="w-8 h-8 flex items-center justify-center text-[#6B7280] hover:text-[#EF4444] hover:bg-[#FEE2E2] rounded-lg">
+                <div className="fixed inset-0 bg-black/55 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-in fade-in duration-200">
+                    <div className="bg-white rounded-xl w-full max-w-lg shadow-2xl border border-zinc-200 overflow-hidden animate-in zoom-in-95 duration-200">
+                        <div className="p-5 border-b border-[#E5E7EB] flex items-center justify-between sticky top-0 bg-white">
+                            <h3 className="text-[#1F2937] font-semibold">Cancel Shift: {selectedShift.id}</h3>
+                            <button type="button" onClick={() => setShowCancelModal(false)} className="w-8 h-8 flex items-center justify-center text-[#6B7280] hover:text-[#EF4444] hover:bg-[#FEE2E2] rounded-lg">
                                 <X className="w-5 h-5" />
                             </button>
                         </div>
                         <div className="p-5 space-y-4">
-                            <div>
-                                <label className="block text-sm text-[#1F2937] mb-1" style={{ fontWeight: 500 }}>Facility</label>
-                                <p className="text-sm text-[#1F2937]">{selectedShift.facility}</p>
-                            </div>
-                            <div>
-                                <label className="block text-sm text-[#1F2937] mb-1" style={{ fontWeight: 500 }}>Specialty Requirement</label>
-                                <p className="text-sm text-[#1F2937]">{selectedShift.specialty}</p>
-                            </div>
                             <div className="grid grid-cols-2 gap-4">
                                 <div>
-                                    <label className="block text-sm text-[#1F2937] mb-1" style={{ fontWeight: 500 }}>Date</label>
-                                    <p className="text-sm text-[#1F2937]">{selectedShift.date}</p>
+                                    <label className="block text-xs font-bold text-[#6B7280] mb-0.5">Facility</label>
+                                    <p className="text-sm text-[#1F2937] font-semibold">{selectedShift.facility}</p>
                                 </div>
                                 <div>
-                                    <label className="block text-sm text-[#1F2937] mb-1" style={{ fontWeight: 500 }}>Pay Rate (€/hr)</label>
-                                    <p className="text-sm text-[#1F2937]">€{selectedShift.rate}</p>
-                                </div>
-                            </div>
-                            <div className="grid grid-cols-2 gap-4">
-                                <div>
-                                    <label className="block text-sm text-[#1F2937] mb-1" style={{ fontWeight: 500 }}>Start Time</label>
-                                    <p className="text-sm text-[#1F2937]">{selectedShift.time.split(' - ')[0]}</p>
-                                </div>
-                                <div>
-                                    <label className="block text-sm text-[#1F2937] mb-1" style={{ fontWeight: 500 }}>End Time</label>
-                                    <p className="text-sm text-[#1F2937]">{selectedShift.time.split(' - ')[1]}</p>
+                                    <label className="block text-xs font-bold text-[#6B7280] mb-0.5">Specialty Requirement</label>
+                                    <p className="text-sm text-[#1F2937] font-semibold">{selectedShift.specialty}</p>
                                 </div>
                             </div>
                             <div>
-                                <label className="block text-sm text-[#1F2937] mb-1" style={{ fontWeight: 500 }}>Shift Type</label>
-                                <p className="text-sm text-[#1F2937]">{selectedShift.status}</p>
-                            </div>
-                            <div>
-                                <label className="block text-sm text-[#1F2937] mb-1" style={{ fontWeight: 500 }}>Reason for Cancellation</label>
-                                <textarea value={cancelReason} onChange={e => setCancelReason(e.target.value)}
-                                    className="w-full px-3 py-2 border border-[#E5E7EB] rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#10B981]" />
+                                <label className="block text-xs font-bold text-[#6B7280] mb-1">Reason for Cancellation</label>
+                                <textarea 
+                                    value={cancelReason} 
+                                    onChange={e => setCancelReason(e.target.value)}
+                                    rows={3}
+                                    className="w-full px-3 py-2 border border-[#E5E7EB] rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#10B981]" 
+                                    placeholder="Enter administrative reason for cancelling this shift..."
+                                />
                             </div>
                         </div>
-                        <div className="p-5 border-t border-[#E5E7EB] flex justify-end gap-2">
-                            <button onClick={() => setShowCancelModal(false)} className="px-4 py-2 border border-[#E5E7EB] text-[#1F2937] rounded-lg text-sm hover:bg-[#F9FAFB]">Cancel</button>
-                            <button className="px-4 py-2 bg-[#DC2626] text-white rounded-lg text-sm hover:bg-[#B91C1C]">Cancel Shift</button>
+                        <div className="p-5 border-t border-[#E5E7EB] flex justify-end gap-2 bg-zinc-50">
+                            <button type="button" onClick={() => setShowCancelModal(false)} className="px-4 py-2 border border-[#E5E7EB] text-[#1F2937] rounded-lg text-sm hover:bg-[#F9FAFB] font-semibold transition-colors">Cancel</button>
+                            <button type="button" onClick={handleCancelShiftSubmit} className="px-4 py-2 bg-[#DC2626] text-white rounded-lg text-sm hover:bg-[#B91C1C] font-bold shadow-md transition-all">Cancel Shift</button>
                         </div>
                     </div>
                 </div>

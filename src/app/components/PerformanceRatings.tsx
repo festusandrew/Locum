@@ -14,6 +14,7 @@ interface LocumPerformance {
     id: string;
     name: string;
     specialty: string;
+    department: string;
     avgRating: number;
     totalShifts: number;
     completionRate: number;
@@ -36,12 +37,12 @@ interface ClientPerformance {
 }
 
 const locumPerformances: LocumPerformance[] = [
-    { id: 'LP-001', name: 'Sarah Mitchell', specialty: 'General Surgery', avgRating: 4.9, totalShifts: 145, completionRate: 99.3, onTimeRate: 97.2, clientFeedback: 4.8, reliability: 98, trend: 'up' },
-    { id: 'LP-002', name: 'James Harrison', specialty: 'Cardiology', avgRating: 4.8, totalShifts: 128, completionRate: 97.7, onTimeRate: 95.3, clientFeedback: 4.7, reliability: 96, trend: 'stable' },
-    { id: 'LP-003', name: 'Emily Chen', specialty: 'Anesthesiology', avgRating: 4.9, totalShifts: 162, completionRate: 99.4, onTimeRate: 98.1, clientFeedback: 4.9, reliability: 99, trend: 'up' },
-    { id: 'LP-004', name: 'Michael Brooks', specialty: 'Emergency Medicine', avgRating: 4.5, totalShifts: 98, completionRate: 93.9, onTimeRate: 88.8, clientFeedback: 4.3, reliability: 91, trend: 'down' },
-    { id: 'LP-005', name: 'Rachel Martinez', specialty: 'Pediatrics', avgRating: 4.7, totalShifts: 134, completionRate: 96.3, onTimeRate: 94.0, clientFeedback: 4.6, reliability: 95, trend: 'up' },
-    { id: 'LP-006', name: 'David Thompson', specialty: 'Orthopedics', avgRating: 4.4, totalShifts: 86, completionRate: 94.2, onTimeRate: 90.7, clientFeedback: 4.2, reliability: 92, trend: 'down' },
+    { id: 'LP-001', name: 'Sarah Mitchell', specialty: 'General Surgery', department: 'Surgery', avgRating: 4.9, totalShifts: 145, completionRate: 99.3, onTimeRate: 97.2, clientFeedback: 4.8, reliability: 98, trend: 'up' },
+    { id: 'LP-002', name: 'James Harrison', specialty: 'Cardiology', department: 'Cardiology', avgRating: 4.8, totalShifts: 128, completionRate: 97.7, onTimeRate: 95.3, clientFeedback: 4.7, reliability: 96, trend: 'stable' },
+    { id: 'LP-003', name: 'Emily Chen', specialty: 'Anesthesiology', department: 'Surgery', avgRating: 4.9, totalShifts: 162, completionRate: 99.4, onTimeRate: 98.1, clientFeedback: 4.9, reliability: 99, trend: 'up' },
+    { id: 'LP-004', name: 'Michael Brooks', specialty: 'Emergency Medicine', department: 'Emergency (A&E)', avgRating: 4.5, totalShifts: 98, completionRate: 93.9, onTimeRate: 88.8, clientFeedback: 4.3, reliability: 91, trend: 'down' },
+    { id: 'LP-005', name: 'Rachel Martinez', specialty: 'Pediatrics', department: 'Pediatrics', avgRating: 4.7, totalShifts: 134, completionRate: 96.3, onTimeRate: 94.0, clientFeedback: 4.6, reliability: 95, trend: 'up' },
+    { id: 'LP-006', name: 'David Thompson', specialty: 'Orthopedics', department: 'Surgery', avgRating: 4.4, totalShifts: 86, completionRate: 94.2, onTimeRate: 90.7, clientFeedback: 4.2, reliability: 92, trend: 'down' },
 ];
 
 const clientPerformances: ClientPerformance[] = [
@@ -155,7 +156,7 @@ export function PerformanceRatings() {
                         <table className="w-full">
                             <thead>
                                 <tr className="border-b border-[#E5E7EB]">
-                                    {['Locum', 'Specialty', 'Rating', 'Shifts', 'Completion', 'On-Time', 'Reliability', 'Trend'].map(h => (
+                                    {['Locum', 'Specialty', 'Department', 'Rating', 'Shifts', 'Completion', 'On-Time', 'Reliability', 'Trend'].map(h => (
                                         <th key={h} className="px-4 py-2.5 text-left text-xs text-[#9CA3AF]" style={{ fontWeight: 500 }}>{h}</th>
                                     ))}
                                 </tr>
@@ -172,6 +173,7 @@ export function PerformanceRatings() {
                                             </div>
                                         </td>
                                         <td className="px-4 py-3 text-xs text-[#6B7280]">{lp.specialty}</td>
+                                        <td className="px-4 py-3 text-xs text-[#6B7280]">{lp.department}</td>
                                         <td className="px-4 py-3">{renderStars(lp.avgRating)}</td>
                                         <td className="px-4 py-3 text-sm text-[#1F2937]" style={{ fontWeight: 500 }}>{lp.totalShifts}</td>
                                         <td className="px-4 py-3">

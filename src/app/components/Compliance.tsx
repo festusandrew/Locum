@@ -28,106 +28,15 @@ import {
     StickyNote,
     FileText
 } from 'lucide-react';
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { toast } from 'sonner';
 import { LocumProfile } from './LocumProfile';
-
-interface ComplianceRecord {
-    id: string;
-    locumName: string;
-    avatar: string;
-    specialty: string;
-    overallCompliance: number;
-    documents: {
-        medicalLicense: { status: 'valid' | 'expiring' | 'expired', expiryDate: string, uploadedDate: string };
-        garda: { status: 'valid' | 'expiring' | 'expired', expiryDate: string, uploadedDate: string };
-        indemnityInsurance: { status: 'valid' | 'expiring' | 'expired', expiryDate: string, uploadedDate: string };
-        cprTraining: { status: 'valid' | 'expiring' | 'expired', expiryDate: string, uploadedDate: string };
-    };
-}
-
-const complianceData: ComplianceRecord[] = [
-    {
-        id: '#GS234FS',
-        locumName: 'Sarah Mitchell',
-        avatar: '👩‍⚕️',
-        specialty: 'General Surgery',
-        overallCompliance: 100,
-        documents: {
-            medicalLicense: { status: 'valid', expiryDate: '2026-03-15', uploadedDate: '2023-03-15' },
-            garda: { status: 'valid', expiryDate: '2025-08-22', uploadedDate: '2023-08-22' },
-            indemnityInsurance: { status: 'valid', expiryDate: '2025-12-31', uploadedDate: '2023-12-31' },
-            cprTraining: { status: 'valid', expiryDate: '2025-06-10', uploadedDate: '2023-06-10' }
-        }
-    },
-    {
-        id: '#EC0125D',
-        locumName: 'James Harrison',
-        avatar: '👨‍⚕️',
-        specialty: 'Cardiology',
-        overallCompliance: 75,
-        documents: {
-            medicalLicense: { status: 'valid', expiryDate: '2025-11-30', uploadedDate: '2023-11-30' },
-            garda: { status: 'expiring', expiryDate: '2025-01-15', uploadedDate: '2023-01-15' },
-            indemnityInsurance: { status: 'valid', expiryDate: '2026-02-28', uploadedDate: '2023-02-28' },
-            cprTraining: { status: 'valid', expiryDate: '2025-09-05', uploadedDate: '2023-09-05' }
-        }
-    },
-    {
-        id: '#MK4521A',
-        locumName: 'Emily Chen',
-        avatar: '👩‍⚕️',
-        specialty: 'Anesthesiology',
-        overallCompliance: 50,
-        documents: {
-            medicalLicense: { status: 'valid', expiryDate: '2027-01-20', uploadedDate: '2023-01-20' },
-            garda: { status: 'expired', expiryDate: '2024-11-30', uploadedDate: '2023-11-30' },
-            indemnityInsurance: { status: 'expiring', expiryDate: '2025-01-05', uploadedDate: '2023-01-05' },
-            cprTraining: { status: 'valid', expiryDate: '2025-07-18', uploadedDate: '2023-07-18' }
-        }
-    },
-    {
-        id: '#LW9872P',
-        locumName: 'Michael Brooks',
-        avatar: '👨‍⚕️',
-        specialty: 'Emergency Medicine',
-        overallCompliance: 100,
-        documents: {
-            medicalLicense: { status: 'valid', expiryDate: '2026-05-12', uploadedDate: '2023-05-12' },
-            garda: { status: 'valid', expiryDate: '2025-10-08', uploadedDate: '2023-10-08' },
-            indemnityInsurance: { status: 'valid', expiryDate: '2026-03-22', uploadedDate: '2023-03-22' },
-            cprTraining: { status: 'valid', expiryDate: '2025-04-30', uploadedDate: '2023-04-30' }
-        }
-    },
-    {
-        id: '#PM6543K',
-        locumName: 'Rachel Martinez',
-        avatar: '👩‍⚕️',
-        specialty: 'Pediatrics',
-        overallCompliance: 75,
-        documents: {
-            medicalLicense: { status: 'valid', expiryDate: '2025-09-14', uploadedDate: '2023-09-14' },
-            garda: { status: 'valid', expiryDate: '2025-07-25', uploadedDate: '2023-07-25' },
-            indemnityInsurance: { status: 'valid', expiryDate: '2026-01-10', uploadedDate: '2023-01-10' },
-            cprTraining: { status: 'expiring', expiryDate: '2025-01-20', uploadedDate: '2023-01-20' }
-        }
-    },
-    {
-        id: '#RT8765N',
-        locumName: 'David Thompson',
-        avatar: '👨‍⚕️',
-        specialty: 'Orthopedics',
-        overallCompliance: 25,
-        documents: {
-            medicalLicense: { status: 'expiring', expiryDate: '2025-01-08', uploadedDate: '2023-01-08' },
-            garda: { status: 'expired', expiryDate: '2024-10-15', uploadedDate: '2023-10-15' },
-            indemnityInsurance: { status: 'expired', expiryDate: '2024-12-01', uploadedDate: '2023-12-01' },
-            cprTraining: { status: 'valid', expiryDate: '2025-08-22', uploadedDate: '2023-08-22' }
-        }
-    },
-];
+import { ComplianceRecord } from '../types';
+import { complianceService } from '../services/complianceService';
 
 export function Compliance({ onViewComplianceDetail }: { onViewComplianceDetail?: (id: string) => void }) {
+    const [complianceData, setComplianceData] = useState<ComplianceRecord[]>([]);
+    const [loading, setLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState('');
     const [complianceFilter, setComplianceFilter] = useState('all');
     const [statusFilter, setStatusFilter] = useState('all');
@@ -135,6 +44,20 @@ export function Compliance({ onViewComplianceDetail }: { onViewComplianceDetail?
     const [selectedLocum, setSelectedLocum] = useState<ComplianceRecord | null>(null);
     const [activeTab, setActiveTab] = useState<'information' | 'schedule' | 'compliance' | 'shifts' | 'payments'>('information');
     const [showUploadDialog, setShowUploadDialog] = useState(false);
+
+    useEffect(() => {
+        const fetchCompliance = async () => {
+            try {
+                const data = await complianceService.getAllRecords();
+                setComplianceData(data);
+            } catch (err) {
+                console.error("Failed to load compliance data:", err);
+            } finally {
+                setLoading(false);
+            }
+        };
+        fetchCompliance();
+    }, []);
 
     const fileInputRef = useRef<HTMLInputElement>(null);
     const [selectedFile, setSelectedFile] = useState<File | null>(null);
@@ -154,17 +77,24 @@ export function Compliance({ onViewComplianceDetail }: { onViewComplianceDetail?
         }
     };
 
-    const handleUploadSubmit = () => {
+    const handleUploadSubmit = async () => {
         if (!uploadLocumId || !uploadDocType || !uploadExpiryDate || !selectedFile) {
             toast.error("Please fill in all fields and select a file.");
             return;
         }
-        toast.success(`Successfully uploaded ${selectedFile.name} for compliance validation!`);
-        setShowUploadDialog(false);
-        setSelectedFile(null);
-        setUploadLocumId('');
-        setUploadDocType('');
-        setUploadExpiryDate('');
+        try {
+            const updated = await complianceService.uploadDocument(uploadLocumId, uploadDocType, uploadExpiryDate);
+            setComplianceData(prev => prev.map(r => r.id === uploadLocumId ? updated : r));
+            toast.success(`Successfully uploaded ${selectedFile.name} for compliance validation!`);
+            setShowUploadDialog(false);
+            setSelectedFile(null);
+            setUploadLocumId('');
+            setUploadDocType('');
+            setUploadExpiryDate('');
+        } catch (err) {
+            console.error("Upload compliance document error:", err);
+            toast.error("Failed to upload document");
+        }
     };
 
     // Document management dialogs
@@ -182,6 +112,106 @@ export function Compliance({ onViewComplianceDetail }: { onViewComplianceDetail?
     const [activeDropdown, setActiveDropdown] = useState<string | null>(null);
     const [documentNotes, setDocumentNotes] = useState('');
     const [editExpiryDate, setEditExpiryDate] = useState('');
+
+    const handleEditSave = async () => {
+        if (!selectedDocument || !editExpiryDate) return;
+        try {
+            const updated = await complianceService.updateExpiryDate(
+                selectedDocument.locum.id,
+                selectedDocument.docType,
+                editExpiryDate
+            );
+            setComplianceData(prev => prev.map(r => r.id === selectedDocument.locum.id ? updated : r));
+            setShowEditDialog(false);
+            toast.success("Document expiry date updated successfully!");
+        } catch (err) {
+            console.error("Edit expiry date error:", err);
+            toast.error("Failed to update document expiry date");
+        }
+    };
+
+    const handleUpdateSubmit = async () => {
+        if (!selectedDocument || !editExpiryDate) {
+            toast.error("Please select an expiry date.");
+            return;
+        }
+        try {
+            const updated = await complianceService.uploadDocument(
+                selectedDocument.locum.id,
+                selectedDocument.docType,
+                editExpiryDate
+            );
+            setComplianceData(prev => prev.map(r => r.id === selectedDocument.locum.id ? updated : r));
+            setShowUpdateDialog(false);
+            toast.success("Document updated successfully!");
+        } catch (err) {
+            console.error("Update document error:", err);
+            toast.error("Failed to update document");
+        }
+    };
+
+    const handleArchiveSubmit = async () => {
+        if (!selectedDocument) return;
+        try {
+            const records = await complianceService.getAllRecords();
+            const mapped = records.map(r => {
+                if (r.id === selectedDocument.locum.id) {
+                    const docs = { ...r.documents };
+                    (docs as any)[selectedDocument.docType] = {
+                        ...(docs as any)[selectedDocument.docType],
+                        status: 'expired'
+                    };
+                    const overallCompliance = complianceService.calculateOverallCompliance(docs);
+                    return { ...r, documents: docs, overallCompliance };
+                }
+                return r;
+            });
+            await complianceService.saveAll(mapped);
+            setComplianceData(mapped);
+            setShowArchiveDialog(false);
+            toast.success("Document archived successfully!");
+        } catch (err) {
+            console.error("Archive document error:", err);
+            toast.error("Failed to archive document");
+        }
+    };
+
+    const handleDeleteSubmit = async () => {
+        if (!selectedDocument) return;
+        try {
+            const records = await complianceService.getAllRecords();
+            const mapped = records.map(r => {
+                if (r.id === selectedDocument.locum.id) {
+                    const docs = { ...r.documents };
+                    (docs as any)[selectedDocument.docType] = {
+                        status: 'expired',
+                        expiryDate: '',
+                        uploadedDate: ''
+                    };
+                    const overallCompliance = complianceService.calculateOverallCompliance(docs);
+                    return { ...r, documents: docs, overallCompliance };
+                }
+                return r;
+            });
+            await complianceService.saveAll(mapped);
+            setComplianceData(mapped);
+            setShowDeleteDialog(false);
+            toast.success("Document deleted successfully!");
+        } catch (err) {
+            console.error("Delete document error:", err);
+            toast.error("Failed to delete document");
+        }
+    };
+
+    const handleAddDocNote = () => {
+        if (!documentNotes.trim()) {
+            toast.error("Please enter a note.");
+            return;
+        }
+        toast.success("Note added successfully!");
+        setDocumentNotes('');
+        setShowNotesDialog(false);
+    };
 
     // Calculate stats
     const totalLocums = complianceData.length;
@@ -368,6 +398,15 @@ export function Compliance({ onViewComplianceDetail }: { onViewComplianceDetail?
             </div>
         );
     };
+
+    if (loading) {
+        return (
+            <div className="p-6 flex flex-col items-center justify-center min-h-[400px] space-y-4">
+                <div className="w-8 h-8 border-4 border-[#10B981] border-t-transparent rounded-full animate-spin font-medium"></div>
+                <p className="text-sm text-[#6B7280]">Loading compliance details...</p>
+            </div>
+        );
+    }
 
     return (
         <div className="p-6">
@@ -750,7 +789,7 @@ export function Compliance({ onViewComplianceDetail }: { onViewComplianceDetail?
                             >
                                 Cancel
                             </button>
-                            <button className="px-4 py-2 bg-[#10B981] text-white rounded-lg hover:bg-[#059669]">
+                            <button onClick={handleEditSave} className="px-4 py-2 bg-[#10B981] text-white rounded-lg hover:bg-[#059669]">
                                 Save Changes
                             </button>
                         </div>
@@ -797,6 +836,8 @@ export function Compliance({ onViewComplianceDetail }: { onViewComplianceDetail?
                                 <label className="block text-sm font-medium text-[#1F2937] mb-2">New Expiry Date</label>
                                 <input
                                     type="date"
+                                    value={editExpiryDate}
+                                    onChange={(e) => setEditExpiryDate(e.target.value)}
                                     className="w-full px-3 py-2 border border-[#E5E7EB] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#10B981]"
                                 />
                             </div>
@@ -818,7 +859,7 @@ export function Compliance({ onViewComplianceDetail }: { onViewComplianceDetail?
                             >
                                 Cancel
                             </button>
-                            <button className="px-4 py-2 bg-[#10B981] text-white rounded-lg hover:bg-[#059669]">
+                            <button onClick={handleUpdateSubmit} className="px-4 py-2 bg-[#10B981] text-white rounded-lg hover:bg-[#059669]">
                                 Update Document
                             </button>
                         </div>
@@ -938,7 +979,7 @@ export function Compliance({ onViewComplianceDetail }: { onViewComplianceDetail?
                             >
                                 Cancel
                             </button>
-                            <button className="px-4 py-2 bg-[#DC2626] text-white rounded-lg hover:bg-[#B91C1C]">
+                            <button onClick={handleArchiveSubmit} className="px-4 py-2 bg-[#DC2626] text-white rounded-lg hover:bg-[#B91C1C]">
                                 Archive Document
                             </button>
                         </div>
@@ -975,7 +1016,7 @@ export function Compliance({ onViewComplianceDetail }: { onViewComplianceDetail?
                                 placeholder="Enter your note here..."
                                 className="w-full px-3 py-2 border border-[#E5E7EB] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#10B981]"
                             ></textarea>
-                            <button className="mt-2 px-4 py-2 bg-[#10B981] text-white rounded-lg hover:bg-[#059669] text-sm">
+                            <button onClick={handleAddDocNote} className="mt-2 px-4 py-2 bg-[#10B981] text-white rounded-lg hover:bg-[#059669] text-sm">
                                 Add Note
                             </button>
                         </div>
@@ -1066,7 +1107,7 @@ export function Compliance({ onViewComplianceDetail }: { onViewComplianceDetail?
                             >
                                 Cancel
                             </button>
-                            <button className="px-4 py-2 bg-[#DC2626] text-white rounded-lg hover:bg-[#B91C1C]">
+                            <button onClick={handleDeleteSubmit} className="px-4 py-2 bg-[#DC2626] text-white rounded-lg hover:bg-[#B91C1C]">
                                 Delete Document
                             </button>
                         </div>

@@ -38,11 +38,11 @@ const specialtyDemand = [
 ];
 
 const upcomingBookings = [
-    { id: 'BK-001', locum: 'Sarah Mitchell', facility: "St. James's Hospital", specialty: 'General Surgery', date: '10 Feb', time: '08:00 - 16:00', status: 'confirmed' },
-    { id: 'BK-002', locum: 'James Harrison', facility: 'Cork University Hospital', specialty: 'Cardiology', date: '10 Feb', time: '09:00 - 21:00', status: 'confirmed' },
-    { id: 'BK-003', locum: 'Pending Assignment', facility: 'Beaumont Hospital', specialty: 'Emergency Medicine', date: '10 Feb', time: '20:00 - 08:00', status: 'urgent' },
-    { id: 'BK-004', locum: 'Emily Chen', facility: 'University Hospital Galway', specialty: 'Anesthesiology', date: '11 Feb', time: '07:00 - 19:00', status: 'pending' },
-    { id: 'BK-005', locum: 'Pending Assignment', facility: 'Mater Hospital', specialty: 'Pediatrics', date: '11 Feb', time: '08:00 - 20:00', status: 'open' },
+    { id: 'BK-001', locum: 'Sarah Mitchell', facility: "St. James's Hospital", specialty: 'General Surgery', department: 'Surgery', date: '10 Feb', time: '08:00 - 16:00', status: 'confirmed' },
+    { id: 'BK-002', locum: 'James Harrison', facility: 'Cork University Hospital', specialty: 'Cardiology', department: 'Cardiology', date: '10 Feb', time: '09:00 - 21:00', status: 'confirmed' },
+    { id: 'BK-003', locum: 'Pending Assignment', facility: 'Beaumont Hospital', specialty: 'Emergency Medicine', department: 'Emergency (A&E)', date: '10 Feb', time: '20:00 - 08:00', status: 'urgent' },
+    { id: 'BK-004', locum: 'Emily Chen', facility: 'University Hospital Galway', specialty: 'Anesthesiology', department: 'Surgery', date: '11 Feb', time: '07:00 - 19:00', status: 'pending' },
+    { id: 'BK-005', locum: 'Pending Assignment', facility: 'Mater Hospital', specialty: 'Pediatrics', department: 'Pediatrics', date: '11 Feb', time: '08:00 - 20:00', status: 'open' },
 ];
 
 const complianceAlerts = [
@@ -358,7 +358,7 @@ export function DashboardOverview({ onNavigate }: DashboardOverviewProps) {
                     <table className="w-full">
                         <thead>
                             <tr className="border-b border-[#E5E7EB]">
-                                {['Booking', 'Locum', 'Facility', 'Specialty', 'Schedule', 'Status'].map(h => (
+                                {['Booking', 'Locum', 'Facility', 'Specialty', 'Department', 'Schedule', 'Status'].map(h => (
                                     <th key={h} className="px-4 py-2.5 text-left text-xs text-[#9CA3AF]" style={{ fontWeight: 500 }}>{h}</th>
                                 ))}
                             </tr>
@@ -375,6 +375,7 @@ export function DashboardOverview({ onNavigate }: DashboardOverviewProps) {
                                         </div>
                                     </td>
                                     <td className="px-4 py-3 text-xs text-[#6B7280]">{b.specialty}</td>
+                                    <td className="px-4 py-3 text-xs text-[#6B7280]">{b.department}</td>
                                     <td className="px-4 py-3">
                                         <p className="text-xs text-[#1F2937]">{b.date}</p>
                                         <p className="text-[11px] text-[#9CA3AF]">{b.time}</p>

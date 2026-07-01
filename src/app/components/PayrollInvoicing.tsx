@@ -1,58 +1,17 @@
 import { useState, useEffect } from 'react';
 import { locumService } from '../services/locumService';
-import { Locum } from '../types';
+import { Locum, PayrollItem, Invoice } from '../types';
+import { payrollService } from '../services/payrollService';
+import { toast } from 'sonner';
 import {
     Wallet, FileText, CreditCard, Download, Search, Eye, X,
     CheckCircle, Clock, AlertCircle, TrendingUp, ArrowUp, ArrowDown,
-    Building2, Users, Receipt, Plus, Send, Trash2
+    Building2, Users, Receipt, Plus, Send, Trash2, ShieldCheck, Printer
 } from 'lucide-react';
 import {
     BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip,
     ResponsiveContainer, LineChart, Line
 } from 'recharts';
-
-interface PayrollItem {
-    id: string;
-    locum: string;
-    period: string;
-    shifts: number;
-    hours: number;
-    baseRate: number;
-    grossPay: number;
-    tax: number;
-    prsi: number;
-    netPay: number;
-    status: 'processed' | 'pending' | 'on_hold';
-    payDate: string;
-}
-
-interface Invoice {
-    id: string;
-    client: string;
-    amount: number;
-    issueDate: string;
-    dueDate: string;
-    status: 'paid' | 'sent' | 'overdue' | 'draft';
-    shifts: number;
-}
-
-const payrollItems: PayrollItem[] = [
-    { id: 'PAY-001', locum: 'Sarah Mitchell', period: 'Feb 1-15, 2026', shifts: 6, hours: 52, baseRate: 55, grossPay: 2860, tax: 572, prsi: 114.40, netPay: 2173.60, status: 'processed', payDate: '2026-02-20' },
-    { id: 'PAY-002', locum: 'James Harrison', period: 'Feb 1-15, 2026', shifts: 5, hours: 56, baseRate: 60, grossPay: 3360, tax: 672, prsi: 134.40, netPay: 2553.60, status: 'processed', payDate: '2026-02-20' },
-    { id: 'PAY-003', locum: 'Emily Chen', period: 'Feb 1-15, 2026', shifts: 4, hours: 40, baseRate: 58, grossPay: 2320, tax: 464, prsi: 92.80, netPay: 1763.20, status: 'pending', payDate: '2026-02-20' },
-    { id: 'PAY-004', locum: 'Michael Brooks', period: 'Feb 1-15, 2026', shifts: 3, hours: 36, baseRate: 52, grossPay: 1872, tax: 374.40, prsi: 74.88, netPay: 1422.72, status: 'on_hold', payDate: '2026-02-20' },
-    { id: 'PAY-005', locum: 'Rachel Martinez', period: 'Feb 1-15, 2026', shifts: 5, hours: 48, baseRate: 55, grossPay: 2640, tax: 528, prsi: 105.60, netPay: 2006.40, status: 'pending', payDate: '2026-02-20' },
-    { id: 'PAY-006', locum: 'David Thompson', period: 'Feb 1-15, 2026', shifts: 4, hours: 40, baseRate: 52, grossPay: 2080, tax: 416, prsi: 83.20, netPay: 1580.80, status: 'processed', payDate: '2026-02-20' },
-];
-
-const invoices: Invoice[] = [
-    { id: 'INV-2026-045', client: "St. James's Hospital", amount: 24500, issueDate: '2026-02-01', dueDate: '2026-02-28', status: 'sent', shifts: 18 },
-    { id: 'INV-2026-044', client: 'Cork University Hospital', amount: 18200, issueDate: '2026-02-01', dueDate: '2026-02-28', status: 'sent', shifts: 14 },
-    { id: 'INV-2026-043', client: 'Galway Clinic', amount: 9400, issueDate: '2026-01-15', dueDate: '2026-02-15', status: 'overdue', shifts: 8 },
-    { id: 'INV-2026-042', client: 'Mater Hospital', amount: 15800, issueDate: '2026-01-15', dueDate: '2026-02-15', status: 'paid', shifts: 12 },
-    { id: 'INV-2026-041', client: 'Beaumont Hospital', amount: 12600, issueDate: '2026-01-01', dueDate: '2026-01-31', status: 'paid', shifts: 10 },
-    { id: 'INV-2026-040', client: 'Beacon Hospital', amount: 5200, issueDate: '2026-01-01', dueDate: '2026-01-31', status: 'paid', shifts: 5 },
-];
 
 const profitData = [
     { month: 'Sep', revenue: 285, cost: 198, profit: 87 },
@@ -78,6 +37,9 @@ const invStatusConfig: Record<string, { label: string; color: string; bg: string
 
 export function PayrollInvoicing() {
     const [activeTab, setActiveTab] = useState<'payroll' | 'invoicing' | 'financial'>('payroll');
+    const [payrollItems, setPayrollItems] = useState<PayrollItem[]>([]);
+    const [invoices, setInvoices] = useState<Invoice[]>([]);
+    const [loading, setLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState('');
     const [showNewInvoiceModal, setShowNewInvoiceModal] = useState(false);
     const [showLogPayrollModal, setShowLogPayrollModal] = useState(false);
@@ -89,15 +51,23 @@ export function PayrollInvoicing() {
     const [selectedDepartment, setSelectedDepartment] = useState('');
 
     useEffect(() => {
-        const fetchLocums = async () => {
+        const fetchData = async () => {
             try {
-                const data = await locumService.getAllLocums();
-                setLocumsList(data);
+                const [locums, payroll, invs] = await Promise.all([
+                    locumService.getAllLocums(),
+                    payrollService.getPayrollItems(),
+                    payrollService.getInvoices()
+                ]);
+                setLocumsList(locums);
+                setPayrollItems(payroll);
+                setInvoices(invs);
             } catch (err) {
-                console.error('Failed to load locums', err);
+                console.error('Failed to load payroll and invoicing data', err);
+            } finally {
+                setLoading(false);
             }
         };
-        fetchLocums();
+        fetchData();
     }, []);
 
     const departments = [...new Set(locumsList.map(l => l.department).filter(Boolean))];
@@ -181,6 +151,27 @@ export function PayrollInvoicing() {
         }
         setInvoiceForm({ ...invoiceForm, lineItems: newLineItems });
     };
+
+    const handleUpdateInvoiceStatus = async (id: string, newStatus: Invoice['status']) => {
+        try {
+            const updated = await payrollService.updateInvoiceStatus(id, newStatus);
+            setInvoices(prev => prev.map(inv => inv.id === id ? updated : inv));
+            setSelectedInvoice(updated);
+            toast.success(`Invoice status updated to ${newStatus}!`);
+        } catch (err) {
+            console.error("Update invoice status error:", err);
+            toast.error("Failed to update invoice status");
+        }
+    };
+
+    if (loading) {
+        return (
+            <div className="p-6 flex flex-col items-center justify-center min-h-[400px] space-y-4">
+                <div className="w-8 h-8 border-4 border-[#10B981] border-t-transparent rounded-full animate-spin font-medium"></div>
+                <p className="text-sm text-[#6B7280]">Loading payroll and invoicing details...</p>
+            </div>
+        );
+    }
 
     return (
         <div className="p-6 space-y-6">
@@ -573,9 +564,35 @@ export function PayrollInvoicing() {
                                 Cancel
                             </button>
                             <button
-                                onClick={() => {
-                                    console.log('Payroll logged:', payrollForm);
-                                    setShowLogPayrollModal(false);
+                                onClick={async () => {
+                                    if (!payrollForm.locum) {
+                                        toast.error("Please select a locum professional.");
+                                        return;
+                                    }
+                                    try {
+                                        const newItem = { ...payrollForm };
+                                        const created = await payrollService.createPayrollItem(newItem);
+                                        setPayrollItems(prev => [created, ...prev]);
+                                        setShowLogPayrollModal(false);
+                                        // Reset form
+                                        setPayrollForm({
+                                            id: `PAY-${Math.floor(1000 + Math.random() * 9000)}`,
+                                            locum: '',
+                                            period: '',
+                                            shifts: 0,
+                                            hours: 0,
+                                            baseRate: 0,
+                                            grossPay: 0,
+                                            tax: 0,
+                                            prsi: 0,
+                                            netPay: 0,
+                                            payDate: new Date().toISOString().split('T')[0],
+                                            status: 'pending'
+                                        });
+                                        toast.success("Payroll logged successfully!");
+                                    } catch (err) {
+                                        toast.error("Failed to log payroll item");
+                                    }
                                 }}
                                 className="px-8 py-2.5 bg-[#10B981] text-white rounded-lg text-sm font-bold hover:bg-[#059669] shadow-lg shadow-emerald-100 transition-all active:scale-95 flex items-center gap-2"
                             >
@@ -690,7 +707,44 @@ export function PayrollInvoicing() {
                             </button>
                             <button
                                 type="button"
-                                onClick={() => setShowNewInvoiceModal(false)}
+                                onClick={async () => {
+                                    if (!invoiceForm.client) {
+                                        toast.error("Please select a client.");
+                                        return;
+                                    }
+                                    try {
+                                        const newInv: Invoice = {
+                                            id: invoiceForm.invoiceNumber || `INV-2026-${Math.floor(100 + Math.random() * 900)}`,
+                                            client: invoiceForm.client,
+                                            amount: totalAmount,
+                                            issueDate: invoiceForm.issueDate || new Date().toISOString().split('T')[0],
+                                            dueDate: invoiceForm.dueDate || new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+                                            status: 'draft',
+                                            shifts: invoiceForm.lineItems.reduce((acc, item) => acc + item.quantity, 0)
+                                        };
+                                        const created = await payrollService.createInvoice(newInv);
+                                        setInvoices(prev => [created, ...prev]);
+                                        setShowNewInvoiceModal(false);
+                                        setInvoiceForm({
+                                            client: '',
+                                            invoiceNumber: '',
+                                            issueDate: '',
+                                            dueDate: '',
+                                            paymentTerms: '30',
+                                            vatRegistered: true,
+                                            vatRate: '23',
+                                            currency: 'EUR',
+                                            reference: '',
+                                            notes: '',
+                                            lineItems: [
+                                                { description: '', quantity: 1, rate: 0, amount: 0 }
+                                            ],
+                                        });
+                                        toast.success("Invoice created successfully!");
+                                    } catch (err) {
+                                        toast.error("Failed to create invoice");
+                                    }
+                                }}
                                 className="px-4 py-2 bg-[#10B981] text-white rounded-lg text-sm hover:bg-[#059669] flex items-center gap-2"
                             >
                                 <CheckCircle className="w-4 h-4" />
@@ -702,35 +756,186 @@ export function PayrollInvoicing() {
             )}
 
             {/* Invoice Detail Modal */}
-            {showInvoiceDetail && selectedInvoice && (
-                <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-6">
-                    <div className="bg-white rounded-xl w-full max-w-4xl max-h-[90vh] overflow-hidden flex flex-col shadow-2xl animate-in fade-in zoom-in duration-200">
-                        <div className="p-5 border-b border-[#E5E7EB] flex items-center justify-between bg-white shrink-0">
-                            <div className="flex items-center gap-3">
-                                <div className="w-10 h-10 bg-[#ECFDF5] text-[#10B981] rounded-lg flex items-center justify-center">
-                                    <FileText className="w-6 h-6" />
+            {showInvoiceDetail && selectedInvoice && (() => {
+                const subtotalAmt = selectedInvoice.amount / 1.23;
+                const vatAmt = selectedInvoice.amount - subtotalAmt;
+                const avgRate = subtotalAmt / selectedInvoice.shifts;
+                const sc = invStatusConfig[selectedInvoice.status] || { label: selectedInvoice.status, color: '#6B7280', bg: '#F3F4F6', border: '#E5E7EB' };
+
+                return (
+                    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-6 print-invoice-overlay">
+                        <div className="bg-white rounded-xl w-full max-w-4xl max-h-[90vh] overflow-hidden flex flex-col shadow-2xl animate-in fade-in zoom-in duration-200">
+                            {/* Modal Header Toolbar */}
+                            <div className="p-5 border-b border-[#E5E7EB] flex items-center justify-between bg-white shrink-0 no-print-element">
+                                <div className="flex items-center gap-3">
+                                    <div className="w-10 h-10 bg-[#ECFDF5] text-[#10B981] rounded-lg flex items-center justify-center">
+                                        <FileText className="w-6 h-6" />
+                                    </div>
+                                    <div>
+                                        <div className="flex items-center gap-2">
+                                            <h3 className="text-[#1F2937] text-lg font-bold">Invoice {selectedInvoice.id}</h3>
+                                            <span className="px-2.5 py-0.5 rounded-full text-[11px] border font-bold uppercase tracking-wider" style={{ backgroundColor: sc.bg, color: sc.color, borderColor: sc.border }}>
+                                                {sc.label}
+                                            </span>
+                                        </div>
+                                        <p className="text-xs text-[#6B7280]">Review billing details and change payment status</p>
+                                    </div>
                                 </div>
-                                <h3 className="text-[#1F2937] text-lg" style={{ fontWeight: 700 }}>Invoice {selectedInvoice.id}</h3>
+                                <div className="flex items-center gap-2">
+                                    {selectedInvoice.status !== 'paid' && (
+                                        <button
+                                            onClick={() => handleUpdateInvoiceStatus(selectedInvoice.id, 'paid')}
+                                            className="flex items-center gap-1.5 px-3 py-2 text-xs bg-[#10B981] text-white rounded-lg hover:bg-[#059669] font-semibold transition-all cursor-pointer shadow-sm shadow-emerald-50 active:scale-95"
+                                        >
+                                            <CheckCircle className="w-3.5 h-3.5" /> Mark as Paid
+                                        </button>
+                                    )}
+                                    {selectedInvoice.status === 'draft' && (
+                                        <button
+                                            onClick={() => handleUpdateInvoiceStatus(selectedInvoice.id, 'sent')}
+                                            className="flex items-center gap-1.5 px-3 py-2 text-xs bg-[#3B82F6] text-white rounded-lg hover:bg-[#2563EB] font-semibold transition-all cursor-pointer shadow-sm shadow-blue-50 active:scale-95"
+                                        >
+                                            <Send className="w-3.5 h-3.5" /> Send Invoice
+                                        </button>
+                                    )}
+                                    <button
+                                        onClick={() => {
+                                            window.print();
+                                        }}
+                                        className="flex items-center gap-1.5 px-3 py-2 text-xs text-[#374151] border border-[#E5E7EB] rounded-lg hover:bg-[#F9FAFB] font-semibold transition-all cursor-pointer active:scale-95"
+                                    >
+                                        <Printer className="w-3.5 h-3.5" /> Print / Download
+                                    </button>
+                                    <button onClick={() => setShowInvoiceDetail(false)} className="p-2 hover:bg-[#F3F4F6] rounded-lg ml-2 cursor-pointer transition-colors">
+                                        <X className="w-5 h-5 text-[#6B7280]" />
+                                    </button>
+                                </div>
                             </div>
-                            <button onClick={() => setShowInvoiceDetail(false)} className="p-2 hover:bg-[#F3F4F6] rounded-lg">
-                                <X className="w-5 h-5 text-[#6B7280]" />
-                            </button>
-                        </div>
-                        <div className="flex-1 overflow-y-auto p-8 bg-[#F8FAFC]">
-                            <div className="max-w-3xl mx-auto bg-white p-10 rounded-xl shadow-sm border border-[#E5E7EB]">
-                                <h1 className="text-2xl font-black text-[#10B981]">MPLOYUS</h1>
-                                <p className="text-sm text-[#6B7280] mt-4">Invoice for {selectedInvoice.client}</p>
-                                <div className="mt-8 border-t pt-8">
-                                    <div className="flex justify-between">
-                                        <span className="font-bold">Total Due:</span>
-                                        <span className="text-xl font-black text-[#1F2937]">€{selectedInvoice.amount.toLocaleString()}</span>
+
+                            {/* Modal Body: Printed Style Invoice */}
+                            <div className="flex-1 overflow-y-auto p-8 bg-[#F8FAFC] print-invoice-scroll">
+                                <div className="max-w-3xl mx-auto bg-white p-10 rounded-2xl shadow-sm border border-[#E5E7EB] space-y-8 print-invoice-paper relative overflow-hidden">
+                                    {/* Brand Header */}
+                                    <div className="flex justify-between items-start pt-2">
+                                        <div>
+                                            <div className="flex items-center gap-2.5">
+                                                <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-[#10B981] to-[#0D9488] flex items-center justify-center text-white font-black text-xl shadow-md">M</div>
+                                                <span className="text-2xl font-black text-[#10B981] tracking-tight">MPLOYUS</span>
+                                            </div>
+                                            <div className="mt-5 space-y-0.5 text-xs text-[#6B7280]">
+                                                <p className="font-bold text-[#1F2937] text-sm">Mployus Healthcare Staffing Ltd</p>
+                                                <p>24 Upper Mount Street</p>
+                                                <p>Dublin 2, D02 KH28</p>
+                                                <p>Ireland</p>
+                                                <p className="pt-1"><span className="text-[#9CA3AF] font-medium">VAT ID:</span> IE9928347L</p>
+                                                <p><span className="text-[#9CA3AF] font-medium">Email:</span> billing@mployus.ie</p>
+                                            </div>
+                                        </div>
+                                        <div className="text-right">
+                                            <h1 className="text-3xl font-black text-[#1F2937] tracking-tight uppercase">INVOICE</h1>
+                                            <div className="mt-5 space-y-1.5 text-xs text-[#6B7280]">
+                                                <p>Invoice #: <span className="font-mono font-bold text-[#1F2937]">{selectedInvoice.id}</span></p>
+                                                <p>Date Issued: <span className="font-semibold text-[#374151]">{selectedInvoice.issueDate}</span></p>
+                                                <p>Due Date: <span className="font-semibold text-[#374151]">{selectedInvoice.dueDate}</span></p>
+                                                <p>Terms: <span className="font-semibold text-[#374151]">Net 30</span></p>
+                                                <div className="pt-2">
+                                                    <span className="px-2 py-0.5 rounded text-[10px] border font-bold uppercase tracking-wider" style={{ backgroundColor: sc.bg, color: sc.color, borderColor: sc.border }}>
+                                                        {sc.label}
+                                                    </span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    {/* Billed To / Remittance Details */}
+                                    <div className="grid grid-cols-2 gap-8 border-t border-[#F3F4F6] pt-6">
+                                        <div className="p-5 bg-emerald-50/40 border border-emerald-100/50 rounded-xl space-y-2">
+                                            <p className="text-[10px] text-[#059669] font-bold uppercase tracking-wider">Billed To</p>
+                                            <div className="space-y-0.5 text-xs text-[#4B5563]">
+                                                <p className="font-bold text-[#1F2937] text-sm">{selectedInvoice.client}</p>
+                                                <p className="font-medium text-[#4B5563]">Finance & Accounts Department</p>
+                                                <p className="text-[#6B7280]">Client Facility ID: <span className="font-mono text-[#1F2937] font-semibold">CL-{selectedInvoice.client.replace(/[^a-zA-Z0-9]/g, '').substring(0, 3).toUpperCase()}</span></p>
+                                                <p className="text-[#6B7280]">Ireland</p>
+                                            </div>
+                                        </div>
+                                        <div className="p-5 bg-[#F8FAFC] border border-[#E2E8F0] rounded-xl space-y-2">
+                                            <div className="flex items-center gap-1.5 text-[10px] text-[#10B981] font-bold uppercase tracking-wider">
+                                                <ShieldCheck className="w-3.5 h-3.5 text-[#10B981]" /> Remittance Instructions
+                                            </div>
+                                            <div className="space-y-1 text-xs text-[#4B5563]">
+                                                <p className="font-bold text-[#1F2937]">Allied Irish Banks (AIB)</p>
+                                                <div className="grid grid-cols-[80px_1fr] gap-y-1 text-xs pt-1">
+                                                    <span className="text-[#9CA3AF] font-medium">IBAN:</span>
+                                                    <span className="font-mono text-[#1F2937] font-bold break-all">IE98 AIBK 9311 5234 5678 90</span>
+                                                    
+                                                    <span className="text-[#9CA3AF] font-medium">BIC/SWIFT:</span>
+                                                    <span className="font-mono text-[#1F2937] font-semibold">AIBKIE2D</span>
+                                                    
+                                                    <span className="text-[#9CA3AF] font-medium">Reference:</span>
+                                                    <span className="font-mono text-[#10B981] font-bold">{selectedInvoice.id}</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    {/* Line Items Table */}
+                                    <div className="border border-[#E2E8F0] rounded-xl overflow-hidden mt-6 bg-white">
+                                        <table className="w-full text-left border-collapse">
+                                            <thead>
+                                                <tr className="bg-[#F8FAFC] border-b border-[#E2E8F0] text-xs text-[#4B5563] font-bold">
+                                                    <th className="px-5 py-3.5">Description</th>
+                                                    <th className="px-5 py-3.5 text-center w-28">Quantity</th>
+                                                    <th className="px-5 py-3.5 text-right w-36">Unit Price</th>
+                                                    <th className="px-5 py-3.5 text-right w-36">Amount</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody className="text-xs text-[#374151]">
+                                                <tr className="border-b border-[#F3F4F6]">
+                                                    <td className="px-5 py-5">
+                                                        <p className="font-semibold text-[#1F2937] text-sm">Locum Medical & Specialist Placements</p>
+                                                        <p className="text-[11px] text-[#6B7280] mt-1 leading-relaxed">Agency staffing coverage rendered at {selectedInvoice.client} for general clinical shifts. All shifts validated by clinical supervisor.</p>
+                                                    </td>
+                                                    <td className="px-5 py-5 text-center text-sm font-medium text-[#1F2937]">{selectedInvoice.shifts} shifts</td>
+                                                    <td className="px-5 py-5 text-right text-sm font-medium text-[#4B5563]">€{avgRate.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+                                                    <td className="px-5 py-5 text-right text-sm font-bold text-[#1F2937]">€{subtotalAmt.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+                                                </tr>
+                                            </tbody>
+                                        </table>
+                                    </div>
+
+                                    {/* Summary Block */}
+                                    <div className="flex justify-end pt-4">
+                                        <div className="w-80 p-5 bg-[#F8FAFC] border border-[#E2E8F0] rounded-xl space-y-3">
+                                            <div className="flex justify-between text-xs text-[#4B5563]">
+                                                <span className="font-medium">Subtotal</span>
+                                                <span className="font-semibold text-[#1F2937]">€{subtotalAmt.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                                            </div>
+                                            <div className="flex justify-between text-xs text-[#4B5563] pb-3 border-b border-[#E2E8F0]">
+                                                <span className="font-medium">VAT (23% Standard Rate)</span>
+                                                <span className="font-semibold text-[#1F2937]">€{vatAmt.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                                            </div>
+                                            <div className="flex justify-between items-baseline font-bold text-[#1F2937] pt-1">
+                                                <span className="text-xs uppercase tracking-wider text-[#4B5563]">Total Due (EUR)</span>
+                                                <span className="text-xl text-[#10B981] font-black">€{selectedInvoice.amount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    {/* Footer Notes */}
+                                    <div className="border-t border-[#E2E8F0] pt-6 space-y-2">
+                                        <p className="text-[11px] font-bold text-[#4B5563] uppercase tracking-wider mb-1">Important Terms & Notes</p>
+                                        <div className="text-[11px] text-[#6B7280] leading-relaxed space-y-1.5">
+                                            <p><strong className="text-[#4B5563]">1. Payment Reference:</strong> Please quote the invoice reference number <span className="font-mono text-[#10B981] font-bold">{selectedInvoice.id}</span> on all bank transfers to ensure prompt account allocation.</p>
+                                            <p><strong className="text-[#4B5563]">2. Net Payment Period:</strong> Payment terms are strictly 30 days from the invoice issue date. Overdue balances are subject to statutory interest charges.</p>
+                                            <p><strong className="text-[#4B5563]">3. Questions & Discrepancies:</strong> If you have any inquiries regarding this invoice, contact our billing desk at <span className="text-[#10B981] font-semibold">billing@mployus.ie</span> or phone +353 (1) 496 0120 within 7 business days.</p>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
                         </div>
                     </div>
-                </div>
-            )}
+                );
+            })()}
 
             {/* Remittance Detail Modal */}
             {showPayrollDetail && selectedPayroll && (

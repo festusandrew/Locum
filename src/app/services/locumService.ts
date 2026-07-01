@@ -151,7 +151,7 @@ export const locumService = {
             name: applicant.name,
             avatar: applicant.name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2),
             specialty: applicant.specialty,
-            department: applicant.specialty.includes('Surgery') ? 'Surgery' : 'Internal Medicine',
+            department: applicant.department || (applicant.specialty.includes('Surgery') ? 'Surgery' : 'Internal Medicine'),
             location: applicant.location + ', Ireland',
             phone: applicant.phone || '+353 1 555 0199',
             email: applicant.email || `${applicant.name.toLowerCase().replace(/\s+/g, '.')}@email.com`,

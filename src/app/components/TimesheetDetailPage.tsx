@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
     ArrowLeft, Clock, CheckCircle, XCircle, AlertTriangle, Download,
     FileText, MapPin, Building2, User, Calendar, Navigation, Upload,
@@ -6,6 +6,7 @@ import {
     Send, Eye, FileSpreadsheet, AlertCircle, Trash2
 } from 'lucide-react';
 import { toast } from 'sonner';
+import { timesheetService } from '../services/timesheetService';
 
 interface TimesheetDetailPageProps {
     timesheetId: string;
@@ -142,14 +143,85 @@ const statusConfig: Record<string, { label: string; color: string; bg: string; b
     auto_approved: { label: 'Auto-Approved', color: '#059669', bg: '#D1FAE5', border: '#A7F3D0' },
 };
 
-function getTimesheetProfile(id: string) {
-    if (timesheetProfiles[id]) return timesheetProfiles[id];
-    return timesheetProfiles['TS-2026-001'];
-}
-
 export function TimesheetDetailPage({ timesheetId, onBack, onViewLocumProfile, onViewFacilityProfile }: TimesheetDetailPageProps) {
-    const [profile, setProfile] = useState<any>(() => ({ ...getTimesheetProfile(timesheetId) }));
+    const [profile, setProfile] = useState<any>(null);
     const [activeTab, setActiveTab] = useState<'details' | 'breakdown' | 'timeline' | 'notes'>('details');
+
+    useEffect(() => {
+        const loadProfile = async () => {
+            try {
+                const list = await timesheetService.getAll();
+                const found = list.find(t => t.id === timesheetId);
+                if (found) {
+                    const baseProfile = timesheetProfiles[timesheetId] ? { ...timesheetProfiles[timesheetId] } : {
+                        id: found.id,
+                        locum: found.locum,
+                        locumId: found.locum === 'Sarah Mitchell' ? 'LOC-001' : 'LOC-002',
+                        facility: found.facility,
+                        facilityId: 'CL-001',
+                        location: found.location,
+                        address: found.location === 'Dublin' ? "James's Street, Dublin 8" : "Wilton, Cork",
+                        department: 'General Surgery',
+                        shiftDate: found.shiftDate,
+                        dayOfWeek: new Date(found.shiftDate).toLocaleDateString('en-GB', { weekday: 'long' }),
+                        clockIn: found.clockIn,
+                        clockOut: found.clockOut,
+                        scheduledStart: '08:00',
+                        scheduledEnd: '16:00',
+                        scheduledHours: found.scheduledHours,
+                        actualHours: found.actualHours,
+                        regularHours: found.scheduledHours,
+                        overtime: found.overtime,
+                        breaksTaken: 0.5,
+                        rate: found.rate,
+                        overtimeRate: found.rate * 1.5,
+                        totalPay: found.total,
+                        status: found.status,
+                        gpsVerified: found.gpsVerified,
+                        gpsClockIn: '53.3415, -6.2872',
+                        gpsClockOut: '53.3416, -6.2870',
+                        signature: found.signature,
+                        signatureTimestamp: found.submittedAt,
+                        supportingDocs: found.supportingDocs,
+                        submittedAt: found.submittedAt,
+                        submittedBy: found.locum,
+                        shiftType: found.actualHours > 10 ? 'Long Day' : 'Day Shift',
+                        paymentMethod: found.locum === 'James Harrison' ? 'Self-Employed (Umbrella)' : 'PAYE',
+                        niNumber: 'AB123456C',
+                        taxCode: '1257L',
+                        pensionContrib: true,
+                        timeline: [
+                            { date: found.submittedAt, user: found.locum, action: 'Timesheet submitted', details: 'Submitted for approval with all verifications' }
+                        ],
+                        notes: found.notes ? [{ date: found.submittedAt.split(' ')[0], author: found.locum, content: found.notes }] : [],
+                        attachments: found.supportingDocs ? [{ name: 'Receipt.pdf', size: '124 KB', uploadedAt: found.submittedAt }] : [],
+                        breakdown: {
+                            grossPay: found.total,
+                            incomeTax: found.total * 0.2,
+                            niEmployee: found.total * 0.1,
+                            pensionEmployee: found.total * 0.05,
+                            netPay: found.total * 0.65,
+                            niEmployer: found.total * 0.11,
+                            pensionEmployer: found.total * 0.03,
+                            totalEmployerCost: found.total * 1.14
+                        }
+                    };
+                    baseProfile.status = found.status;
+                    if (found.notes && (!baseProfile.notes || baseProfile.notes.length === 0)) {
+                        baseProfile.notes = [{ date: found.submittedAt.split(' ')[0], author: found.locum, content: found.notes }];
+                    }
+                    setProfile(baseProfile);
+                } else {
+                    toast.error("Timesheet not found");
+                    onBack();
+                }
+            } catch (err) {
+                console.error("Error loading timesheet profile:", err);
+                toast.error("Error loading timesheet details");
+            }
+        };
+        loadProfile();
+    }, [timesheetId]);
     const [showApprovalModal, setShowApprovalModal] = useState(false);
     const [showRejectModal, setShowRejectModal] = useState(false);
     const [rejectionReason, setRejectionReason] = useState('');
@@ -237,61 +309,82 @@ Generated on: ${new Date().toLocaleString()}
         toast.success("Timesheet successfully flagged for QA audit!");
     };
 
-    const handleDispute = () => {
-        const timelineEntry = {
-            date: new Date().toISOString().replace('T', ' ').substring(0, 16),
-            user: 'Omar Murphy',
-            action: 'Timesheet disputed',
-            details: 'Timesheet marked as disputed due to hours or rate discrepancy. Escalated to support.'
-        };
-        const updatedProfile = {
-            ...profile,
-            status: 'rejected',
-            timeline: [timelineEntry, ...(profile.timeline || [])]
-        };
-        setProfile(updatedProfile);
-        setShowActionDropdown(false);
-        toast.success("Timesheet marked as disputed. Support team notified.");
+    const handleDispute = async () => {
+        try {
+            await timesheetService.reject(profile.id, "Timesheet disputed");
+            const timelineEntry = {
+                date: new Date().toISOString().replace('T', ' ').substring(0, 16),
+                user: 'Omar Murphy',
+                action: 'Timesheet disputed',
+                details: 'Timesheet marked as disputed due to hours or rate discrepancy. Escalated to support.'
+            };
+            setProfile((prev: any) => ({
+                ...prev,
+                status: 'rejected',
+                timeline: [timelineEntry, ...(prev.timeline || [])]
+            }));
+            setShowActionDropdown(false);
+            toast.success("Timesheet marked as disputed. Support team notified.");
+        } catch (err) {
+            console.error("Dispute error:", err);
+            toast.error("Failed to dispute timesheet");
+        }
     };
 
-    const handleVoidTimesheet = () => {
+    const handleVoidTimesheet = async () => {
         if (confirm(`Are you sure you want to void timesheet ${profile.id}? This action cannot be undone.`)) {
-            toast.success(`Timesheet ${profile.id} voided successfully.`);
-            onBack();
+            try {
+                await timesheetService.reject(profile.id, "Voided");
+                toast.success(`Timesheet ${profile.id} voided successfully.`);
+                onBack();
+            } catch (err) {
+                console.error("Void error:", err);
+                toast.error("Failed to void timesheet");
+            }
         }
         setShowActionDropdown(false);
     };
 
-    const config = statusConfig[profile.status];
-
-    const handleApproveTimesheet = () => {
-        setProfile((prev: any) => ({
-            ...prev,
-            status: 'approved',
-            timeline: [
-                { date: new Date().toISOString().replace('T', ' ').substring(0, 16), user: 'Omar Murphy', action: 'Timesheet approved', details: 'Timesheet approved for payroll processing' },
-                ...prev.timeline
-            ]
-        }));
-        setShowApprovalModal(false);
-        toast.success("Timesheet approved successfully!");
+    const handleApproveTimesheet = async () => {
+        try {
+            await timesheetService.approve(profile.id);
+            setProfile((prev: any) => ({
+                ...prev,
+                status: 'approved',
+                timeline: [
+                    { date: new Date().toISOString().replace('T', ' ').substring(0, 16), user: 'Omar Murphy', action: 'Timesheet approved', details: 'Timesheet approved for payroll processing' },
+                    ...prev.timeline
+                ]
+            }));
+            setShowApprovalModal(false);
+            toast.success("Timesheet approved successfully!");
+        } catch (err) {
+            console.error("Approve error:", err);
+            toast.error("Failed to approve timesheet");
+        }
     };
 
-    const handleRejectTimesheet = () => {
+    const handleRejectTimesheet = async () => {
         if (!rejectionReason.trim()) {
             toast.error("Please enter a rejection reason.");
             return;
         }
-        setProfile((prev: any) => ({
-            ...prev,
-            status: 'rejected',
-            timeline: [
-                { date: new Date().toISOString().replace('T', ' ').substring(0, 16), user: 'Omar Murphy', action: 'Timesheet rejected', details: `Reason: ${rejectionReason}` },
-                ...prev.timeline
-            ]
-        }));
-        setShowRejectModal(false);
-        toast.success("Timesheet rejected successfully.");
+        try {
+            await timesheetService.reject(profile.id, rejectionReason);
+            setProfile((prev: any) => ({
+                ...prev,
+                status: 'rejected',
+                timeline: [
+                    { date: new Date().toISOString().replace('T', ' ').substring(0, 16), user: 'Omar Murphy', action: 'Timesheet rejected', details: `Reason: ${rejectionReason}` },
+                    ...prev.timeline
+                ]
+            }));
+            setShowRejectModal(false);
+            toast.success("Timesheet rejected successfully.");
+        } catch (err) {
+            console.error("Reject error:", err);
+            toast.error("Failed to reject timesheet");
+        }
     };
 
     const handleAddNote = () => {
@@ -355,6 +448,17 @@ Generated on: ${new Date().toLocaleString()}
         const date = new Date(dateStr);
         return date.toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' });
     };
+
+    if (!profile) {
+        return (
+            <div className="p-6 flex flex-col items-center justify-center min-h-[400px] space-y-4">
+                <div className="w-8 h-8 border-4 border-[#10B981] border-t-transparent rounded-full animate-spin font-medium"></div>
+                <p className="text-sm text-[#6B7280]">Loading timesheet details...</p>
+            </div>
+        );
+    }
+
+    const config = statusConfig[profile.status] || { label: 'Unknown', color: '#6B7280', bg: '#F3F4F6', border: '#E5E7EB' };
 
     return (
         <div className="p-6 space-y-6">

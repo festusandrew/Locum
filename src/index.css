@@ -11,6 +11,80 @@ html, body, button, input, select, textarea {
   -moz-osx-font-smoothing: grayscale;
 }
 
-h1, h2, h3, h4, h5, h6 {
+h1,h2,h3,h4,h5,h6 {
   font-family: 'Outfit', sans-serif;
 }
+
+/* Print Utilities for Invoice Detail View */
+@media print {
+  html, body {
+    background: #ffffff !important;
+    color: #111827 !important;
+    font-size: 11pt !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  /* Hide navigation, sidebar, action header, exit preview banners, scrollbars and print buttons */
+  nav, aside, header, footer, 
+  .no-print,
+  button,
+  .no-print-element,
+  [role="dialog"] > div:first-child:not(.print-invoice-scroll),
+  .fixed.inset-0:not(.print-invoice-overlay) {
+    display: none !important;
+  }
+
+  /* Reset layout margins for full page printing */
+  .transition-all,
+  [class*="ml-"] {
+    margin-left: 0 !important;
+    padding: 0 !important;
+  }
+
+  /* Remove fixed overlay backdrop style for printing */
+  .fixed.inset-0 {
+    position: static !important;
+    background: transparent !important;
+    padding: 0 !important;
+    display: block !important;
+    z-index: auto !important;
+    overflow: visible !important;
+  }
+
+  /* Reset modal box container */
+  .bg-white.rounded-xl {
+    box-shadow: none !important;
+    border: none !important;
+    max-height: none !important;
+    overflow: visible !important;
+    width: 100% !important;
+    max-width: none !important;
+  }
+
+  /* Scroll container reset */
+  .print-invoice-scroll {
+    overflow: visible !important;
+    background: white !important;
+    padding: 0 !important;
+  }
+
+  /* Make printed invoice paper fill page */
+  .print-invoice-paper {
+    border: none !important;
+    box-shadow: none !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    width: 100% !important;
+    max-width: none !important;
+    background: white !important;
+  }
+
+  /* Ensure page breaks are handled nicely */
+  tr {
+    page-break-inside: avoid !important;
+  }
+}
+
