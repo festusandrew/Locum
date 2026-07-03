@@ -51,6 +51,7 @@ export function ClientManagement({ subPage = 'directory', onViewProfile }: { sub
         fax: '',
         email: '',
         website: '',
+        country: 'Ireland',
         hseRegion: '',
         hseArea: '',
         beds: '',
@@ -61,6 +62,7 @@ export function ClientManagement({ subPage = 'directory', onViewProfile }: { sub
         contactPersonMobile: '',
         contactPersonEmail: '',
         status: 'pending' as 'active' | 'inactive' | 'pending',
+        nationality: 'Irish',
 
         // Extended rich fields to mirror FacilityProfilePage.tsx details
         hiqaRegistration: '',
@@ -84,11 +86,26 @@ export function ClientManagement({ subPage = 'directory', onViewProfile }: { sub
         financeContactMobile: '',
         financeContactEmail: '',
 
+        // Nursing Contact details
+        nursingContactName: '',
+        nursingContactRole: '',
+        nursingContactPhone: '',
+        nursingContactMobile: '',
+        nursingContactEmail: '',
+
+        // Escalation Contact details
+        escalationContactName: '',
+        escalationContactRole: '',
+        escalationContactPhone: '',
+        escalationContactMobile: '',
+        escalationContactEmail: '',
+
         // Contractual Terms details
-        frameworkType: 'HSE National Framework Agreement',
+        frameworkType: 'Standard Framework Agreement',
         contractRef: '',
         contractStartDate: '',
         contractEndDate: '',
+        autoRenewal: true,
         paymentTerms: 'Net 30 days',
         invoiceFrequency: 'Fortnightly',
         poRequired: true,
@@ -153,7 +170,7 @@ export function ClientManagement({ subPage = 'directory', onViewProfile }: { sub
             status: formData.status === 'active' ? 'active' : 'inactive',
             monthlySpend: 0,
             preferredLocums: 0,
-            complianceReqs: ['Medical Council of Ireland Registration', 'Garda Vetting (NVB Clearance)', 'Professional Indemnity Insurance', 'BLS / CPR Certification'],
+            complianceReqs: ['Medical License', 'Background Criminal Record Check', 'Professional Indemnity Insurance', 'BLS / CPR Certification'],
             logo: formData.logo,
             themeColor: formData.themeColor,
         };
@@ -167,22 +184,24 @@ export function ClientManagement({ subPage = 'directory', onViewProfile }: { sub
             logo: formData.logo,
             themeColor: formData.themeColor,
             overview: {
-                address: formData.address || "James's Street, Dublin 8, D08 NHY1",
-                eircode: formData.eircode || "D08 NHY1",
-                phone: formData.phone || "+353 1 410 3000",
+                address: formData.address || "123 Health Ave, Suite 100",
+                eircode: formData.eircode || "90210",
+                phone: formData.phone || "+1 555-0199",
                 fax: formData.fax || "",
-                email: formData.email || "bookings@facility.ie",
+                email: formData.email || "bookings@facility.com",
                 website: formData.website || "",
+                country: formData.country || "Ireland",
                 hseRegion: formData.hseRegion || "",
                 hseArea: formData.hseArea || "",
                 beds: formData.beds ? parseInt(formData.beds) : 0,
                 established: formData.established ? parseInt(formData.established) : new Date().getFullYear(),
-                ownership: formData.ownership || "Public (HSE)",
+                ownership: formData.ownership || "Public",
                 hiqaRegistration: formData.hiqaRegistration || "",
                 hiqaLastInspection: formData.hiqaLastInspection || "",
                 hiqaStatus: formData.hiqaStatus || "Compliant",
                 jciAccredited: formData.jciAccredited,
                 description: formData.description || `${formData.name} is a dedicated healthcare provider offering stellar treatment and services.`,
+                nationality: formData.nationality,
             },
             contacts: {
                 primary: {
@@ -206,8 +225,20 @@ export function ClientManagement({ subPage = 'directory', onViewProfile }: { sub
                     email: formData.financeContactEmail || "",
                     mobile: formData.financeContactMobile || ""
                 },
-                nursing: { name: '', role: '', phone: '', email: '', mobile: '' },
-                escalation: { name: '', role: '', phone: '', email: '', mobile: '' }
+                nursing: {
+                    name: formData.nursingContactName || "",
+                    role: formData.nursingContactRole || "",
+                    phone: formData.nursingContactPhone || "",
+                    email: formData.nursingContactEmail || "",
+                    mobile: formData.nursingContactMobile || ""
+                },
+                escalation: {
+                    name: formData.escalationContactName || "",
+                    role: formData.escalationContactRole || "",
+                    phone: formData.escalationContactPhone || "",
+                    email: formData.escalationContactEmail || "",
+                    mobile: formData.escalationContactMobile || ""
+                }
             },
             departments: [
                 { name: 'General Surgery', locumDemand: 'Medium', avgShiftsPerMonth: 12, preferredGrade: 'Registrar', currentVacancies: 1 },
@@ -218,7 +249,7 @@ export function ClientManagement({ subPage = 'directory', onViewProfile }: { sub
                 contractRef: formData.contractRef || `${newId}-CONTRACT-2026`,
                 startDate: formData.contractStartDate || new Date().toISOString().split('T')[0],
                 endDate: formData.contractEndDate || '2028-12-31',
-                autoRenewal: true,
+                autoRenewal: formData.autoRenewal,
                 paymentTerms: formData.paymentTerms,
                 invoiceFrequency: formData.invoiceFrequency,
                 poRequired: formData.poRequired,
@@ -239,9 +270,9 @@ export function ClientManagement({ subPage = 'directory', onViewProfile }: { sub
             },
             compliance: {
                 requirements: [
-                    { name: 'Medical Council of Ireland Registration', mandatory: true, description: 'Current registration with IMC' },
-                    { name: 'Garda Vetting (NVB Clearance)', mandatory: true, description: 'National Vetting Bureau clearance' },
-                    { name: 'Professional Indemnity Insurance', mandatory: true, description: 'Minimum €2.5M cover' },
+                    { name: 'Medical License', mandatory: true, description: 'Current medical practice license' },
+                    { name: 'Background Criminal Record Check', mandatory: true, description: 'Clean background check clearance' },
+                    { name: 'Professional Indemnity Insurance', mandatory: true, description: 'Minimum $2.5M cover' },
                     { name: 'BLS / CPR Certification', mandatory: true, description: 'Current BLS certification' }
                 ]
             },
@@ -281,6 +312,7 @@ export function ClientManagement({ subPage = 'directory', onViewProfile }: { sub
                 contactPersonMobile: '',
                 contactPersonEmail: '',
                 status: 'pending',
+                nationality: 'Irish',
 
                 hiqaRegistration: '',
                 hiqaStatus: 'Compliant',
@@ -301,10 +333,23 @@ export function ClientManagement({ subPage = 'directory', onViewProfile }: { sub
                 financeContactMobile: '',
                 financeContactEmail: '',
 
-                frameworkType: 'HSE National Framework Agreement',
+                nursingContactName: '',
+                nursingContactRole: '',
+                nursingContactPhone: '',
+                nursingContactMobile: '',
+                nursingContactEmail: '',
+
+                escalationContactName: '',
+                escalationContactRole: '',
+                escalationContactPhone: '',
+                escalationContactMobile: '',
+                escalationContactEmail: '',
+
+                frameworkType: 'Standard Framework Agreement',
                 contractRef: '',
                 contractStartDate: '',
                 contractEndDate: '',
+                autoRenewal: true,
                 paymentTerms: 'Net 30 days',
                 invoiceFrequency: 'Fortnightly',
                 poRequired: true,
@@ -370,6 +415,7 @@ export function ClientManagement({ subPage = 'directory', onViewProfile }: { sub
                         hiqaStatus: formData.hiqaStatus,
                         jciAccredited: formData.jciAccredited,
                         description: formData.description,
+                        nationality: formData.nationality,
                     },
                     contacts: {
                         ...profile.contacts,
@@ -393,6 +439,20 @@ export function ClientManagement({ subPage = 'directory', onViewProfile }: { sub
                             phone: formData.financeContactPhone,
                             email: formData.financeContactEmail,
                             mobile: formData.financeContactMobile
+                        },
+                        nursing: {
+                            name: formData.nursingContactName,
+                            role: formData.nursingContactRole,
+                            phone: formData.nursingContactPhone,
+                            email: formData.nursingContactEmail,
+                            mobile: formData.nursingContactMobile
+                        },
+                        escalation: {
+                            name: formData.escalationContactName,
+                            role: formData.escalationContactRole,
+                            phone: formData.escalationContactPhone,
+                            email: formData.escalationContactEmail,
+                            mobile: formData.escalationContactMobile
                         }
                     },
                     contract: {
@@ -401,6 +461,7 @@ export function ClientManagement({ subPage = 'directory', onViewProfile }: { sub
                         contractRef: formData.contractRef,
                         startDate: formData.contractStartDate,
                         endDate: formData.contractEndDate,
+                        autoRenewal: formData.autoRenewal,
                         paymentTerms: formData.paymentTerms,
                         invoiceFrequency: formData.invoiceFrequency,
                         poRequired: formData.poRequired,
@@ -479,16 +540,30 @@ export function ClientManagement({ subPage = 'directory', onViewProfile }: { sub
             financeContactMobile: profile?.contacts?.finance?.mobile || '',
             financeContactEmail: profile?.contacts?.finance?.email || '',
 
-            frameworkType: profile?.contract?.frameworkType || 'HSE National Framework Agreement',
+            nursingContactName: profile?.contacts?.nursing?.name || '',
+            nursingContactRole: profile?.contacts?.nursing?.role || '',
+            nursingContactPhone: profile?.contacts?.nursing?.phone || '',
+            nursingContactMobile: profile?.contacts?.nursing?.mobile || '',
+            nursingContactEmail: profile?.contacts?.nursing?.email || '',
+
+            escalationContactName: profile?.contacts?.escalation?.name || '',
+            escalationContactRole: profile?.contacts?.escalation?.role || '',
+            escalationContactPhone: profile?.contacts?.escalation?.phone || '',
+            escalationContactMobile: profile?.contacts?.escalation?.mobile || '',
+            escalationContactEmail: profile?.contacts?.escalation?.email || '',
+
+            frameworkType: profile?.contract?.frameworkType || 'Standard Framework Agreement',
             contractRef: profile?.contract?.contractRef || '',
             contractStartDate: profile?.contract?.startDate || '',
             contractEndDate: profile?.contract?.endDate || '',
+            autoRenewal: profile?.contract?.autoRenewal ?? true,
             paymentTerms: profile?.contract?.paymentTerms || 'Net 30 days',
             invoiceFrequency: profile?.contract?.invoiceFrequency || 'Fortnightly',
             poRequired: profile?.contract?.poRequired ?? true,
             agencyMargin: profile?.contract?.agencyMargin || '15%',
             logo: client.logo || profile?.logo || '',
             themeColor: client.themeColor || profile?.themeColor || '#10B981',
+            nationality: profile?.overview?.nationality || 'Irish',
         });
         setModalTab('overview');
         setShowEditModal(true);
@@ -712,8 +787,8 @@ export function ClientManagement({ subPage = 'directory', onViewProfile }: { sub
                         {/* Modal Tab Headers */}
                         <div className="flex border-b border-[#E5E7EB] px-6 bg-[#F9FAFB]">
                             {[
-                                { id: 'overview' as const, label: '1. Overview & HIQA' },
-                                { id: 'location' as const, label: '2. Location & HSE' },
+                                { id: 'overview' as const, label: '1. Overview & Accreditation' },
+                                { id: 'location' as const, label: '2. Location & Region' },
                                 { id: 'contacts' as const, label: '3. Contacts' },
                                 { id: 'contract' as const, label: '4. Contract Terms' },
                             ].map(tab => (
@@ -905,73 +980,92 @@ export function ClientManagement({ subPage = 'directory', onViewProfile }: { sub
                                                     className="w-full px-3 py-2 text-sm border border-[#E5E7EB] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#10B981] bg-white text-[#1F2937]"
                                                 />
                                             </div>
-                                            <div className="flex items-center mt-6">
+                                            <div>
+                                                <label className="block text-xs text-[#6B7280] mb-1.5 font-medium">Nationality <span className="text-[#EF4444]">*</span></label>
+                                                <select
+                                                    value={formData.nationality}
+                                                    onChange={e => setFormData({ ...formData, nationality: e.target.value })}
+                                                    className="w-full px-3 py-2 text-sm border border-[#E5E7EB] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#10B981] bg-white text-[#1F2937]"
+                                                >
+                                                    <option value="Irish">Irish</option>
+                                                    <option value="British">British</option>
+                                                    <option value="American">American</option>
+                                                    <option value="Canadian">Canadian</option>
+                                                    <option value="Australian">Australian</option>
+                                                    <option value="German">German</option>
+                                                    <option value="French">French</option>
+                                                    <option value="Spanish">Spanish</option>
+                                                    <option value="Italian">Italian</option>
+                                                    <option value="Other">Other</option>
+                                                </select>
+                                            </div>
+                                            <div className="flex items-center mt-6 col-span-2">
                                                 <label className="flex items-center gap-2 cursor-pointer text-xs text-[#6B7280] font-medium">
                                                     <input
                                                         type="checkbox"
                                                         checked={formData.jciAccredited}
                                                         onChange={e => setFormData({ ...formData, jciAccredited: e.target.checked })}
                                                         className="w-4 h-4 rounded text-[#10B981] focus:ring-[#10B981] border-[#E5E7EB]"
-                                                    />
-                                                    Joint Commission International (JCI) Accredited
-                                                </label>
-                                            </div>
-                                            <div className="col-span-2">
-                                                <label className="block text-xs text-[#6B7280] mb-1.5 font-medium">Description</label>
-                                                <textarea
-                                                    value={formData.description}
-                                                    onChange={e => setFormData({ ...formData, description: e.target.value })}
-                                                    placeholder="Describe the facility history, focus, and general overview..."
-                                                    rows={3}
-                                                    className="w-full px-3 py-2 text-sm border border-[#E5E7EB] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#10B981] bg-white text-[#1F2937]"
-                                                />
-                                            </div>
-                                        </div>
-                                    </div>
+                                                     />
+                                                     Joint Commission International (JCI) Accredited
+                                                 </label>
+                                             </div>
+                                             <div className="col-span-2">
+                                                 <label className="block text-xs text-[#6B7280] mb-1.5 font-medium">Description</label>
+                                                 <textarea
+                                                     value={formData.description}
+                                                     onChange={e => setFormData({ ...formData, description: e.target.value })}
+                                                     placeholder="Describe the facility history, focus, and general overview..."
+                                                     rows={3}
+                                                     className="w-full px-3 py-2 text-sm border border-[#E5E7EB] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#10B981] bg-white text-[#1F2937]"
+                                                 />
+                                             </div>
+                                         </div>
+                                     </div>
 
-                                    {/* HIQA Compliance */}
-                                    <div className="border-t border-[#E5E7EB] pt-6">
-                                        <div className="flex items-center gap-2 mb-4">
-                                            <ShieldCheck className="w-4 h-4 text-[#10B981]" />
-                                            <h4 className="text-sm text-[#1F2937]" style={{ fontWeight: 600 }}>HIQA Compliance & Accreditation</h4>
-                                        </div>
-                                        <div className="grid grid-cols-3 gap-4">
-                                            <div>
-                                                <label className="block text-xs text-[#6B7280] mb-1.5 font-medium">HIQA Registration Number</label>
-                                                <input
-                                                    type="text"
-                                                    value={formData.hiqaRegistration}
-                                                    onChange={e => setFormData({ ...formData, hiqaRegistration: e.target.value })}
-                                                    placeholder="e.g., HIQA-OSV-0001234"
-                                                    className="w-full px-3 py-2 text-sm border border-[#E5E7EB] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#10B981] bg-white text-[#1F2937]"
-                                                />
-                                            </div>
-                                            <div>
-                                                <label className="block text-xs text-[#6B7280] mb-1.5 font-medium">HIQA Registration Status</label>
-                                                <select
-                                                    value={formData.hiqaStatus}
-                                                    onChange={e => setFormData({ ...formData, hiqaStatus: e.target.value })}
-                                                    className="w-full px-3 py-2 text-sm border border-[#E5E7EB] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#10B981] bg-white text-[#1F2937]"
-                                                >
-                                                    <option value="Compliant">Compliant</option>
-                                                    <option value="Substantially Compliant">Substantially Compliant</option>
-                                                    <option value="Non-Compliant">Non-Compliant</option>
-                                                    <option value="Pending Review">Pending Review</option>
-                                                </select>
-                                            </div>
-                                            <div>
-                                                <label className="block text-xs text-[#6B7280] mb-1.5 font-medium">Last Inspection Date</label>
-                                                <input
-                                                    type="date"
-                                                    value={formData.hiqaLastInspection}
-                                                    onChange={e => setFormData({ ...formData, hiqaLastInspection: e.target.value })}
-                                                    className="w-full px-3 py-2 text-sm border border-[#E5E7EB] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#10B981] bg-white text-[#1F2937]"
-                                                />
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            )}
+                                     {/* Regulatory Compliance & Accreditation */}
+                                     <div className="border-t border-[#E5E7EB] pt-6">
+                                         <div className="flex items-center gap-2 mb-4">
+                                             <ShieldCheck className="w-4 h-4 text-[#10B981]" />
+                                             <h4 className="text-sm text-[#1F2937]" style={{ fontWeight: 600 }}>Regulatory Compliance & Accreditation</h4>
+                                         </div>
+                                         <div className="grid grid-cols-3 gap-4">
+                                             <div>
+                                                 <label className="block text-xs text-[#6B7280] mb-1.5 font-medium">Regulatory License / Registration ID</label>
+                                                 <input
+                                                     type="text"
+                                                     value={formData.hiqaRegistration}
+                                                     onChange={e => setFormData({ ...formData, hiqaRegistration: e.target.value })}
+                                                     placeholder="e.g., REG-1002345"
+                                                     className="w-full px-3 py-2 text-sm border border-[#E5E7EB] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#10B981] bg-white text-[#1F2937]"
+                                                 />
+                                             </div>
+                                             <div>
+                                                 <label className="block text-xs text-[#6B7280] mb-1.5 font-medium">Compliance / Registration Status</label>
+                                                 <select
+                                                     value={formData.hiqaStatus}
+                                                     onChange={e => setFormData({ ...formData, hiqaStatus: e.target.value })}
+                                                     className="w-full px-3 py-2 text-sm border border-[#E5E7EB] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#10B981] bg-white text-[#1F2937]"
+                                                 >
+                                                     <option value="Compliant">Compliant</option>
+                                                     <option value="Substantially Compliant">Substantially Compliant</option>
+                                                     <option value="Non-Compliant">Non-Compliant</option>
+                                                     <option value="Pending Review">Pending Review</option>
+                                                 </select>
+                                             </div>
+                                             <div>
+                                                 <label className="block text-xs text-[#6B7280] mb-1.5 font-medium">Last Inspection / Audit Date</label>
+                                                 <input
+                                                     type="date"
+                                                     value={formData.hiqaLastInspection}
+                                                     onChange={e => setFormData({ ...formData, hiqaLastInspection: e.target.value })}
+                                                     className="w-full px-3 py-2 text-sm border border-[#E5E7EB] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#10B981] bg-white text-[#1F2937]"
+                                                 />
+                                             </div>
+                                         </div>
+                                     </div>
+                                 </div>
+                             )}
 
                             {modalTab === 'location' && (
                                 <div className="space-y-6">
@@ -997,17 +1091,17 @@ export function ClientManagement({ subPage = 'directory', onViewProfile }: { sub
                                                     type="text"
                                                     value={formData.location}
                                                     onChange={e => setFormData({ ...formData, location: e.target.value })}
-                                                    placeholder="e.g., Dublin, Cork, Galway"
+                                                    placeholder="e.g., London, New York"
                                                     className="w-full px-3 py-2 text-sm border border-[#E5E7EB] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#10B981] bg-white text-[#1F2937]"
                                                 />
                                             </div>
                                             <div>
-                                                <label className="block text-xs text-[#6B7280] mb-1.5 font-medium">Eircode</label>
+                                                <label className="block text-xs text-[#6B7280] mb-1.5 font-medium">Zip / Postal Code</label>
                                                 <input
                                                     type="text"
                                                     value={formData.eircode}
                                                     onChange={e => setFormData({ ...formData, eircode: e.target.value })}
-                                                    placeholder="e.g., D08 NHY1"
+                                                    placeholder="e.g., 90210 / SW1A 1AA"
                                                     className="w-full px-3 py-2 text-sm border border-[#E5E7EB] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#10B981] bg-white text-[#1F2937]"
                                                 />
                                             </div>
@@ -1017,7 +1111,7 @@ export function ClientManagement({ subPage = 'directory', onViewProfile }: { sub
                                                     type="tel"
                                                     value={formData.phone}
                                                     onChange={e => setFormData({ ...formData, phone: e.target.value })}
-                                                    placeholder="+353 1 410 3000"
+                                                    placeholder="e.g., +1 555-0199"
                                                     className="w-full px-3 py-2 text-sm border border-[#E5E7EB] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#10B981] bg-white text-[#1F2937]"
                                                 />
                                             </div>
@@ -1037,7 +1131,7 @@ export function ClientManagement({ subPage = 'directory', onViewProfile }: { sub
                                                     type="email"
                                                     value={formData.email}
                                                     onChange={e => setFormData({ ...formData, email: e.target.value })}
-                                                    placeholder="contact@facility.ie"
+                                                    placeholder="contact@facility.com"
                                                     className="w-full px-3 py-2 text-sm border border-[#E5E7EB] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#10B981] bg-white text-[#1F2937]"
                                                 />
                                             </div>
@@ -1047,42 +1141,52 @@ export function ClientManagement({ subPage = 'directory', onViewProfile }: { sub
                                                     type="url"
                                                     value={formData.website}
                                                     onChange={e => setFormData({ ...formData, website: e.target.value })}
-                                                    placeholder="www.facility.ie"
+                                                    placeholder="www.facility.com"
                                                     className="w-full px-3 py-2 text-sm border border-[#E5E7EB] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#10B981] bg-white text-[#1F2937]"
                                                 />
                                             </div>
                                         </div>
                                     </div>
 
-                                    {/* HSE Information */}
+                                    {/* Regional Health Authority / Jurisdiction */}
                                     <div className="border-t border-[#E5E7EB] pt-6">
                                         <div className="flex items-center gap-2 mb-4">
                                             <FileText className="w-4 h-4 text-[#059669]" />
-                                            <h4 className="text-sm text-[#1F2937]" style={{ fontWeight: 600 }}>HSE Information</h4>
+                                            <h4 className="text-sm text-[#1F2937]" style={{ fontWeight: 600 }}>Regional Health Authority / Jurisdiction</h4>
                                         </div>
-                                        <div className="grid grid-cols-2 gap-4">
+                                        <div className="grid grid-cols-3 gap-4">
                                             <div>
-                                                <label className="block text-xs text-[#6B7280] mb-1.5 font-medium">HSE Region</label>
+                                                <label className="block text-xs text-[#6B7280] mb-1.5 font-medium">Country<span className="text-[#EF4444]">*</span></label>
                                                 <select
-                                                    value={formData.hseRegion}
-                                                    onChange={e => setFormData({ ...formData, hseRegion: e.target.value })}
-                                                    className="w-full px-3 py-2 text-sm border border-[#E5E7EB] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#10B981] bg-white text-[#1F2937]"
-                                                >
-                                                    <option value="">Select Region</option>
-                                                    <option value="HSE Dublin Midlands">HSE Dublin Midlands</option>
-                                                    <option value="HSE South">HSE South</option>
-                                                    <option value="HSE West">HSE West</option>
-                                                    <option value="HSE Mid-West">HSE Mid-West</option>
-                                                    <option value="HSE South East">HSE South East</option>
+                                                    value={formData.country}
+                                                    onChange={e => setFormData({ ...formData, country: e.target.value })}
+                                                    className="w-full px-3 py-2 text-sm border border-[#E5E7EB] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#10B981] bg-white text-[#1F2937]">
+                                                    <option value="">Select a country</option>
+                                                    <option value="Ireland">Ireland</option>
+                                                    <option value="United Kingdom">United Kingdom</option>
+                                                    <option value="United States">United States</option>
+                                                    <option value="Canada">Canada</option>
+                                                    <option value="Australia">Australia</option>
+                                                    <option value="Other">Other</option>
                                                 </select>
                                             </div>
                                             <div>
-                                                <label className="block text-xs text-[#6B7280] mb-1.5 font-medium">HSE Area / CHO</label>
+                                                <label className="block text-xs text-[#6B7280] mb-1.5 font-medium">Health Authority Region</label>
+                                                <input
+                                                    type="text"
+                                                    value={formData.hseRegion}
+                                                    onChange={e => setFormData({ ...formData, hseRegion: e.target.value })}
+                                                    placeholder="e.g., NHS London, NSW Health, State Health Dept"
+                                                    className="w-full px-3 py-2 text-sm border border-[#E5E7EB] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#10B981] bg-white text-[#1F2937]"
+                                                />
+                                            </div>
+                                            <div>
+                                                <label className="block text-xs text-[#6B7280] mb-1.5 font-medium">Service Area / Sub-District</label>
                                                 <input
                                                     type="text"
                                                     value={formData.hseArea}
                                                     onChange={e => setFormData({ ...formData, hseArea: e.target.value })}
-                                                    placeholder="e.g., CHO 7 - Dublin South City"
+                                                    placeholder="e.g., District 4, Sector B, CHO 7"
                                                     className="w-full px-3 py-2 text-sm border border-[#E5E7EB] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#10B981] bg-white text-[#1F2937]"
                                                 />
                                             </div>
@@ -1252,6 +1356,106 @@ export function ClientManagement({ subPage = 'directory', onViewProfile }: { sub
                                             </div>
                                         </div>
                                     </div>
+
+                                    {/* Nursing Contact */}
+                                    <div className="border-t border-[#E5E7EB] pt-6">
+                                        <div className="flex items-center gap-2 mb-4">
+                                            <Users className="w-4 h-4 text-[#EC4899]" />
+                                            <h4 className="text-sm text-[#1F2937]" style={{ fontWeight: 600 }}>Nursing / Clinical Contact</h4>
+                                        </div>
+                                        <div className="grid grid-cols-2 gap-4">
+                                            <div>
+                                                <label className="block text-xs text-[#6B7280] mb-1.5 font-medium">Contact Name</label>
+                                                <input
+                                                    type="text"
+                                                    value={formData.nursingContactName}
+                                                    onChange={e => setFormData({ ...formData, nursingContactName: e.target.value })}
+                                                    placeholder="e.g., Director of Nursing"
+                                                    className="w-full px-3 py-2 text-sm border border-[#E5E7EB] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#10B981] bg-white text-[#1F2937]"
+                                                />
+                                            </div>
+                                            <div>
+                                                <label className="block text-xs text-[#6B7280] mb-1.5 font-medium">Role/Position</label>
+                                                <input
+                                                    type="text"
+                                                    value={formData.nursingContactRole}
+                                                    onChange={e => setFormData({ ...formData, nursingContactRole: e.target.value })}
+                                                    placeholder="e.g., Director of Nursing"
+                                                    className="w-full px-3 py-2 text-sm border border-[#E5E7EB] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#10B981] bg-white text-[#1F2937]"
+                                                />
+                                            </div>
+                                            <div>
+                                                <label className="block text-xs text-[#6B7280] mb-1.5 font-medium">Phone</label>
+                                                <input
+                                                    type="tel"
+                                                    value={formData.nursingContactPhone}
+                                                    onChange={e => setFormData({ ...formData, nursingContactPhone: e.target.value })}
+                                                    placeholder="+353 1 410 3400"
+                                                    className="w-full px-3 py-2 text-sm border border-[#E5E7EB] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#10B981] bg-white text-[#1F2937]"
+                                                />
+                                            </div>
+                                            <div>
+                                                <label className="block text-xs text-[#6B7280] mb-1.5 font-medium">Email</label>
+                                                <input
+                                                    type="email"
+                                                    value={formData.nursingContactEmail}
+                                                    onChange={e => setFormData({ ...formData, nursingContactEmail: e.target.value })}
+                                                    placeholder="don@facility.ie"
+                                                    className="w-full px-3 py-2 text-sm border border-[#E5E7EB] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#10B981] bg-white text-[#1F2937]"
+                                                />
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    {/* Escalation Contact */}
+                                    <div className="border-t border-[#E5E7EB] pt-6">
+                                        <div className="flex items-center gap-2 mb-4">
+                                            <Users className="w-4 h-4 text-[#EF4444]" />
+                                            <h4 className="text-sm text-[#1F2937]" style={{ fontWeight: 600 }}>Escalation / Emergency Contact</h4>
+                                        </div>
+                                        <div className="grid grid-cols-2 gap-4">
+                                            <div>
+                                                <label className="block text-xs text-[#6B7280] mb-1.5 font-medium">Contact Name</label>
+                                                <input
+                                                    type="text"
+                                                    value={formData.escalationContactName}
+                                                    onChange={e => setFormData({ ...formData, escalationContactName: e.target.value })}
+                                                    placeholder="e.g., Operations Lead"
+                                                    className="w-full px-3 py-2 text-sm border border-[#E5E7EB] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#10B981] bg-white text-[#1F2937]"
+                                                />
+                                            </div>
+                                            <div>
+                                                <label className="block text-xs text-[#6B7280] mb-1.5 font-medium">Role/Position</label>
+                                                <input
+                                                    type="text"
+                                                    value={formData.escalationContactRole}
+                                                    onChange={e => setFormData({ ...formData, escalationContactRole: e.target.value })}
+                                                    placeholder="e.g., Facility Manager"
+                                                    className="w-full px-3 py-2 text-sm border border-[#E5E7EB] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#10B981] bg-white text-[#1F2937]"
+                                                />
+                                            </div>
+                                            <div>
+                                                <label className="block text-xs text-[#6B7280] mb-1.5 font-medium">Phone</label>
+                                                <input
+                                                    type="tel"
+                                                    value={formData.escalationContactPhone}
+                                                    onChange={e => setFormData({ ...formData, escalationContactPhone: e.target.value })}
+                                                    placeholder="+353 1 410 3500"
+                                                    className="w-full px-3 py-2 text-sm border border-[#E5E7EB] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#10B981] bg-white text-[#1F2937]"
+                                                />
+                                            </div>
+                                            <div>
+                                                <label className="block text-xs text-[#6B7280] mb-1.5 font-medium">Email</label>
+                                                <input
+                                                    type="email"
+                                                    value={formData.escalationContactEmail}
+                                                    onChange={e => setFormData({ ...formData, escalationContactEmail: e.target.value })}
+                                                    placeholder="escalations@facility.ie"
+                                                    className="w-full px-3 py-2 text-sm border border-[#E5E7EB] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#10B981] bg-white text-[#1F2937]"
+                                                />
+                                            </div>
+                                        </div>
+                                    </div>
                                 </div>
                             )}
 
@@ -1336,7 +1540,7 @@ export function ClientManagement({ subPage = 'directory', onViewProfile }: { sub
                                                     className="w-full px-3 py-2 text-sm border border-[#E5E7EB] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#10B981] bg-white text-[#1F2937]"
                                                 />
                                             </div>
-                                            <div className="flex items-center mt-6">
+                                            <div className="flex flex-col gap-3 mt-6">
                                                 <label className="flex items-center gap-2 cursor-pointer text-xs text-[#6B7280] font-medium">
                                                     <input
                                                         type="checkbox"
@@ -1345,6 +1549,15 @@ export function ClientManagement({ subPage = 'directory', onViewProfile }: { sub
                                                         className="w-4 h-4 rounded text-[#10B981] focus:ring-[#10B981] border-[#E5E7EB]"
                                                     />
                                                     Purchase Order (PO) Required for Invoicing
+                                                </label>
+                                                <label className="flex items-center gap-2 cursor-pointer text-xs text-[#6B7280] font-medium">
+                                                    <input
+                                                        type="checkbox"
+                                                        checked={formData.autoRenewal}
+                                                        onChange={e => setFormData({ ...formData, autoRenewal: e.target.checked })}
+                                                        className="w-4 h-4 rounded text-[#10B981] focus:ring-[#10B981] border-[#E5E7EB]"
+                                                    />
+                                                    Contract Auto Renewal
                                                 </label>
                                             </div>
                                         </div>
@@ -1419,8 +1632,8 @@ export function ClientManagement({ subPage = 'directory', onViewProfile }: { sub
                         {/* Modal Tab Headers */}
                         <div className="flex border-b border-[#E5E7EB] px-6 bg-[#F9FAFB]">
                             {[
-                                { id: 'overview' as const, label: '1. Overview & HIQA' },
-                                { id: 'location' as const, label: '2. Location & HSE' },
+                                { id: 'overview' as const, label: '1. Overview & Accreditation' },
+                                { id: 'location' as const, label: '2. Location & Region' },
                                 { id: 'contacts' as const, label: '3. Contacts' },
                                 { id: 'contract' as const, label: '4. Contract Terms' },
                             ].map(tab => (
@@ -1612,73 +1825,92 @@ export function ClientManagement({ subPage = 'directory', onViewProfile }: { sub
                                                     className="w-full px-3 py-2 text-sm border border-[#E5E7EB] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#10B981] bg-white text-[#1F2937]"
                                                 />
                                             </div>
-                                            <div className="flex items-center mt-6">
+                                            <div>
+                                                <label className="block text-xs text-[#6B7280] mb-1.5 font-medium">Nationality <span className="text-[#EF4444]">*</span></label>
+                                                <select
+                                                    value={formData.nationality}
+                                                    onChange={e => setFormData({ ...formData, nationality: e.target.value })}
+                                                    className="w-full px-3 py-2 text-sm border border-[#E5E7EB] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#10B981] bg-white text-[#1F2937]"
+                                                >
+                                                    <option value="Irish">Irish</option>
+                                                    <option value="British">British</option>
+                                                    <option value="American">American</option>
+                                                    <option value="Canadian">Canadian</option>
+                                                    <option value="Australian">Australian</option>
+                                                    <option value="German">German</option>
+                                                    <option value="French">French</option>
+                                                    <option value="Spanish">Spanish</option>
+                                                    <option value="Italian">Italian</option>
+                                                    <option value="Other">Other</option>
+                                                </select>
+                                            </div>
+                                            <div className="flex items-center mt-6 col-span-2">
                                                 <label className="flex items-center gap-2 cursor-pointer text-xs text-[#6B7280] font-medium">
                                                     <input
                                                         type="checkbox"
                                                         checked={formData.jciAccredited}
                                                         onChange={e => setFormData({ ...formData, jciAccredited: e.target.checked })}
                                                         className="w-4 h-4 rounded text-[#10B981] focus:ring-[#10B981] border-[#E5E7EB]"
-                                                    />
-                                                    Joint Commission International (JCI) Accredited
-                                                </label>
-                                            </div>
-                                            <div className="col-span-2">
-                                                <label className="block text-xs text-[#6B7280] mb-1.5 font-medium">Description</label>
-                                                <textarea
-                                                    value={formData.description}
-                                                    onChange={e => setFormData({ ...formData, description: e.target.value })}
-                                                    placeholder="Describe the facility history, focus, and general overview..."
-                                                    rows={3}
-                                                    className="w-full px-3 py-2 text-sm border border-[#E5E7EB] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#10B981] bg-white text-[#1F2937]"
-                                                />
-                                            </div>
-                                        </div>
-                                    </div>
+                                                     />
+                                                     Joint Commission International (JCI) Accredited
+                                                 </label>
+                                             </div>
+                                             <div className="col-span-2">
+                                                 <label className="block text-xs text-[#6B7280] mb-1.5 font-medium">Description</label>
+                                                 <textarea
+                                                     value={formData.description}
+                                                     onChange={e => setFormData({ ...formData, description: e.target.value })}
+                                                     placeholder="Describe the facility history, focus, and general overview..."
+                                                     rows={3}
+                                                     className="w-full px-3 py-2 text-sm border border-[#E5E7EB] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#10B981] bg-white text-[#1F2937]"
+                                                 />
+                                             </div>
+                                         </div>
+                                     </div>
 
-                                    {/* HIQA Compliance */}
-                                    <div className="border-t border-[#E5E7EB] pt-6">
-                                        <div className="flex items-center gap-2 mb-4">
-                                            <ShieldCheck className="w-4 h-4 text-[#10B981]" />
-                                            <h4 className="text-sm text-[#1F2937]" style={{ fontWeight: 600 }}>HIQA Compliance & Accreditation</h4>
-                                        </div>
-                                        <div className="grid grid-cols-3 gap-4">
-                                            <div>
-                                                <label className="block text-xs text-[#6B7280] mb-1.5 font-medium">HIQA Registration Number</label>
-                                                <input
-                                                    type="text"
-                                                    value={formData.hiqaRegistration}
-                                                    onChange={e => setFormData({ ...formData, hiqaRegistration: e.target.value })}
-                                                    placeholder="e.g., HIQA-OSV-0001234"
-                                                    className="w-full px-3 py-2 text-sm border border-[#E5E7EB] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#10B981] bg-white text-[#1F2937]"
-                                                />
-                                            </div>
-                                            <div>
-                                                <label className="block text-xs text-[#6B7280] mb-1.5 font-medium">HIQA Registration Status</label>
-                                                <select
-                                                    value={formData.hiqaStatus}
-                                                    onChange={e => setFormData({ ...formData, hiqaStatus: e.target.value })}
-                                                    className="w-full px-3 py-2 text-sm border border-[#E5E7EB] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#10B981] bg-white text-[#1F2937]"
-                                                >
-                                                    <option value="Compliant">Compliant</option>
-                                                    <option value="Substantially Compliant">Substantially Compliant</option>
-                                                    <option value="Non-Compliant">Non-Compliant</option>
-                                                    <option value="Pending Review">Pending Review</option>
-                                                </select>
-                                            </div>
-                                            <div>
-                                                <label className="block text-xs text-[#6B7280] mb-1.5 font-medium">Last Inspection Date</label>
-                                                <input
-                                                    type="date"
-                                                    value={formData.hiqaLastInspection}
-                                                    onChange={e => setFormData({ ...formData, hiqaLastInspection: e.target.value })}
-                                                    className="w-full px-3 py-2 text-sm border border-[#E5E7EB] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#10B981] bg-white text-[#1F2937]"
-                                                />
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            )}
+                                     {/* Regulatory Compliance & Accreditation */}
+                                     <div className="border-t border-[#E5E7EB] pt-6">
+                                         <div className="flex items-center gap-2 mb-4">
+                                             <ShieldCheck className="w-4 h-4 text-[#10B981]" />
+                                             <h4 className="text-sm text-[#1F2937]" style={{ fontWeight: 600 }}>Regulatory Compliance & Accreditation</h4>
+                                         </div>
+                                         <div className="grid grid-cols-3 gap-4">
+                                             <div>
+                                                 <label className="block text-xs text-[#6B7280] mb-1.5 font-medium">Regulatory License / Registration ID</label>
+                                                 <input
+                                                     type="text"
+                                                     value={formData.hiqaRegistration}
+                                                     onChange={e => setFormData({ ...formData, hiqaRegistration: e.target.value })}
+                                                     placeholder="e.g., REG-1002345"
+                                                     className="w-full px-3 py-2 text-sm border border-[#E5E7EB] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#10B981] bg-white text-[#1F2937]"
+                                                 />
+                                             </div>
+                                             <div>
+                                                 <label className="block text-xs text-[#6B7280] mb-1.5 font-medium">Compliance / Registration Status</label>
+                                                 <select
+                                                     value={formData.hiqaStatus}
+                                                     onChange={e => setFormData({ ...formData, hiqaStatus: e.target.value })}
+                                                     className="w-full px-3 py-2 text-sm border border-[#E5E7EB] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#10B981] bg-white text-[#1F2937]"
+                                                 >
+                                                     <option value="Compliant">Compliant</option>
+                                                     <option value="Substantially Compliant">Substantially Compliant</option>
+                                                     <option value="Non-Compliant">Non-Compliant</option>
+                                                     <option value="Pending Review">Pending Review</option>
+                                                 </select>
+                                             </div>
+                                             <div>
+                                                 <label className="block text-xs text-[#6B7280] mb-1.5 font-medium">Last Inspection / Audit Date</label>
+                                                 <input
+                                                     type="date"
+                                                     value={formData.hiqaLastInspection}
+                                                     onChange={e => setFormData({ ...formData, hiqaLastInspection: e.target.value })}
+                                                     className="w-full px-3 py-2 text-sm border border-[#E5E7EB] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#10B981] bg-white text-[#1F2937]"
+                                                 />
+                                             </div>
+                                         </div>
+                                     </div>
+                                 </div>
+                             )}
 
                             {modalTab === 'location' && (
                                 <div className="space-y-6">
@@ -1704,17 +1936,17 @@ export function ClientManagement({ subPage = 'directory', onViewProfile }: { sub
                                                     type="text"
                                                     value={formData.location}
                                                     onChange={e => setFormData({ ...formData, location: e.target.value })}
-                                                    placeholder="e.g., Dublin, Cork, Galway"
+                                                    placeholder="e.g., London, New York"
                                                     className="w-full px-3 py-2 text-sm border border-[#E5E7EB] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#10B981] bg-white text-[#1F2937]"
                                                 />
                                             </div>
                                             <div>
-                                                <label className="block text-xs text-[#6B7280] mb-1.5 font-medium">Eircode</label>
+                                                <label className="block text-xs text-[#6B7280] mb-1.5 font-medium">Zip / Postal Code</label>
                                                 <input
                                                     type="text"
                                                     value={formData.eircode}
                                                     onChange={e => setFormData({ ...formData, eircode: e.target.value })}
-                                                    placeholder="e.g., D08 NHY1"
+                                                    placeholder="e.g., 90210 / SW1A 1AA"
                                                     className="w-full px-3 py-2 text-sm border border-[#E5E7EB] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#10B981] bg-white text-[#1F2937]"
                                                 />
                                             </div>
@@ -1724,7 +1956,7 @@ export function ClientManagement({ subPage = 'directory', onViewProfile }: { sub
                                                     type="tel"
                                                     value={formData.phone}
                                                     onChange={e => setFormData({ ...formData, phone: e.target.value })}
-                                                    placeholder="+353 1 410 3000"
+                                                    placeholder="e.g., +1 555-0199"
                                                     className="w-full px-3 py-2 text-sm border border-[#E5E7EB] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#10B981] bg-white text-[#1F2937]"
                                                 />
                                             </div>
@@ -1744,7 +1976,7 @@ export function ClientManagement({ subPage = 'directory', onViewProfile }: { sub
                                                     type="email"
                                                     value={formData.email}
                                                     onChange={e => setFormData({ ...formData, email: e.target.value })}
-                                                    placeholder="contact@facility.ie"
+                                                    placeholder="contact@facility.com"
                                                     className="w-full px-3 py-2 text-sm border border-[#E5E7EB] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#10B981] bg-white text-[#1F2937]"
                                                 />
                                             </div>
@@ -1754,42 +1986,37 @@ export function ClientManagement({ subPage = 'directory', onViewProfile }: { sub
                                                     type="url"
                                                     value={formData.website}
                                                     onChange={e => setFormData({ ...formData, website: e.target.value })}
-                                                    placeholder="www.facility.ie"
+                                                    placeholder="www.facility.com"
                                                     className="w-full px-3 py-2 text-sm border border-[#E5E7EB] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#10B981] bg-white text-[#1F2937]"
                                                 />
                                             </div>
                                         </div>
                                     </div>
 
-                                    {/* HSE Information */}
+                                    {/* Regional Health Authority / Jurisdiction */}
                                     <div className="border-t border-[#E5E7EB] pt-6">
                                         <div className="flex items-center gap-2 mb-4">
                                             <FileText className="w-4 h-4 text-[#059669]" />
-                                            <h4 className="text-sm text-[#1F2937]" style={{ fontWeight: 600 }}>HSE Information</h4>
+                                            <h4 className="text-sm text-[#1F2937]" style={{ fontWeight: 600 }}>Regional Health Authority / Jurisdiction</h4>
                                         </div>
                                         <div className="grid grid-cols-2 gap-4">
                                             <div>
-                                                <label className="block text-xs text-[#6B7280] mb-1.5 font-medium">HSE Region</label>
-                                                <select
+                                                <label className="block text-xs text-[#6B7280] mb-1.5 font-medium">Health Authority Region</label>
+                                                <input
+                                                    type="text"
                                                     value={formData.hseRegion}
                                                     onChange={e => setFormData({ ...formData, hseRegion: e.target.value })}
+                                                    placeholder="e.g., NHS London, NSW Health, State Health Dept"
                                                     className="w-full px-3 py-2 text-sm border border-[#E5E7EB] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#10B981] bg-white text-[#1F2937]"
-                                                >
-                                                    <option value="">Select Region</option>
-                                                    <option value="HSE Dublin Midlands">HSE Dublin Midlands</option>
-                                                    <option value="HSE South">HSE South</option>
-                                                    <option value="HSE West">HSE West</option>
-                                                    <option value="HSE Mid-West">HSE Mid-West</option>
-                                                    <option value="HSE South East">HSE South East</option>
-                                                </select>
+                                                />
                                             </div>
                                             <div>
-                                                <label className="block text-xs text-[#6B7280] mb-1.5 font-medium">HSE Area / CHO</label>
+                                                <label className="block text-xs text-[#6B7280] mb-1.5 font-medium">Service Area / Sub-District</label>
                                                 <input
                                                     type="text"
                                                     value={formData.hseArea}
                                                     onChange={e => setFormData({ ...formData, hseArea: e.target.value })}
-                                                    placeholder="e.g., CHO 7 - Dublin South City"
+                                                    placeholder="e.g., District 4, Sector B, CHO 7"
                                                     className="w-full px-3 py-2 text-sm border border-[#E5E7EB] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#10B981] bg-white text-[#1F2937]"
                                                 />
                                             </div>
@@ -1959,6 +2186,106 @@ export function ClientManagement({ subPage = 'directory', onViewProfile }: { sub
                                             </div>
                                         </div>
                                     </div>
+
+                                    {/* Nursing Contact */}
+                                    <div className="border-t border-[#E5E7EB] pt-6">
+                                        <div className="flex items-center gap-2 mb-4">
+                                            <Users className="w-4 h-4 text-[#EC4899]" />
+                                            <h4 className="text-sm text-[#1F2937]" style={{ fontWeight: 600 }}>Nursing / Clinical Contact</h4>
+                                        </div>
+                                        <div className="grid grid-cols-2 gap-4">
+                                            <div>
+                                                <label className="block text-xs text-[#6B7280] mb-1.5 font-medium">Contact Name</label>
+                                                <input
+                                                    type="text"
+                                                    value={formData.nursingContactName}
+                                                    onChange={e => setFormData({ ...formData, nursingContactName: e.target.value })}
+                                                    placeholder="e.g., Director of Nursing"
+                                                    className="w-full px-3 py-2 text-sm border border-[#E5E7EB] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#10B981] bg-white text-[#1F2937]"
+                                                />
+                                            </div>
+                                            <div>
+                                                <label className="block text-xs text-[#6B7280] mb-1.5 font-medium">Role/Position</label>
+                                                <input
+                                                    type="text"
+                                                    value={formData.nursingContactRole}
+                                                    onChange={e => setFormData({ ...formData, nursingContactRole: e.target.value })}
+                                                    placeholder="e.g., Director of Nursing"
+                                                    className="w-full px-3 py-2 text-sm border border-[#E5E7EB] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#10B981] bg-white text-[#1F2937]"
+                                                />
+                                            </div>
+                                            <div>
+                                                <label className="block text-xs text-[#6B7280] mb-1.5 font-medium">Phone</label>
+                                                <input
+                                                    type="tel"
+                                                    value={formData.nursingContactPhone}
+                                                    onChange={e => setFormData({ ...formData, nursingContactPhone: e.target.value })}
+                                                    placeholder="+353 1 410 3400"
+                                                    className="w-full px-3 py-2 text-sm border border-[#E5E7EB] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#10B981] bg-white text-[#1F2937]"
+                                                />
+                                            </div>
+                                            <div>
+                                                <label className="block text-xs text-[#6B7280] mb-1.5 font-medium">Email</label>
+                                                <input
+                                                    type="email"
+                                                    value={formData.nursingContactEmail}
+                                                    onChange={e => setFormData({ ...formData, nursingContactEmail: e.target.value })}
+                                                    placeholder="don@facility.ie"
+                                                    className="w-full px-3 py-2 text-sm border border-[#E5E7EB] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#10B981] bg-white text-[#1F2937]"
+                                                />
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    {/* Escalation Contact */}
+                                    <div className="border-t border-[#E5E7EB] pt-6">
+                                        <div className="flex items-center gap-2 mb-4">
+                                            <Users className="w-4 h-4 text-[#EF4444]" />
+                                            <h4 className="text-sm text-[#1F2937]" style={{ fontWeight: 600 }}>Escalation / Emergency Contact</h4>
+                                        </div>
+                                        <div className="grid grid-cols-2 gap-4">
+                                            <div>
+                                                <label className="block text-xs text-[#6B7280] mb-1.5 font-medium">Contact Name</label>
+                                                <input
+                                                    type="text"
+                                                    value={formData.escalationContactName}
+                                                    onChange={e => setFormData({ ...formData, escalationContactName: e.target.value })}
+                                                    placeholder="e.g., Operations Lead"
+                                                    className="w-full px-3 py-2 text-sm border border-[#E5E7EB] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#10B981] bg-white text-[#1F2937]"
+                                                />
+                                            </div>
+                                            <div>
+                                                <label className="block text-xs text-[#6B7280] mb-1.5 font-medium">Role/Position</label>
+                                                <input
+                                                    type="text"
+                                                    value={formData.escalationContactRole}
+                                                    onChange={e => setFormData({ ...formData, escalationContactRole: e.target.value })}
+                                                    placeholder="e.g., Facility Manager"
+                                                    className="w-full px-3 py-2 text-sm border border-[#E5E7EB] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#10B981] bg-white text-[#1F2937]"
+                                                />
+                                            </div>
+                                            <div>
+                                                <label className="block text-xs text-[#6B7280] mb-1.5 font-medium">Phone</label>
+                                                <input
+                                                    type="tel"
+                                                    value={formData.escalationContactPhone}
+                                                    onChange={e => setFormData({ ...formData, escalationContactPhone: e.target.value })}
+                                                    placeholder="+353 1 410 3500"
+                                                    className="w-full px-3 py-2 text-sm border border-[#E5E7EB] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#10B981] bg-white text-[#1F2937]"
+                                                />
+                                            </div>
+                                            <div>
+                                                <label className="block text-xs text-[#6B7280] mb-1.5 font-medium">Email</label>
+                                                <input
+                                                    type="email"
+                                                    value={formData.escalationContactEmail}
+                                                    onChange={e => setFormData({ ...formData, escalationContactEmail: e.target.value })}
+                                                    placeholder="escalations@facility.ie"
+                                                    className="w-full px-3 py-2 text-sm border border-[#E5E7EB] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#10B981] bg-white text-[#1F2937]"
+                                                />
+                                            </div>
+                                        </div>
+                                    </div>
                                 </div>
                             )}
 
@@ -2043,7 +2370,7 @@ export function ClientManagement({ subPage = 'directory', onViewProfile }: { sub
                                                     className="w-full px-3 py-2 text-sm border border-[#E5E7EB] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#10B981] bg-white text-[#1F2937]"
                                                 />
                                             </div>
-                                            <div className="flex items-center mt-6">
+                                            <div className="flex flex-col gap-3 mt-6">
                                                 <label className="flex items-center gap-2 cursor-pointer text-xs text-[#6B7280] font-medium">
                                                     <input
                                                         type="checkbox"
@@ -2052,6 +2379,15 @@ export function ClientManagement({ subPage = 'directory', onViewProfile }: { sub
                                                         className="w-4 h-4 rounded text-[#10B981] focus:ring-[#10B981] border-[#E5E7EB]"
                                                     />
                                                     Purchase Order (PO) Required for Invoicing
+                                                </label>
+                                                <label className="flex items-center gap-2 cursor-pointer text-xs text-[#6B7280] font-medium">
+                                                    <input
+                                                        type="checkbox"
+                                                        checked={formData.autoRenewal}
+                                                        onChange={e => setFormData({ ...formData, autoRenewal: e.target.checked })}
+                                                        className="w-4 h-4 rounded text-[#10B981] focus:ring-[#10B981] border-[#E5E7EB]"
+                                                    />
+                                                    Contract Auto Renewal
                                                 </label>
                                             </div>
                                         </div>
