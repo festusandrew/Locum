@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
 import { toast } from 'sonner';
+import { AddNoteModal } from './ui/AddNoteModal';
 import {
     ArrowLeft, User, Mail, Phone, MapPin, Briefcase, Calendar, Clock,
     FileText, ShieldCheck, Star, Download, Upload, AlertTriangle,
@@ -7,7 +8,7 @@ import {
     Search, SlidersHorizontal, Heart, Globe, Hash, Building2, Award,
     BadgeCheck, Banknote, Activity, MessageSquare, Edit, MoreHorizontal,
     RefreshCw, Archive, History, ChevronDown, ChevronUp, Paperclip, X, Eye,
-    Plus, Trash2, Check, Info, CalendarDays
+    Plus, Trash2, Check, Info, CalendarDays, RotateCcw
 } from 'lucide-react';
 
 interface LocumProfilePageProps {
@@ -29,7 +30,8 @@ interface ComplianceDocument {
     fileName: string;
     fileSize: string;
     comments: { author: string; date: string; text: string }[];
-    history: { action: string; by: string; date: string; detail: string }[];
+    history: { action: string; by: string; date: string; detail: string; fileName?: string }[];
+    archived?: boolean;
 }
 
 // Helper to build compliance documents with all new fields
@@ -597,6 +599,12 @@ const locumProfiles: Record<string, any> = {
 
 // Generate basic profile for any ID not in detailed mock data
 function getLocumProfile(id: string) {
+    const stored = localStorage.getItem(`mployus_locum_profile_${id}`);
+    if (stored) {
+        try {
+            return JSON.parse(stored);
+        } catch (e) {}
+    }
     if (locumProfiles[id]) return locumProfiles[id];
     return locumProfiles['#GS234FS'];
 }
@@ -609,10 +617,38 @@ export function LocumProfilePage({ locumId, onBack }: LocumProfilePageProps) {
         if (copied.name.startsWith('Dr. ')) {
             copied.name = copied.name.substring(4);
         }
+        if (copied.notes) {
+            copied.notes = copied.notes.map((n: any, idx: number) => ({
+                id: n.id || `note-${idx}-${n.date}-${Math.random().toString(36).substring(2, 6)}`,
+                ...n
+            }));
+        }
         return copied;
     });
 
     const [showActionsDropdown, setShowActionsDropdown] = useState(false);
+    const [showAddNoteModal, setShowAddNoteModal] = useState(false);
+    const [showArchived, setShowArchived] = useState(false);
+    const [noteToEdit, setNoteToEdit] = useState<any>(null);
+    const [showArchivedDocs, setShowArchivedDocs] = useState(false);
+    const [editingDocIdx, setEditingDocIdx] = useState<number | null>(null);
+    const [editDocForm, setEditDocForm] = useState({
+        name: '',
+        category: '',
+        reference: '',
+        awardedBy: '',
+        expiryDate: '',
+        status: 'valid' as 'valid' | 'expiring' | 'expired' | 'pending',
+        mandatory: false,
+        noExpiry: false,
+    });
+    const [renewDocIdx, setRenewDocIdx] = useState<number | null>(null);
+    const [renewForm, setRenewForm] = useState({
+        expiryDate: '',
+        reference: '',
+        fileName: '',
+        fileSize: '250 KB',
+    });
     const actionsDropdownRef = useRef<HTMLDivElement>(null);
 
     useEffect(() => {
@@ -624,6 +660,13 @@ export function LocumProfilePage({ locumId, onBack }: LocumProfilePageProps) {
         document.addEventListener('mousedown', handleClickOutside);
         return () => document.removeEventListener('mousedown', handleClickOutside);
     }, []);
+
+    useEffect(() => {
+        if (profile && profile.id) {
+            localStorage.setItem(`mployus_locum_profile_${profile.id}`, JSON.stringify(profile));
+            locumProfiles[profile.id] = profile;
+        }
+    }, [profile]);
 
     // Edit Profile Modal States
     const [showEditModal, setShowEditModal] = useState(false);
@@ -672,6 +715,285 @@ export function LocumProfilePage({ locumId, onBack }: LocumProfilePageProps) {
     const [editPreferredShifts, setEditPreferredShifts] = useState<string[]>([]);
     const [editRevenueRegistered, setEditRevenueRegistered] = useState(false);
     const [editVatRegistered, setEditVatRegistered] = useState(false);
+
+    const handleAddLocumNote = (newNote: any) => {
+        let updatedNotes;
+        const noteIndex = profile.notes.findIndex((n: any) => n.id === newNote.id);
+        if (noteIndex > -1) {
+            updatedNotes = profile.notes.map((n: any) => n.id === newNote.id ? newNote : n);
+            toast.success('Internal note updated successfully');
+        } else {
+            updatedNotes = [newNote, ...profile.notes];
+            toast.success('Internal note added successfully');
+        }
+        const updated = {
+            ...profile,
+            notes: updatedNotes
+        };
+        setProfile(updated);
+        locumProfiles[profile.id] = updated;
+        setNoteToEdit(null);
+    };
+
+    const handleArchiveLocumNote = (noteId: string) => {
+        const updatedNotes = profile.notes.map((n: any) => {
+            if (n.id === noteId) {
+                return { ...n, isArchived: !n.isArchived };
+            }
+            return n;
+        });
+        const updated = {
+            ...profile,
+            notes: updatedNotes
+        };
+        setProfile(updated);
+        locumProfiles[profile.id] = updated;
+        const note = updatedNotes.find((n: any) => n.id === noteId);
+        toast.success(note?.isArchived ? 'Note archived successfully' : 'Note restored successfully');
+    };
+
+    const handleTriggerEditNote = (note: any) => {
+        setNoteToEdit(note);
+        setShowAddNoteModal(true);
+    };
+
+    const handleDownloadDocument = (doc: ComplianceDocument) => {
+        try {
+            const datePrinted = new Date().toLocaleDateString('en-IE', { day: 'numeric', month: 'short', year: 'numeric' });
+            const content = `# Compliance & Registry Document Verification Pack\nLocum Professional: ${profile.name} (ID: ${profile.id})\nDocument Name: ${doc.name}\nCategory: ${doc.category}\nReference Number: ${doc.reference || 'N/A'}\nAwarded / Verified By: ${doc.awardedBy || 'N/A'}\nExpiry Date: ${doc.expiryDate === 'N/A' ? 'No Expiry Date (Lifetime Validity)' : doc.expiryDate}\nStatus: ${doc.status.toUpperCase()}\nMandatory Document: ${doc.mandatory ? 'YES' : 'NO'}\n\nUploaded Date: ${doc.uploadedDate}\nVerification Date: ${doc.updatedDate}\nVerified By: ${doc.updatedBy}\n\n---\nVerified System Signature: MPLOYUS-COMP-SECURE-VERIFY-2026\nDate Generated: ${datePrinted}\n`;
+            const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = doc.fileName || `${doc.name.replace(/\s+/g, '_')}_Verification.txt`;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            URL.revokeObjectURL(url);
+            toast.success(`Verification file for ${doc.name} downloaded successfully`);
+        } catch (error) {
+            toast.error('Failed to download document');
+        }
+    };
+
+    const handleToggleArchiveDocument = (globalIdx: number) => {
+        const updatedDocs = profile.compliance.documents.map((d: ComplianceDocument, idx: number) => {
+            if (idx === globalIdx) {
+                const isArchiving = !d.archived;
+                const newHistoryItem = {
+                    action: isArchiving ? 'Archived' : 'Restored',
+                    by: 'Lisa Keane',
+                    date: new Date().toISOString().split('T')[0],
+                    detail: isArchiving ? 'Document archived and removed from active registry.' : 'Document restored back to active registry.',
+                    fileName: d.fileName
+                };
+                return {
+                    ...d,
+                    archived: isArchiving,
+                    history: [newHistoryItem, ...(d.history || [])]
+                };
+            }
+            return d;
+        });
+
+        // Recalculate overall compliance score
+        const activeDocs = updatedDocs.filter((d: ComplianceDocument) => !d.archived);
+        const validDocs = activeDocs.filter((d: ComplianceDocument) => d.status === 'valid').length;
+        const overallScore = activeDocs.length > 0 ? Math.round((validDocs / activeDocs.length) * 100) : 100;
+
+        const updatedProfile = {
+            ...profile,
+            compliance: {
+                ...profile.compliance,
+                documents: updatedDocs,
+                overall: overallScore
+            }
+        };
+
+        setProfile(updatedProfile);
+        locumProfiles[profile.id] = updatedProfile;
+
+        const isArchiving = updatedDocs[globalIdx].archived;
+        toast.success(isArchiving ? 'Document archived successfully' : 'Document restored successfully');
+    };
+
+    const handleOpenEditDoc = (globalIdx: number) => {
+        const doc = profile.compliance.documents[globalIdx];
+        setEditingDocIdx(globalIdx);
+        setEditDocForm({
+            name: doc.name,
+            category: doc.category,
+            reference: doc.reference,
+            awardedBy: doc.awardedBy,
+            expiryDate: doc.expiryDate === 'N/A' ? '' : doc.expiryDate,
+            status: doc.status,
+            mandatory: doc.mandatory,
+            noExpiry: doc.expiryDate === 'N/A'
+        });
+    };
+
+    const handleSaveEditDoc = () => {
+        if (!editDocForm.name.trim()) {
+            toast.error('Document Name is required');
+            return;
+        }
+        if (!editDocForm.category.trim()) {
+            toast.error('Category is required');
+            return;
+        }
+
+        const updatedDocs = profile.compliance.documents.map((d: ComplianceDocument, idx: number) => {
+            if (idx === editingDocIdx) {
+                const isNoExpiry = editDocForm.noExpiry;
+                const newExpiry = isNoExpiry ? 'N/A' : editDocForm.expiryDate || new Date().toISOString().split('T')[0];
+                
+                const newHistoryItem = {
+                    action: 'Modified',
+                    by: 'Lisa Keane',
+                    date: new Date().toISOString().split('T')[0],
+                    detail: `Details updated. Reference: ${editDocForm.reference || 'N/A'}. Status: ${editDocForm.status}.`,
+                    fileName: d.fileName
+                };
+
+                return {
+                    ...d,
+                    name: editDocForm.name,
+                    category: editDocForm.category,
+                    reference: editDocForm.reference,
+                    awardedBy: editDocForm.awardedBy,
+                    expiryDate: newExpiry,
+                    status: editDocForm.status,
+                    mandatory: editDocForm.mandatory,
+                    updatedBy: 'Lisa Keane',
+                    updatedDate: new Date().toISOString().split('T')[0],
+                    history: [newHistoryItem, ...(d.history || [])]
+                };
+            }
+            return d;
+        });
+
+        // Recalculate overall compliance score
+        const activeDocs = updatedDocs.filter((d: ComplianceDocument) => !d.archived);
+        const validDocs = activeDocs.filter((d: ComplianceDocument) => d.status === 'valid').length;
+        const overallScore = activeDocs.length > 0 ? Math.round((validDocs / activeDocs.length) * 100) : 100;
+
+        const updatedProfile = {
+            ...profile,
+            compliance: {
+                ...profile.compliance,
+                documents: updatedDocs,
+                overall: overallScore
+            }
+        };
+
+        setProfile(updatedProfile);
+        locumProfiles[profile.id] = updatedProfile;
+        setEditingDocIdx(null);
+        toast.success('Document updated successfully');
+    };
+
+    const handleOpenRenewDoc = (globalIdx: number) => {
+        const doc = profile.compliance.documents[globalIdx];
+        setRenewDocIdx(globalIdx);
+        
+        let defaultNextExpiry = '';
+        if (doc.expiryDate !== 'N/A') {
+            const currentExpiry = new Date(doc.expiryDate);
+            if (!isNaN(currentExpiry.getTime())) {
+                currentExpiry.setFullYear(currentExpiry.getFullYear() + 1);
+                defaultNextExpiry = currentExpiry.toISOString().split('T')[0];
+            }
+        } else {
+            const nextYear = new Date();
+            nextYear.setFullYear(nextYear.getFullYear() + 1);
+            defaultNextExpiry = nextYear.toISOString().split('T')[0];
+        }
+
+        setRenewForm({
+            expiryDate: defaultNextExpiry,
+            reference: doc.reference || '',
+            fileName: `Renewed_${doc.fileName || 'document.pdf'}`,
+            fileSize: '250 KB'
+        });
+    };
+
+    const handleRenewFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+
+        const formatBytes = (bytes: number): string => {
+            if (bytes === 0) return '0 Bytes';
+            const k = 1024;
+            const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
+        };
+
+        setRenewForm(prev => ({
+            ...prev,
+            fileName: file.name,
+            fileSize: formatBytes(file.size)
+        }));
+
+        toast.success(`File "${file.name}" staged for renewal upload`);
+    };
+
+    const handleSaveRenewDoc = () => {
+        if (!renewForm.expiryDate) {
+            toast.error('Expiry Date is required for renewal');
+            return;
+        }
+
+        const updatedDocs = profile.compliance.documents.map((d: ComplianceDocument, idx: number) => {
+            if (idx === renewDocIdx) {
+                const expiryDateObj = new Date(renewForm.expiryDate);
+                const today = new Date(2026, 1, 10);
+                const isExpired = expiryDateObj.getTime() < today.getTime();
+                const newStatus = isExpired ? 'expired' : 'valid';
+
+                const newHistoryItem = {
+                    action: 'Renewed',
+                    by: 'Lisa Keane',
+                    date: new Date().toISOString().split('T')[0],
+                    detail: `Document renewed. Expiry extended to ${renewForm.expiryDate}. Status set to ${newStatus}.`,
+                    fileName: renewForm.fileName || d.fileName
+                };
+
+                return {
+                    ...d,
+                    reference: renewForm.reference || d.reference,
+                    expiryDate: renewForm.expiryDate,
+                    status: newStatus as any,
+                    fileName: renewForm.fileName || d.fileName,
+                    fileSize: renewForm.fileSize || d.fileSize,
+                    uploadedDate: new Date().toISOString().split('T')[0],
+                    updatedBy: 'Lisa Keane',
+                    updatedDate: new Date().toISOString().split('T')[0],
+                    history: [newHistoryItem, ...(d.history || [])]
+                };
+            }
+            return d;
+        });
+
+        // Recalculate overall compliance score
+        const activeDocs = updatedDocs.filter((d: ComplianceDocument) => !d.archived);
+        const validDocs = activeDocs.filter((d: ComplianceDocument) => d.status === 'valid').length;
+        const overallScore = activeDocs.length > 0 ? Math.round((validDocs / activeDocs.length) * 100) : 100;
+
+        const updatedProfile = {
+            ...profile,
+            compliance: {
+                ...profile.compliance,
+                documents: updatedDocs,
+                overall: overallScore
+            }
+        };
+
+        setProfile(updatedProfile);
+        locumProfiles[profile.id] = updatedProfile;
+        setRenewDocIdx(null);
+        toast.success(`Document ${profile.compliance.documents[renewDocIdx!].name} renewed successfully`);
+    };
 
     const handleOpenEdit = () => {
         setEditName(profile.name);
@@ -1357,7 +1679,8 @@ export function LocumProfilePage({ locumId, onBack }: LocumProfilePageProps) {
             doc.awardedBy.toLowerCase().includes(docSearch.toLowerCase());
         const matchCategory = docCategoryFilter === 'all' || doc.category === docCategoryFilter;
         const matchStatus = docStatusFilter === 'all' || doc.status === docStatusFilter;
-        return matchSearch && matchCategory && matchStatus;
+        const matchArchive = showArchivedDocs ? true : !doc.archived;
+        return matchSearch && matchCategory && matchStatus && matchArchive;
     });
 
     const docCategories = [...new Set(allDocs.map((d: ComplianceDocument) => d.category))];
@@ -1713,6 +2036,15 @@ export function LocumProfilePage({ locumId, onBack }: LocumProfilePageProps) {
                                     <option value="expiring">Expiring</option>
                                     <option value="expired">Expired</option>
                                 </select>
+                                <label className="flex items-center gap-1.5 cursor-pointer text-xs text-[#6B7280] font-medium border border-[#E5E7EB] rounded-lg px-3 py-2 bg-white hover:bg-gray-50 transition-colors">
+                                    <input
+                                        type="checkbox"
+                                        checked={showArchivedDocs}
+                                        onChange={e => setShowArchivedDocs(e.target.checked)}
+                                        className="w-4 h-4 rounded text-[#10B981] focus:ring-[#10B981] border-[#E5E7EB]"
+                                    />
+                                    Show Archived
+                                </label>
                                 <span className="text-xs text-[#9CA3AF] ml-2">{filteredDocs.length} document{filteredDocs.length !== 1 ? 's' : ''}</span>
                             </div>
 
@@ -1734,7 +2066,7 @@ export function LocumProfilePage({ locumId, onBack }: LocumProfilePageProps) {
                                                 const daysLeft = getDaysUntilExpiry(doc.expiryDate);
 
                                                 return (
-                                                    <div key={globalIdx} className={`border rounded-lg transition-all ${isExpanded ? 'border-[#10B981]/30 shadow-sm' : 'border-[#E5E7EB] hover:border-[#D1D5DB]'}`}>
+                                                    <div key={globalIdx} className={`border rounded-lg transition-all ${doc.archived ? 'opacity-65 border-[#D1D5DB] bg-[#F9FAFB] shadow-none' : isExpanded ? 'border-[#10B981]/30 shadow-sm bg-white' : 'border-[#E5E7EB] hover:border-[#D1D5DB] bg-white'}`}>
                                                         {/* Main Row */}
                                                         <div className="p-3">
                                                             <div className="flex items-start gap-3">
@@ -1750,6 +2082,9 @@ export function LocumProfilePage({ locumId, onBack }: LocumProfilePageProps) {
                                                                 <div className="flex-1 min-w-0">
                                                                     <div className="flex items-center gap-2 mb-1">
                                                                         <p className="text-sm text-[#1F2937] truncate" style={{ fontWeight: 500 }}>{doc.name}</p>
+                                                                        {doc.archived && (
+                                                                            <span className="text-[9px] text-[#7C2D12] border border-[#FFEDD5] bg-[#FFEDD5] px-1.5 py-0.5 rounded flex-shrink-0" style={{ fontWeight: 500 }}>Archived</span>
+                                                                        )}
                                                                         {doc.mandatory && (
                                                                             <span className="text-[9px] text-[#EF4444] border border-[#FECACA] bg-[#FEF2F2] px-1.5 py-0.5 rounded flex-shrink-0" style={{ fontWeight: 500 }}>Required</span>
                                                                         )}
@@ -1812,13 +2147,13 @@ export function LocumProfilePage({ locumId, onBack }: LocumProfilePageProps) {
 
                                                                 {/* Action Buttons */}
                                                                 <div className="flex items-center gap-1 flex-shrink-0">
-                                                                    <button className="p-1.5 text-[#6B7280] hover:bg-[#F3F4F6] rounded-lg transition-colors" title="Download">
+                                                                    <button onClick={() => handleDownloadDocument(doc)} className="p-1.5 text-[#6B7280] hover:bg-[#F3F4F6] rounded-lg transition-colors" title="Download">
                                                                         <Download className="w-3.5 h-3.5" />
                                                                     </button>
-                                                                    <button className="p-1.5 text-[#6B7280] hover:bg-[#F3F4F6] rounded-lg transition-colors" title="Edit">
+                                                                    <button onClick={() => handleOpenEditDoc(globalIdx)} className="p-1.5 text-[#6B7280] hover:bg-[#F3F4F6] rounded-lg transition-colors" title="Edit">
                                                                         <Edit className="w-3.5 h-3.5" />
                                                                     </button>
-                                                                    <button className="px-2 py-1 text-[10px] text-[#10B981] border border-[#10B981] rounded hover:bg-[#D1FAE5] transition-colors flex items-center gap-1" title="Update / Renew">
+                                                                    <button onClick={() => handleOpenRenewDoc(globalIdx)} className="px-2 py-1 text-[10px] text-[#10B981] border border-[#10B981] rounded hover:bg-[#D1FAE5] transition-colors flex items-center gap-1" title="Update / Renew">
                                                                         <RefreshCw className="w-3 h-3" /> Renew
                                                                     </button>
                                                                     <button
@@ -1828,9 +2163,15 @@ export function LocumProfilePage({ locumId, onBack }: LocumProfilePageProps) {
                                                                     >
                                                                         <History className="w-3 h-3" /> History
                                                                     </button>
-                                                                    <button className="p-1.5 text-[#6B7280] hover:bg-[#FEF2F2] hover:text-[#DC2626] rounded-lg transition-colors" title="Archive">
-                                                                        <Archive className="w-3.5 h-3.5" />
-                                                                    </button>
+                                                                    {doc.archived ? (
+                                                                        <button onClick={() => handleToggleArchiveDocument(globalIdx)} className="p-1.5 text-[#059669] hover:bg-[#D1FAE5] rounded-lg transition-colors" title="Restore">
+                                                                            <RotateCcw className="w-3.5 h-3.5" />
+                                                                        </button>
+                                                                    ) : (
+                                                                        <button onClick={() => handleToggleArchiveDocument(globalIdx)} className="p-1.5 text-[#6B7280] hover:bg-[#FEF2F2] hover:text-[#DC2626] rounded-lg transition-colors" title="Archive">
+                                                                            <Archive className="w-3.5 h-3.5" />
+                                                                        </button>
+                                                                    )}
                                                                     <button
                                                                         onClick={() => toggleDocExpand(globalIdx)}
                                                                         className="p-1.5 text-[#6B7280] hover:bg-[#F3F4F6] rounded-lg transition-colors"
@@ -1875,6 +2216,16 @@ export function LocumProfilePage({ locumId, onBack }: LocumProfilePageProps) {
                                                                                         <span className="text-[10px] text-[#9CA3AF]">{formatDateNice(entry.date)}</span>
                                                                                     </div>
                                                                                     <p className="text-[10px] text-[#6B7280] mt-0.5">{entry.detail}</p>
+                                                                                    <div className="flex items-center gap-1 mt-1 text-[9px] text-[#3B82F6]">
+                                                                                        <Paperclip className="w-2.5 h-2.5" />
+                                                                                        <span 
+                                                                                            onClick={() => handleDownloadDocument({ ...doc, fileName: entry.fileName || doc.fileName })}
+                                                                                            className="hover:underline cursor-pointer font-medium text-left"
+                                                                                            title="Download this historical version"
+                                                                                        >
+                                                                                            {entry.fileName || doc.fileName}
+                                                                                        </span>
+                                                                                    </div>
                                                                                 </div>
                                                                             </div>
                                                                         ))}
@@ -2757,25 +3108,65 @@ export function LocumProfilePage({ locumId, onBack }: LocumProfilePageProps) {
                         <div className="space-y-4">
                             <div className="flex items-center justify-between">
                                 <h4 className="text-sm text-[#1F2937]" style={{ fontWeight: 600 }}>Internal Notes & Activity Log</h4>
-                                <button className="flex items-center gap-1.5 px-3 py-1.5 text-sm bg-[#10B981] text-white rounded-lg hover:bg-[#059669]">
-                                    <MessageSquare className="w-3.5 h-3.5" /> Add Note
-                                </button>
+                                <div className="flex items-center gap-4">
+                                    <label className="flex items-center gap-2 text-xs text-[#6B7280] cursor-pointer">
+                                        <input 
+                                            type="checkbox" 
+                                            checked={showArchived} 
+                                            onChange={(e) => setShowArchived(e.target.checked)} 
+                                            className="rounded text-[#10B981] focus:ring-[#10B981] border-[#E5E7EB] h-3.5 w-3.5"
+                                        />
+                                        Show Archived Notes
+                                    </label>
+                                    <button 
+                                        onClick={() => { setNoteToEdit(null); setShowAddNoteModal(true); }}
+                                        className="flex items-center gap-1.5 px-3 py-1.5 text-sm bg-[#10B981] hover:bg-[#059669] text-white rounded-lg font-medium shadow-sm hover:shadow transition-all duration-200"
+                                    >
+                                        <MessageSquare className="w-3.5 h-3.5" /> Add Note
+                                    </button>
+                                </div>
                             </div>
                             <div className="space-y-3">
-                                {profile.notes.map((note: any, i: number) => (
-                                    <div key={i} className="p-4 border border-[#E5E7EB] rounded-lg">
-                                        <div className="flex items-center justify-between mb-2">
-                                            <div className="flex items-center gap-2">
-                                                <div className="w-7 h-7 bg-[#EDE9FE] rounded-full flex items-center justify-center">
-                                                    <User className="w-3.5 h-3.5 text-[#8B5CF6]" />
+                                {profile.notes
+                                    .filter((note: any) => showArchived || !note.isArchived)
+                                    .map((note: any, i: number) => (
+                                        <div 
+                                            key={note.id || i} 
+                                            className={`p-4 border rounded-lg transition-all ${note.isArchived ? 'bg-[#F9FAFB] border-dashed border-[#D1D5DB] opacity-75' : 'border-[#E5E7EB]'}`}
+                                        >
+                                            <div className="flex items-center justify-between mb-2">
+                                                <div className="flex items-center gap-2">
+                                                    <div className="w-7 h-7 bg-[#EDE9FE] rounded-full flex items-center justify-center">
+                                                        <User className="w-3.5 h-3.5 text-[#8B5CF6]" />
+                                                    </div>
+                                                    <span className="text-sm text-[#1F2937]" style={{ fontWeight: 500 }}>{note.author}</span>
+                                                    {note.isArchived && (
+                                                        <span className="px-1.5 py-0.5 text-[10px] font-medium bg-[#E5E7EB] text-[#4B5563] rounded">Archived</span>
+                                                    )}
                                                 </div>
-                                                <span className="text-sm text-[#1F2937]" style={{ fontWeight: 500 }}>{note.author}</span>
+                                                <div className="flex items-center gap-3">
+                                                    <span className="text-xs text-[#9CA3AF]">{note.date}</span>
+                                                    <div className="flex items-center gap-1">
+                                                        <button 
+                                                            onClick={() => handleTriggerEditNote(note)}
+                                                            className="p-1 text-[#9CA3AF] hover:text-[#3B82F6] hover:bg-gray-100 rounded transition-colors"
+                                                            title="Edit Note"
+                                                        >
+                                                            <Edit className="w-3.5 h-3.5" />
+                                                        </button>
+                                                        <button 
+                                                            onClick={() => handleArchiveLocumNote(note.id)}
+                                                            className={`p-1 rounded transition-colors ${note.isArchived ? 'text-[#10B981] hover:text-[#059669] hover:bg-[#ECFDF5]' : 'text-[#9CA3AF] hover:text-[#EF4444] hover:bg-red-50'}`}
+                                                            title={note.isArchived ? "Restore Note" : "Archive Note"}
+                                                        >
+                                                            {note.isArchived ? <RotateCcw className="w-3.5 h-3.5" /> : <Archive className="w-3.5 h-3.5" />}
+                                                        </button>
+                                                    </div>
+                                                </div>
                                             </div>
-                                            <span className="text-xs text-[#9CA3AF]">{note.date}</span>
+                                            <p className="text-sm text-[#6B7280] pl-9">{note.content}</p>
                                         </div>
-                                        <p className="text-sm text-[#6B7280] pl-9">{note.content}</p>
-                                    </div>
-                                ))}
+                                    ))}
                             </div>
                         </div>
                     )}
@@ -3269,6 +3660,262 @@ export function LocumProfilePage({ locumId, onBack }: LocumProfilePageProps) {
                             </button>
                         </div>
                     </form>
+                </div>
+            )}
+            {/* Add Note Modal */}
+            <AddNoteModal
+                isOpen={showAddNoteModal}
+                onClose={() => { setShowAddNoteModal(false); setNoteToEdit(null); }}
+                onAddNote={handleAddLocumNote}
+                defaultAuthor="Lisa Keane"
+                title="Add Locum Note"
+                placeholder="Type internal locum note content here..."
+                noteToEdit={noteToEdit}
+            />
+
+            {/* Edit Compliance Document Modal */}
+            {editingDocIdx !== null && (
+                <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-6">
+                    <div className="bg-white rounded-xl w-full max-w-lg shadow-xl overflow-hidden flex flex-col max-h-[90vh]">
+                        <div className="p-5 border-b border-[#E5E7EB] flex items-center justify-between flex-shrink-0 bg-[#F9FAFB]">
+                            <div>
+                                <h3 className="text-lg text-[#1F2937]" style={{ fontWeight: 600 }}>Edit Compliance Document</h3>
+                                <p className="text-xs text-[#9CA3AF]">Update verification details and expiry status</p>
+                            </div>
+                            <button onClick={() => setEditingDocIdx(null)} className="p-2 hover:bg-[#F3F4F6] rounded-lg">
+                                <X className="w-5 h-5 text-[#6B7280]" />
+                            </button>
+                        </div>
+
+                        <div className="p-6 space-y-4 overflow-y-auto flex-1">
+                            <div>
+                                <label className="block text-xs text-[#6B7280] mb-1.5 font-medium">Document Name <span className="text-[#EF4444]">*</span></label>
+                                <input
+                                    type="text"
+                                    value={editDocForm.name}
+                                    onChange={e => setEditDocForm({ ...editDocForm, name: e.target.value })}
+                                    className="w-full px-3 py-2 text-sm border border-[#E5E7EB] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#10B981] bg-white text-[#1F2937]"
+                                />
+                            </div>
+
+                            <div className="grid grid-cols-2 gap-4">
+                                <div>
+                                    <label className="block text-xs text-[#6B7280] mb-1.5 font-medium">Category <span className="text-[#EF4444]">*</span></label>
+                                    <select
+                                        value={editDocForm.category}
+                                        onChange={e => setEditDocForm({ ...editDocForm, category: e.target.value })}
+                                        className="w-full px-3 py-2 text-sm border border-[#E5E7EB] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#10B981] bg-white text-[#1F2937]"
+                                    >
+                                        <option value="Registration">Registration</option>
+                                        <option value="Mandatory Training">Mandatory Training</option>
+                                        <option value="Clinical Competency">Clinical Competency</option>
+                                        <option value="Identification & Right to Work">Identification & Right to Work</option>
+                                        <option value="Insurance & Reference">Insurance & Reference</option>
+                                        <option value="Vaccination & Health">Vaccination & Health</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label className="block text-xs text-[#6B7280] mb-1.5 font-medium">Verification Status</label>
+                                    <select
+                                        value={editDocForm.status}
+                                        onChange={e => setEditDocForm({ ...editDocForm, status: e.target.value as any })}
+                                        className="w-full px-3 py-2 text-sm border border-[#E5E7EB] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#10B981] bg-white text-[#1F2937]"
+                                    >
+                                        <option value="valid">Valid</option>
+                                        <option value="expiring">Expiring</option>
+                                        <option value="expired">Expired</option>
+                                        <option value="pending">Pending</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div className="grid grid-cols-2 gap-4">
+                                <div>
+                                    <label className="block text-xs text-[#6B7280] mb-1.5 font-medium">Reference Number</label>
+                                    <input
+                                        type="text"
+                                        value={editDocForm.reference}
+                                        onChange={e => setEditDocForm({ ...editDocForm, reference: e.target.value })}
+                                        placeholder="e.g. Ref-12345"
+                                        className="w-full px-3 py-2 text-sm border border-[#E5E7EB] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#10B981] bg-white text-[#1F2937]"
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-xs text-[#6B7280] mb-1.5 font-medium">Awarded / Verified By</label>
+                                    <input
+                                        type="text"
+                                        value={editDocForm.awardedBy}
+                                        onChange={e => setEditDocForm({ ...editDocForm, awardedBy: e.target.value })}
+                                        placeholder="e.g. Medical Council"
+                                        className="w-full px-3 py-2 text-sm border border-[#E5E7EB] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#10B981] bg-white text-[#1F2937]"
+                                    />
+                                </div>
+                            </div>
+
+                            <div className="border-t border-[#E5E7EB] pt-4">
+                                <div className="flex items-center justify-between mb-3">
+                                    <label className="flex items-center gap-2 cursor-pointer text-xs text-[#6B7280] font-medium">
+                                        <input
+                                            type="checkbox"
+                                            checked={editDocForm.noExpiry}
+                                            onChange={e => setEditDocForm({ ...editDocForm, noExpiry: e.target.checked })}
+                                            className="w-4 h-4 rounded text-[#10B981] focus:ring-[#10B981] border-[#E5E7EB]"
+                                        />
+                                        No Expiry Date (Lifetime Validity)
+                                    </label>
+                                </div>
+
+                                {!editDocForm.noExpiry && (
+                                    <div>
+                                        <label className="block text-xs text-[#6B7280] mb-1.5 font-medium">Expiry Date</label>
+                                        <input
+                                            type="date"
+                                            value={editDocForm.expiryDate}
+                                            onChange={e => setEditDocForm({ ...editDocForm, expiryDate: e.target.value })}
+                                            className="w-full px-3 py-2 text-sm border border-[#E5E7EB] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#10B981] bg-white text-[#1F2937]"
+                                        />
+                                    </div>
+                                )}
+                            </div>
+
+                            <div className="border-t border-[#E5E7EB] pt-4">
+                                <label className="flex items-center gap-2 cursor-pointer text-xs text-[#6B7280] font-medium">
+                                    <input
+                                        type="checkbox"
+                                        checked={editDocForm.mandatory}
+                                        onChange={e => setEditDocForm({ ...editDocForm, mandatory: e.target.checked })}
+                                        className="w-4 h-4 rounded text-[#10B981] focus:ring-[#10B981] border-[#E5E7EB]"
+                                    />
+                                    Mandatory Document (Required for Compliance Score)
+                                </label>
+                            </div>
+                        </div>
+
+                        <div className="flex items-center justify-end gap-2 px-6 py-4 border-t border-[#E5E7EB] bg-[#F9FAFB] flex-shrink-0">
+                            <button
+                                onClick={() => setEditingDocIdx(null)}
+                                className="px-4 py-2 border border-[#E5E7EB] hover:bg-gray-50 text-[#6B7280] rounded-lg text-sm transition-colors"
+                                style={{ fontWeight: 500 }}
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                onClick={handleSaveEditDoc}
+                                className="px-4 py-2 bg-[#10B981] hover:bg-[#059669] text-white rounded-lg text-sm flex items-center gap-1.5 transition-colors"
+                                style={{ fontWeight: 500 }}
+                            >
+                                <Check className="w-4 h-4" /> Save Changes
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Renew Compliance Document Modal */}
+            {renewDocIdx !== null && (
+                <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-6">
+                    <div className="bg-white rounded-xl w-full max-w-lg shadow-xl overflow-hidden flex flex-col max-h-[90vh]">
+                        <div className="p-5 border-b border-[#E5E7EB] flex items-center justify-between flex-shrink-0 bg-[#F9FAFB]">
+                            <div>
+                                <h3 className="text-lg text-[#1F2937]" style={{ fontWeight: 600 }}>Renew Document</h3>
+                                <p className="text-xs text-[#9CA3AF]">Extend expiry and log new document verification details</p>
+                            </div>
+                            <button onClick={() => setRenewDocIdx(null)} className="p-2 hover:bg-[#F3F4F6] rounded-lg">
+                                <X className="w-5 h-5 text-[#6B7280]" />
+                            </button>
+                        </div>
+
+                        <div className="p-6 space-y-4 overflow-y-auto flex-1">
+                            <div className="bg-[#ECFDF5] border border-[#A7F3D0] rounded-lg p-3.5 text-xs text-[#065F46] flex items-start gap-2.5">
+                                <Info className="w-4 h-4 text-[#10B981] flex-shrink-0 mt-0.5" />
+                                <div>
+                                    <span className="font-semibold block mb-0.5">Renewing: {profile.compliance.documents[renewDocIdx].name}</span>
+                                    This action will extend the document's expiry date, update its verification status, and record a renewal transaction in the verification log history.
+                                </div>
+                            </div>
+
+                            <div>
+                                <label className="block text-xs text-[#6B7280] mb-1.5 font-medium">New Expiry Date <span className="text-[#EF4444]">*</span></label>
+                                <input
+                                    type="date"
+                                    value={renewForm.expiryDate}
+                                    onChange={e => setRenewForm({ ...renewForm, expiryDate: e.target.value })}
+                                    className="w-full px-3 py-2 text-sm border border-[#E5E7EB] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#10B981] bg-white text-[#1F2937]"
+                                />
+                            </div>
+
+                            <div>
+                                <label className="block text-xs text-[#6B7280] mb-1.5 font-medium">Updated Reference / Certificate Number</label>
+                                <input
+                                    type="text"
+                                    value={renewForm.reference}
+                                    onChange={e => setRenewForm({ ...renewForm, reference: e.target.value })}
+                                    placeholder="e.g. IMC-34521-REV"
+                                    className="w-full px-3 py-2 text-sm border border-[#E5E7EB] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#10B981] bg-white text-[#1F2937]"
+                                />
+                            </div>
+
+                            <div>
+                                <label className="block text-xs text-[#6B7280] mb-1.5 font-medium">Upload Certificate Document</label>
+                                <div className="border border-dashed border-[#D1D5DB] hover:border-[#10B981] rounded-lg p-4 text-center cursor-pointer transition-colors relative bg-[#F9FAFB] flex flex-col items-center justify-center">
+                                    <Upload className="w-6 h-6 text-[#9CA3AF] mb-1.5" />
+                                    <span className="text-xs text-[#4B5563] font-semibold">Click to select new file</span>
+                                    <span className="text-[10px] text-[#9CA3AF] mt-0.5">PDF, DOCX, PNG, or JPG up to 10MB</span>
+                                    <input
+                                        type="file"
+                                        accept=".pdf,.docx,.doc,.png,.jpg,.jpeg"
+                                        onChange={handleRenewFileChange}
+                                        className="absolute inset-0 opacity-0 cursor-pointer"
+                                    />
+                                </div>
+                                {renewForm.fileName && (
+                                    <div className="flex items-center gap-1.5 text-[11px] text-[#059669] mt-2 bg-[#D1FAE5] px-2 py-1 rounded w-fit font-medium">
+                                        <CheckCircle className="w-3.5 h-3.5" /> File Ready to Upload: {renewForm.fileName} ({renewForm.fileSize})
+                                    </div>
+                                )}
+                            </div>
+
+                            <div className="grid grid-cols-2 gap-4">
+                                <div>
+                                    <label className="block text-xs text-[#6B7280] mb-1.5 font-medium">New Document File Name</label>
+                                    <input
+                                        type="text"
+                                        value={renewForm.fileName}
+                                        onChange={e => setRenewForm({ ...renewForm, fileName: e.target.value })}
+                                        placeholder="e.g. document_renewed.pdf"
+                                        className="w-full px-3 py-2 text-sm border border-[#E5E7EB] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#10B981] bg-white text-[#1F2937]"
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-xs text-[#6B7280] mb-1.5 font-medium">File Size</label>
+                                    <input
+                                        type="text"
+                                        value={renewForm.fileSize}
+                                        onChange={e => setRenewForm({ ...renewForm, fileSize: e.target.value })}
+                                        placeholder="e.g. 250 KB"
+                                        className="w-full px-3 py-2 text-sm border border-[#E5E7EB] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#10B981] bg-white text-[#1F2937]"
+                                    />
+                                </div>
+                            </div>
+                        </div>
+
+                        <div className="flex items-center justify-end gap-2 px-6 py-4 border-t border-[#E5E7EB] bg-[#F9FAFB] flex-shrink-0">
+                            <button
+                                onClick={() => setRenewDocIdx(null)}
+                                className="px-4 py-2 border border-[#E5E7EB] hover:bg-gray-50 text-[#6B7280] rounded-lg text-sm transition-colors"
+                                style={{ fontWeight: 500 }}
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                onClick={handleSaveRenewDoc}
+                                className="px-4 py-2 bg-[#10B981] hover:bg-[#059669] text-white rounded-lg text-sm flex items-center gap-1.5 transition-colors"
+                                style={{ fontWeight: 500 }}
+                            >
+                                <Check className="w-4 h-4" /> Renew Document
+                            </button>
+                        </div>
+                    </div>
                 </div>
             )}
         </div>

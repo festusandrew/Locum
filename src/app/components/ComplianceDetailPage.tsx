@@ -1,10 +1,11 @@
 import { useState, useRef, useEffect } from 'react';
 import { toast } from 'sonner';
+import { AddNoteModal } from './ui/AddNoteModal';
 import {
     ArrowLeft, CheckCircle, XCircle, AlertTriangle, Download, Upload,
     FileText, Calendar, User, Mail, Phone, MapPin, Briefcase, Clock,
     Edit, MoreHorizontal, Activity, MessageSquare, Shield, FileCheck,
-    X, CheckSquare
+    X, CheckSquare, Archive, RotateCcw
 } from 'lucide-react';
 
 interface ComplianceDetailPageProps {
@@ -191,7 +192,31 @@ function getComplianceProfile(id: string) {
 }
 
 export function ComplianceDetailPage({ locumId, onBack }: ComplianceDetailPageProps) {
-    const profile = getComplianceProfile(locumId);
+    const [showArchived, setShowArchived] = useState(false);
+    const [noteToEdit, setNoteToEdit] = useState<any>(null);
+    const [profile, setProfile] = useState(() => {
+        const p = getComplianceProfile(locumId);
+        if (p.notes) {
+            p.notes = p.notes.map((n: any, idx: number) => ({
+                id: n.id || `note-${idx}-${n.date}-${Math.random().toString(36).substring(2, 6)}`,
+                ...n
+            }));
+        }
+        return p;
+    });
+    const [showAddNoteModal, setShowAddNoteModal] = useState(false);
+
+    useEffect(() => {
+        const p = getComplianceProfile(locumId);
+        if (p.notes) {
+            p.notes = p.notes.map((n: any, idx: number) => ({
+                id: n.id || `note-${idx}-${n.date}-${Math.random().toString(36).substring(2, 6)}`,
+                ...n
+            }));
+        }
+        setProfile(p);
+    }, [locumId]);
+
     const [activeTab, setActiveTab] = useState<'documents' | 'timeline' | 'notes'>('documents');
     const [showUploadModal, setShowUploadModal] = useState(false);
     const [uploadDocType, setUploadDocType] = useState('');
@@ -210,6 +235,47 @@ export function ComplianceDetailPage({ locumId, onBack }: ComplianceDetailPagePr
             setSelectedFile(file);
             toast.success(`Selected file: ${file.name}`);
         }
+    };
+
+    const handleAddComplianceNote = (newNote: any) => {
+        let updatedNotes;
+        const noteIndex = profile.notes.findIndex((n: any) => n.id === newNote.id);
+        if (noteIndex > -1) {
+            updatedNotes = profile.notes.map((n: any) => n.id === newNote.id ? newNote : n);
+            toast.success('Note updated successfully');
+        } else {
+            updatedNotes = [newNote, ...profile.notes];
+            toast.success('Note added successfully');
+        }
+        const updatedProfile = {
+            ...profile,
+            notes: updatedNotes
+        };
+        setProfile(updatedProfile);
+        complianceProfiles[profile.id] = updatedProfile;
+        setNoteToEdit(null);
+    };
+
+    const handleArchiveComplianceNote = (noteId: string) => {
+        const updatedNotes = profile.notes.map((n: any) => {
+            if (n.id === noteId) {
+                return { ...n, isArchived: !n.isArchived };
+            }
+            return n;
+        });
+        const updatedProfile = {
+            ...profile,
+            notes: updatedNotes
+        };
+        setProfile(updatedProfile);
+        complianceProfiles[profile.id] = updatedProfile;
+        const note = updatedNotes.find((n: any) => n.id === noteId);
+        toast.success(note?.isArchived ? 'Note archived successfully' : 'Note restored successfully');
+    };
+
+    const handleTriggerEditNote = (note: any) => {
+        setNoteToEdit(note);
+        setShowAddNoteModal(true);
     };
 
     const handleUploadSubmit = () => {
@@ -629,23 +695,63 @@ export function ComplianceDetailPage({ locumId, onBack }: ComplianceDetailPagePr
                         <div className="space-y-4">
                             <div className="flex items-center justify-between">
                                 <h4 className="text-sm text-[#1F2937]" style={{ fontWeight: 600 }}>Compliance Notes</h4>
-                                <button className="flex items-center gap-1.5 px-3 py-1.5 text-sm text-[#10B981] border border-[#10B981] rounded-lg hover:bg-[#ECFDF5]">
-                                    <MessageSquare className="w-3.5 h-3.5" /> Add Note
-                                </button>
+                                <div className="flex items-center gap-4">
+                                    <label className="flex items-center gap-2 text-xs text-[#6B7280] cursor-pointer">
+                                        <input 
+                                            type="checkbox" 
+                                            checked={showArchived} 
+                                            onChange={(e) => setShowArchived(e.target.checked)} 
+                                            className="rounded text-[#10B981] focus:ring-[#10B981] border-[#E5E7EB] h-3.5 w-3.5"
+                                        />
+                                        Show Archived Notes
+                                    </label>
+                                    <button 
+                                        onClick={() => { setNoteToEdit(null); setShowAddNoteModal(true); }}
+                                        className="flex items-center gap-1.5 px-3 py-1.5 text-sm bg-[#10B981] hover:bg-[#059669] text-white rounded-lg font-medium shadow-sm hover:shadow transition-all duration-200"
+                                    >
+                                        <MessageSquare className="w-3.5 h-3.5" /> Add Note
+                                    </button>
+                                </div>
                             </div>
-                            {profile.notes.length > 0 ? (
+                            {profile.notes.filter((note: any) => showArchived || !note.isArchived).length > 0 ? (
                                 <div className="space-y-3">
-                                    {profile.notes.map((note: any, idx: number) => (
-                                        <div key={idx} className="border border-[#E5E7EB] rounded-lg p-4 bg-[#FFFBEB]">
-                                            <div className="flex items-start justify-between mb-2">
-                                                <div>
-                                                    <p className="text-sm text-[#1F2937]" style={{ fontWeight: 500 }}>{note.author}</p>
-                                                    <p className="text-xs text-[#9CA3AF]">{formatDate(note.date)}</p>
+                                    {profile.notes
+                                        .filter((note: any) => showArchived || !note.isArchived)
+                                        .map((note: any, idx: number) => (
+                                            <div 
+                                                key={note.id || idx} 
+                                                className={`p-4 border rounded-lg transition-all ${note.isArchived ? 'bg-[#F9FAFB] border-dashed border-[#D1D5DB] opacity-75' : 'border-[#E5E7EB] bg-[#FFFBEB]'}`}
+                                            >
+                                                <div className="flex items-start justify-between mb-2">
+                                                    <div>
+                                                        <div className="flex items-center gap-2">
+                                                            <p className="text-sm text-[#1F2937]" style={{ fontWeight: 500 }}>{note.author}</p>
+                                                            {note.isArchived && (
+                                                                <span className="px-1.5 py-0.5 text-[10px] font-medium bg-[#E5E7EB] text-[#4B5563] rounded">Archived</span>
+                                                            )}
+                                                        </div>
+                                                        <p className="text-xs text-[#9CA3AF]">{formatDate(note.date)}</p>
+                                                    </div>
+                                                    <div className="flex items-center gap-1">
+                                                        <button 
+                                                            onClick={() => handleTriggerEditNote(note)}
+                                                            className="p-1 text-[#9CA3AF] hover:text-[#3B82F6] hover:bg-gray-100 rounded transition-colors"
+                                                            title="Edit Note"
+                                                        >
+                                                            <Edit className="w-3.5 h-3.5" />
+                                                        </button>
+                                                        <button 
+                                                            onClick={() => handleArchiveComplianceNote(note.id)}
+                                                            className={`p-1 rounded transition-colors ${note.isArchived ? 'text-[#10B981] hover:text-[#059669] hover:bg-[#ECFDF5]' : 'text-[#9CA3AF] hover:text-[#EF4444] hover:bg-red-50'}`}
+                                                            title={note.isArchived ? "Restore Note" : "Archive Note"}
+                                                        >
+                                                            {note.isArchived ? <RotateCcw className="w-3.5 h-3.5" /> : <Archive className="w-3.5 h-3.5" />}
+                                                        </button>
+                                                    </div>
                                                 </div>
+                                                <p className="text-sm text-[#6B7280]">{note.content}</p>
                                             </div>
-                                            <p className="text-sm text-[#6B7280]">{note.content}</p>
-                                        </div>
-                                    ))}
+                                        ))}
                                 </div>
                             ) : (
                                 <div className="border border-[#E5E7EB] rounded-lg p-8 text-center">
@@ -764,6 +870,16 @@ export function ComplianceDetailPage({ locumId, onBack }: ComplianceDetailPagePr
                     </div>
                 </div>
             )}
+            {/* Add Note Modal */}
+            <AddNoteModal
+                isOpen={showAddNoteModal}
+                onClose={() => { setShowAddNoteModal(false); setNoteToEdit(null); }}
+                onAddNote={handleAddComplianceNote}
+                defaultAuthor="Lisa Keane"
+                title="Add Compliance Note"
+                placeholder="Type compliance note content here..."
+                noteToEdit={noteToEdit}
+            />
         </div>
     );
 }

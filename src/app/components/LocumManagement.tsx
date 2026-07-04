@@ -157,6 +157,39 @@ export function LocumManagement({ onViewProfile }: { onViewProfile?: (id: string
     const [applicantsList, setApplicantsList] = useState<Applicant[]>([]);
     const [searchTerm, setSearchTerm] = useState('');
     const [showAddDialog, setShowAddDialog] = useState(false);
+    const [addTab, setAddTab] = useState<'personal' | 'professional' | 'financial'>('personal');
+    const [addForm, setAddForm] = useState({
+        firstName: '',
+        lastName: '',
+        status: 'available',
+        dob: '',
+        nationality: 'Irish',
+        gender: 'Male',
+        address: '',
+        phone: '',
+        mobile: '',
+        email: '',
+        ppsn: '',
+        eircode: '',
+        emergencyContact: '',
+        emergencyPhone: '',
+        
+        specialty: 'General Practice',
+        subSpecialty: '',
+        experience: '1',
+        grade: 'Consultant',
+        imcNumber: '',
+        gmcNumber: '',
+        department: 'Internal Medicine',
+        location: '',
+        
+        dayRate: '800',
+        nightRate: '1000',
+        bankName: 'Bank of Ireland',
+        iban: '',
+        bic: '',
+        taxStatus: 'Self-Employed (Sole Trader)'
+    });
     const [showEditDialog, setShowEditDialog] = useState(false);
     const [showArchiveDialog, setShowArchiveDialog] = useState(false);
     const [selectedLocum, setSelectedLocum] = useState<any>(null);
@@ -330,44 +363,165 @@ export function LocumManagement({ onViewProfile }: { onViewProfile?: (id: string
 
     const handleAddLocumSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
-        const formData = new FormData(e.currentTarget);
-        const firstName = formData.get('firstName') as string;
-        const lastName = formData.get('lastName') as string;
-        const specialty = formData.get('specialty') as string;
-        const department = formData.get('department') as string;
-        const location = formData.get('location') as string;
-        const phone = formData.get('phone') as string;
-        const email = formData.get('email') as string;
-        const experience = formData.get('experience') as string;
+        const firstName = addForm.firstName.trim();
+        const lastName = addForm.lastName.trim();
+        if (!firstName || !lastName) {
+            toast.error('First Name and Last Name are required');
+            return;
+        }
 
         const newLocumId = `#LC${Math.floor(10000 + Math.random() * 90000)}`;
-        const fullName = `${firstName} ${lastName}`;
+        const fullName = `Dr. ${firstName} ${lastName}`;
         const avatarLetters = `${firstName[0] || ''}${lastName[0] || ''}`.toUpperCase() || 'LP';
 
         const newLocum: Locum = {
             id: newLocumId,
             name: fullName,
             avatar: avatarLetters,
-            specialty: specialty || 'General Practice',
-            department: department || 'Internal Medicine',
-            location: location || 'Dublin, Ireland',
-            phone: phone || '+353 1 123 4567',
-            email: email || `${firstName.toLowerCase()}.${lastName.toLowerCase()}@email.com`,
+            specialty: addForm.specialty || 'General Practice',
+            department: addForm.department || 'Internal Medicine',
+            location: addForm.location || addForm.address || 'Dublin, Ireland',
+            phone: addForm.mobile || addForm.phone || '+353 87 123 4567',
+            email: addForm.email || `${firstName.toLowerCase()}.${lastName.toLowerCase()}@email.com`,
             status: 'available',
             shifts: 0,
             rating: 5.0,
             compliance: 100,
-            experience: `${experience || 1} years`,
+            experience: `${addForm.experience || 1} years`,
             qualifications: ['MB BCh BAO'],
             joinDate: new Date().toISOString().split('T')[0]
         };
 
+        const newDetailedProfile = {
+            id: newLocumId,
+            name: fullName,
+            avatar: avatarLetters,
+            status: 'available',
+            personal: {
+                dob: addForm.dob || '',
+                nationality: addForm.nationality || 'Irish',
+                gender: addForm.gender || 'Male',
+                address: addForm.address || addForm.location || 'Dublin, Ireland',
+                phone: addForm.phone || '',
+                mobile: addForm.mobile || '',
+                email: addForm.email || '',
+                emergencyContact: addForm.emergencyContact || '',
+                emergencyPhone: addForm.emergencyPhone || '',
+                ppsn: addForm.ppsn || '',
+            },
+            professional: {
+                specialty: addForm.specialty || 'General Practice',
+                subSpecialty: addForm.subSpecialty || '',
+                experience: `${addForm.experience || 1} years`,
+                grade: addForm.grade || 'Consultant',
+                imcNumber: addForm.imcNumber || '',
+                imcExpiry: addForm.imcNumber ? '2027-03-31' : 'N/A',
+                imcStatus: addForm.imcNumber ? 'valid' : 'pending',
+                gmcNumber: addForm.gmcNumber || '',
+                gmcExpiry: addForm.gmcNumber ? '2027-06-30' : 'N/A',
+                gmcStatus: addForm.gmcNumber ? 'valid' : 'pending',
+                qualifications: [
+                    { name: 'MB BCh BAO', institution: 'National University', year: (new Date().getFullYear() - 10).toString() }
+                ],
+                languages: ['English'],
+                preferredLocations: [addForm.location || 'Dublin'],
+                preferredShifts: ['Day'],
+                maxWeeklyHours: 48,
+            },
+            compliance: {
+                overall: addForm.imcNumber || addForm.gmcNumber ? 100 : 0,
+                documents: [
+                    ...(addForm.imcNumber ? [{
+                        name: 'Medical Council Registration',
+                        category: 'Registration',
+                        status: 'valid' as const,
+                        expiryDate: '2027-03-31',
+                        uploadedDate: new Date().toISOString().split('T')[0],
+                        reference: addForm.imcNumber,
+                        mandatory: true,
+                        awardedBy: 'Medical Council of Ireland',
+                        updatedBy: 'Lisa Keane',
+                        updatedDate: new Date().toISOString().split('T')[0],
+                        fileName: 'IMC_Registration.pdf',
+                        fileSize: '150 KB',
+                        comments: [],
+                        history: [
+                            { action: 'Uploaded', by: 'Lisa Keane', date: new Date().toISOString().split('T')[0], detail: 'Initial IMC document verified during creation.' }
+                        ]
+                    }] : []),
+                    ...(addForm.gmcNumber ? [{
+                        name: 'UK GMC Registration',
+                        category: 'Registration',
+                        status: 'valid' as const,
+                        expiryDate: '2027-06-30',
+                        uploadedDate: new Date().toISOString().split('T')[0],
+                        reference: addForm.gmcNumber,
+                        mandatory: false,
+                        awardedBy: 'General Medical Council (UK)',
+                        updatedBy: 'Lisa Keane',
+                        updatedDate: new Date().toISOString().split('T')[0],
+                        fileName: 'GMC_Registration.pdf',
+                        fileSize: '160 KB',
+                        comments: [],
+                        history: [
+                            { action: 'Uploaded', by: 'Lisa Keane', date: new Date().toISOString().split('T')[0], detail: 'GMC certificate verified during creation.' }
+                        ]
+                    }] : [])
+                ]
+            },
+            financial: {
+                taxStatus: addForm.taxStatus || 'Self-Employed (Sole Trader)',
+                bankName: addForm.bankName || 'Bank of Ireland',
+                iban: addForm.iban || '',
+                bic: addForm.bic || '',
+                standardDayRate: Number(addForm.dayRate) || 800,
+                standardNightRate: Number(addForm.nightRate) || 1000,
+                weekendRate: Number(addForm.dayRate) * 1.2 || 950,
+                oncallRate: Number(addForm.dayRate) * 0.5 || 400,
+                totalEarnings: 0
+            }
+        };
+
         try {
             await locumService.createLocum(newLocum);
+            localStorage.setItem(`mployus_locum_profile_${newLocumId}`, JSON.stringify(newDetailedProfile));
             const updated = await locumService.getAllLocums();
             setLocumsList(updated);
             toast.success(`${fullName} added successfully`);
             setShowAddDialog(false);
+            
+            // Reset Add Form
+            setAddForm({
+                firstName: '',
+                lastName: '',
+                status: 'available',
+                dob: '',
+                nationality: 'Irish',
+                gender: 'Male',
+                address: '',
+                phone: '',
+                mobile: '',
+                email: '',
+                ppsn: '',
+                eircode: '',
+                emergencyContact: '',
+                emergencyPhone: '',
+                specialty: 'General Practice',
+                subSpecialty: '',
+                experience: '1',
+                grade: 'Consultant',
+                imcNumber: '',
+                gmcNumber: '',
+                department: 'Internal Medicine',
+                location: '',
+                dayRate: '800',
+                nightRate: '1000',
+                bankName: 'Bank of Ireland',
+                iban: '',
+                bic: '',
+                taxStatus: 'Self-Employed (Sole Trader)'
+            });
+            setAddTab('personal');
         } catch (err) {
             toast.error('Failed to create locum profile');
         }
@@ -1783,38 +1937,372 @@ export function LocumManagement({ onViewProfile }: { onViewProfile?: (id: string
 
             {/* Add Locum Dialog */}
             {showAddDialog && (
-                <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-                    <form onSubmit={handleAddLocumSubmit} className="bg-white rounded-xl p-6 w-[480px]">
-                        <div className="flex items-center justify-between mb-5">
-                            <h3 className="text-[#1F2937]">Add New Locum</h3>
-                            <button type="button" onClick={() => setShowAddDialog(false)} className="p-1 hover:bg-[#F3F4F6] rounded-lg"><X className="w-5 h-5 text-[#6B7280]" /></button>
+                <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-6">
+                    <form onSubmit={handleAddLocumSubmit} className="bg-white rounded-xl w-full max-w-2xl shadow-xl overflow-hidden flex flex-col max-h-[90vh]">
+                        <div className="p-5 border-b border-[#E5E7EB] flex items-center justify-between flex-shrink-0">
+                            <div>
+                                <h3 className="text-lg text-[#1F2937]" style={{ fontWeight: 600 }}>Add New Locum</h3>
+                                <p className="text-xs text-[#9CA3AF]">Create a new locum profile with personal, professional, and rates details</p>
+                            </div>
+                            <button type="button" onClick={() => setShowAddDialog(false)} className="p-2 hover:bg-[#F3F4F6] rounded-lg">
+                                <X className="w-5 h-5 text-[#6B7280]" />
+                            </button>
                         </div>
-                        <div className="space-y-4">
-                            <div className="grid grid-cols-2 gap-3">
-                                <div><label className="text-xs text-[#6B7280] block mb-1">First Name</label><input name="firstName" required className="w-full px-3 py-2 text-sm border border-[#E5E7EB] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#10B981]" /></div>
-                                <div><label className="text-xs text-[#6B7280] block mb-1">Last Name</label><input name="lastName" required className="w-full px-3 py-2 text-sm border border-[#E5E7EB] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#10B981]" /></div>
-                            </div>
-                            <div><label className="text-xs text-[#6B7280] block mb-1">Specialty</label>
-                                <select name="specialty" className="w-full px-3 py-2 text-sm border border-[#E5E7EB] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#10B981]">
-                                    <option value="">Select specialty...</option>
-                                    {specialties.map(s => <option key={s} value={s}>{s}</option>)}
-                                </select>
-                            </div>
-                            <div><label className="text-xs text-[#6B7280] block mb-1">Department</label>
-                                <select name="department" className="w-full px-3 py-2 text-sm border border-[#E5E7EB] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#10B981]">
-                                    <option value="">Select department...</option>
-                                    {departments.map(d => <option key={d} value={d}>{d}</option>)}
-                                </select>
-                            </div>
-                            <div><label className="text-xs text-[#6B7280] block mb-1">Location</label><input name="location" className="w-full px-3 py-2 text-sm border border-[#E5E7EB] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#10B981]" placeholder="e.g., Dublin, Ireland" /></div>
-                            <div className="grid grid-cols-2 gap-3">
-                                <div><label className="text-xs text-[#6B7280] block mb-1">Phone</label><input name="phone" className="w-full px-3 py-2 text-sm border border-[#E5E7EB] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#10B981]" placeholder="+353" /></div>
-                                <div><label className="text-xs text-[#6B7280] block mb-1">Email</label><input type="email" name="email" className="w-full px-3 py-2 text-sm border border-[#E5E7EB] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#10B981]" /></div>
-                            </div>
-                            <div><label className="text-xs text-[#6B7280] block mb-1">Years of Experience</label><input type="number" name="experience" className="w-full px-3 py-2 text-sm border border-[#E5E7EB] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#10B981]" /></div>
+
+                        {/* Modal Sub-navigation Tabs */}
+                        <div className="flex border-b border-[#E5E7EB] bg-[#F9FAFB] px-4 flex-shrink-0">
+                            {(['personal', 'professional', 'financial'] as const).map((tab) => (
+                                <button
+                                    key={tab}
+                                    type="button"
+                                    onClick={() => setAddTab(tab)}
+                                    className={`px-4 py-3 text-sm font-medium border-b-2 transition-colors capitalize ${
+                                        addTab === tab
+                                            ? 'border-[#10B981] text-[#10B981]'
+                                            : 'border-transparent text-[#6B7280] hover:text-[#1F2937] hover:border-[#E5E7EB]'
+                                    }`}
+                                >
+                                    {tab} Details
+                                </button>
+                            ))}
                         </div>
-                        <div className="flex gap-2 mt-5 justify-end">
-                            <button type="button" onClick={() => setShowAddDialog(false)} className="px-4 py-2 text-sm border border-[#E5E7EB] text-[#6B7280] rounded-lg hover:bg-[#F9FAFB]">Cancel</button>
+
+                        <div className="p-6 space-y-5 overflow-y-auto flex-1 bg-white text-[#1F2937]">
+                            {/* PERSONAL DETAILS TAB */}
+                            {addTab === 'personal' && (
+                                <div className="space-y-4">
+                                    <h4 className="text-xs font-semibold text-[#374151] uppercase tracking-wider border-b border-[#F3F4F6] pb-1">Core Account Information</h4>
+                                    <div className="grid grid-cols-2 gap-4">
+                                        <div>
+                                            <label className="block text-xs text-[#4B5563] mb-1 font-medium">First Name <span className="text-red-500">*</span></label>
+                                            <input 
+                                                type="text" 
+                                                value={addForm.firstName}
+                                                onChange={e => setAddForm({...addForm, firstName: e.target.value})}
+                                                className="w-full px-3 py-2 border border-[#E5E7EB] rounded-lg text-sm bg-white text-[#1F2937] focus:outline-none focus:ring-2 focus:ring-[#10B981]"
+                                                required
+                                            />
+                                        </div>
+                                        <div>
+                                            <label className="block text-xs text-[#4B5563] mb-1 font-medium">Last Name <span className="text-red-500">*</span></label>
+                                            <input 
+                                                type="text" 
+                                                value={addForm.lastName}
+                                                onChange={e => setAddForm({...addForm, lastName: e.target.value})}
+                                                className="w-full px-3 py-2 border border-[#E5E7EB] rounded-lg text-sm bg-white text-[#1F2937] focus:outline-none focus:ring-2 focus:ring-[#10B981]"
+                                                required
+                                            />
+                                        </div>
+                                    </div>
+
+                                    <div className="grid grid-cols-3 gap-4">
+                                        <div>
+                                            <label className="block text-xs text-[#4B5563] mb-1 font-medium">Date of Birth</label>
+                                            <input 
+                                                type="date" 
+                                                value={addForm.dob}
+                                                onChange={e => setAddForm({...addForm, dob: e.target.value})}
+                                                className="w-full px-3 py-2 border border-[#E5E7EB] rounded-lg text-sm bg-white text-[#1F2937] focus:outline-none focus:ring-2 focus:ring-[#10B981]"
+                                            />
+                                        </div>
+                                        <div>
+                                            <label className="block text-xs text-[#4B5563] mb-1 font-medium">Nationality</label>
+                                            <input 
+                                                type="text" 
+                                                value={addForm.nationality}
+                                                onChange={e => setAddForm({...addForm, nationality: e.target.value})}
+                                                className="w-full px-3 py-2 border border-[#E5E7EB] rounded-lg text-sm bg-white text-[#1F2937] focus:outline-none focus:ring-2 focus:ring-[#10B981]"
+                                            />
+                                        </div>
+                                        <div>
+                                            <label className="block text-xs text-[#4B5563] mb-1 font-medium">Gender</label>
+                                            <select 
+                                                value={addForm.gender}
+                                                onChange={e => setAddForm({...addForm, gender: e.target.value})}
+                                                className="w-full px-3 py-2 border border-[#E5E7EB] rounded-lg text-sm bg-white text-[#1F2937] focus:outline-none focus:ring-2 focus:ring-[#10B981]"
+                                            >
+                                                <option value="Male">Male</option>
+                                                <option value="Female">Female</option>
+                                                <option value="Other">Other</option>
+                                            </select>
+                                        </div>
+                                    </div>
+
+                                    <h4 className="text-xs font-semibold text-[#374151] uppercase tracking-wider border-b border-[#F3F4F6] pb-1 pt-2">Contact & Location</h4>
+                                    <div className="grid grid-cols-2 gap-4">
+                                        <div>
+                                            <label className="block text-xs text-[#4B5563] mb-1 font-medium">Mobile Number <span className="text-red-500">*</span></label>
+                                            <input 
+                                                type="text" 
+                                                value={addForm.mobile}
+                                                onChange={e => setAddForm({...addForm, mobile: e.target.value})}
+                                                className="w-full px-3 py-2 border border-[#E5E7EB] rounded-lg text-sm bg-white text-[#1F2937] focus:outline-none focus:ring-2 focus:ring-[#10B981]"
+                                                required
+                                                placeholder="+353"
+                                            />
+                                        </div>
+                                        <div>
+                                            <label className="block text-xs text-[#4B5563] mb-1 font-medium">Landline Phone</label>
+                                            <input 
+                                                type="text" 
+                                                value={addForm.phone}
+                                                onChange={e => setAddForm({...addForm, phone: e.target.value})}
+                                                className="w-full px-3 py-2 border border-[#E5E7EB] rounded-lg text-sm bg-white text-[#1F2937] focus:outline-none focus:ring-2 focus:ring-[#10B981]"
+                                            />
+                                        </div>
+                                    </div>
+
+                                    <div className="grid grid-cols-1 gap-4">
+                                        <div>
+                                            <label className="block text-xs text-[#4B5563] mb-1 font-medium">Email Address <span className="text-red-500">*</span></label>
+                                            <input 
+                                                type="email" 
+                                                value={addForm.email}
+                                                onChange={e => setAddForm({...addForm, email: e.target.value})}
+                                                className="w-full px-3 py-2 border border-[#E5E7EB] rounded-lg text-sm bg-white text-[#1F2937] focus:outline-none focus:ring-2 focus:ring-[#10B981]"
+                                                required
+                                            />
+                                        </div>
+                                    </div>
+
+                                    <div className="grid grid-cols-3 gap-4">
+                                        <div className="col-span-2">
+                                            <label className="block text-xs text-[#4B5563] mb-1 font-medium">Postal Address</label>
+                                            <input 
+                                                type="text" 
+                                                value={addForm.address}
+                                                onChange={e => setAddForm({...addForm, address: e.target.value})}
+                                                className="w-full px-3 py-2 border border-[#E5E7EB] rounded-lg text-sm bg-white text-[#1F2937] focus:outline-none focus:ring-2 focus:ring-[#10B981]"
+                                            />
+                                        </div>
+                                        <div>
+                                            <label className="block text-xs text-[#4B5563] mb-1 font-medium">Zip / Postcode</label>
+                                            <input 
+                                                type="text" 
+                                                value={addForm.eircode}
+                                                onChange={e => setAddForm({...addForm, eircode: e.target.value})}
+                                                className="w-full px-3 py-2 border border-[#E5E7EB] rounded-lg text-sm bg-white text-[#1F2937] focus:outline-none focus:ring-2 focus:ring-[#10B981]"
+                                            />
+                                        </div>
+                                    </div>
+
+                                    <div className="grid grid-cols-3 gap-4">
+                                        <div>
+                                            <label className="block text-xs text-[#4B5563] mb-1 font-medium">Tax ID / PPSN</label>
+                                            <input 
+                                                type="text" 
+                                                value={addForm.ppsn}
+                                                onChange={e => setAddForm({...addForm, ppsn: e.target.value})}
+                                                className="w-full px-3 py-2 border border-[#E5E7EB] rounded-lg text-sm bg-white text-[#1F2937] focus:outline-none focus:ring-2 focus:ring-[#10B981]"
+                                            />
+                                        </div>
+                                        <div>
+                                            <label className="block text-xs text-[#4B5563] mb-1 font-medium">Emergency Contact Name</label>
+                                            <input 
+                                                type="text" 
+                                                value={addForm.emergencyContact}
+                                                onChange={e => setAddForm({...addForm, emergencyContact: e.target.value})}
+                                                className="w-full px-3 py-2 border border-[#E5E7EB] rounded-lg text-sm bg-white text-[#1F2937] focus:outline-none focus:ring-2 focus:ring-[#10B981]"
+                                            />
+                                        </div>
+                                        <div>
+                                            <label className="block text-xs text-[#4B5563] mb-1 font-medium">Emergency Phone</label>
+                                            <input 
+                                                type="text" 
+                                                value={addForm.emergencyPhone}
+                                                onChange={e => setAddForm({...addForm, emergencyPhone: e.target.value})}
+                                                className="w-full px-3 py-2 border border-[#E5E7EB] rounded-lg text-sm bg-white text-[#1F2937] focus:outline-none focus:ring-2 focus:ring-[#10B981]"
+                                            />
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
+
+                            {/* PROFESSIONAL DETAILS TAB */}
+                            {addTab === 'professional' && (
+                                <div className="space-y-4">
+                                    <h4 className="text-xs font-semibold text-[#374151] uppercase tracking-wider border-b border-[#F3F4F6] pb-1">Specialty & Experience</h4>
+                                    <div className="grid grid-cols-2 gap-4">
+                                        <div>
+                                            <label className="block text-xs text-[#4B5563] mb-1 font-medium">Specialty</label>
+                                            <select 
+                                                value={addForm.specialty}
+                                                onChange={e => setAddForm({...addForm, specialty: e.target.value})}
+                                                className="w-full px-3 py-2 border border-[#E5E7EB] rounded-lg text-sm bg-white text-[#1F2937] focus:outline-none focus:ring-2 focus:ring-[#10B981]"
+                                            >
+                                                <option value="General Practice">General Practice</option>
+                                                <option value="General Surgery">General Surgery</option>
+                                                <option value="Cardiology">Cardiology</option>
+                                                <option value="Emergency Medicine">Emergency Medicine</option>
+                                                <option value="Pediatrics">Pediatrics</option>
+                                                <option value="Anesthesiology">Anesthesiology</option>
+                                            </select>
+                                        </div>
+                                        <div>
+                                            <label className="block text-xs text-[#4B5563] mb-1 font-medium">Sub-Specialty</label>
+                                            <input 
+                                                type="text" 
+                                                value={addForm.subSpecialty}
+                                                onChange={e => setAddForm({...addForm, subSpecialty: e.target.value})}
+                                                placeholder="e.g. Laparoscopic Surgery"
+                                                className="w-full px-3 py-2 border border-[#E5E7EB] rounded-lg text-sm bg-white text-[#1F2937] focus:outline-none focus:ring-2 focus:ring-[#10B981]"
+                                            />
+                                        </div>
+                                    </div>
+
+                                    <div className="grid grid-cols-3 gap-4">
+                                        <div>
+                                            <label className="block text-xs text-[#4B5563] mb-1 font-medium">Department</label>
+                                            <select 
+                                                value={addForm.department}
+                                                onChange={e => setAddForm({...addForm, department: e.target.value})}
+                                                className="w-full px-3 py-2 border border-[#E5E7EB] rounded-lg text-sm bg-white text-[#1F2937] focus:outline-none focus:ring-2 focus:ring-[#10B981]"
+                                            >
+                                                <option value="Internal Medicine">Internal Medicine</option>
+                                                <option value="Surgery">Surgery</option>
+                                                <option value="Emergency Department">Emergency Department</option>
+                                                <option value="Pediatrics Department">Pediatrics Department</option>
+                                                <option value="Anesthetics Department">Anesthetics Department</option>
+                                            </select>
+                                        </div>
+                                        <div>
+                                            <label className="block text-xs text-[#4B5563] mb-1 font-medium">Grade</label>
+                                            <select 
+                                                value={addForm.grade}
+                                                onChange={e => setAddForm({...addForm, grade: e.target.value})}
+                                                className="w-full px-3 py-2 border border-[#E5E7EB] rounded-lg text-sm bg-white text-[#1F2937] focus:outline-none focus:ring-2 focus:ring-[#10B981]"
+                                            >
+                                                <option value="Consultant">Consultant</option>
+                                                <option value="Registrar">Registrar</option>
+                                                <option value="SHO">SHO</option>
+                                                <option value="Intern">Intern</option>
+                                            </select>
+                                        </div>
+                                        <div>
+                                            <label className="block text-xs text-[#4B5563] mb-1 font-medium">Years of Experience</label>
+                                            <input 
+                                                type="number" 
+                                                value={addForm.experience}
+                                                onChange={e => setAddForm({...addForm, experience: e.target.value})}
+                                                className="w-full px-3 py-2 border border-[#E5E7EB] rounded-lg text-sm bg-white text-[#1F2937] focus:outline-none focus:ring-2 focus:ring-[#10B981]"
+                                            />
+                                        </div>
+                                    </div>
+
+                                    <h4 className="text-xs font-semibold text-[#374151] uppercase tracking-wider border-b border-[#F3F4F6] pb-1 pt-2">Medical Board Registrations</h4>
+                                    <div className="grid grid-cols-2 gap-4">
+                                        <div>
+                                            <label className="block text-xs text-[#4B5563] mb-1 font-medium">IMC Number (Ireland)</label>
+                                            <input 
+                                                type="text" 
+                                                value={addForm.imcNumber}
+                                                onChange={e => setAddForm({...addForm, imcNumber: e.target.value})}
+                                                placeholder="e.g. IMC-34521"
+                                                className="w-full px-3 py-2 border border-[#E5E7EB] rounded-lg text-sm bg-white text-[#1F2937] focus:outline-none focus:ring-2 focus:ring-[#10B981]"
+                                            />
+                                        </div>
+                                        <div>
+                                            <label className="block text-xs text-[#4B5563] mb-1 font-medium">GMC Number (UK)</label>
+                                            <input 
+                                                type="text" 
+                                                value={addForm.gmcNumber}
+                                                onChange={e => setAddForm({...addForm, gmcNumber: e.target.value})}
+                                                placeholder="e.g. GMC-7654321"
+                                                className="w-full px-3 py-2 border border-[#E5E7EB] rounded-lg text-sm bg-white text-[#1F2937] focus:outline-none focus:ring-2 focus:ring-[#10B981]"
+                                            />
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <label className="block text-xs text-[#4B5563] mb-1 font-medium">Preferred Work Location / City</label>
+                                        <input 
+                                            type="text" 
+                                            value={addForm.location}
+                                            onChange={e => setAddForm({...addForm, location: e.target.value})}
+                                            placeholder="e.g. Dublin, Ireland"
+                                            className="w-full px-3 py-2 border border-[#E5E7EB] rounded-lg text-sm bg-white text-[#1F2937] focus:outline-none focus:ring-2 focus:ring-[#10B981]"
+                                        />
+                                    </div>
+                                </div>
+                            )}
+
+                            {/* FINANCIAL DETAILS TAB */}
+                            {addTab === 'financial' && (
+                                <div className="space-y-4">
+                                    <h4 className="text-xs font-semibold text-[#374151] uppercase tracking-wider border-b border-[#F3F4F6] pb-1">Billing Rates</h4>
+                                    <div className="grid grid-cols-2 gap-4">
+                                        <div>
+                                            <label className="block text-xs text-[#4B5563] mb-1 font-medium">Standard Day Rate (€/day)</label>
+                                            <input 
+                                                type="number" 
+                                                value={addForm.dayRate}
+                                                onChange={e => setAddForm({...addForm, dayRate: e.target.value})}
+                                                className="w-full px-3 py-2 border border-[#E5E7EB] rounded-lg text-sm bg-white text-[#1F2937] focus:outline-none focus:ring-2 focus:ring-[#10B981]"
+                                            />
+                                        </div>
+                                        <div>
+                                            <label className="block text-xs text-[#4B5563] mb-1 font-medium">Standard Night Rate (€/day)</label>
+                                            <input 
+                                                type="number" 
+                                                value={addForm.nightRate}
+                                                onChange={e => setAddForm({...addForm, nightRate: e.target.value})}
+                                                className="w-full px-3 py-2 border border-[#E5E7EB] rounded-lg text-sm bg-white text-[#1F2937] focus:outline-none focus:ring-2 focus:ring-[#10B981]"
+                                            />
+                                        </div>
+                                    </div>
+
+                                    <h4 className="text-xs font-semibold text-[#374151] uppercase tracking-wider border-b border-[#F3F4F6] pb-1 pt-2">Bank Details</h4>
+                                    <div className="grid grid-cols-2 gap-4">
+                                        <div>
+                                            <label className="block text-xs text-[#4B5563] mb-1 font-medium">Bank Name</label>
+                                            <input 
+                                                type="text" 
+                                                value={addForm.bankName}
+                                                onChange={e => setAddForm({...addForm, bankName: e.target.value})}
+                                                className="w-full px-3 py-2 border border-[#E5E7EB] rounded-lg text-sm bg-white text-[#1F2937] focus:outline-none focus:ring-2 focus:ring-[#10B981]"
+                                            />
+                                        </div>
+                                        <div>
+                                            <label className="block text-xs text-[#4B5563] mb-1 font-medium">Tax Classification</label>
+                                            <select 
+                                                value={addForm.taxStatus}
+                                                onChange={e => setAddForm({...addForm, taxStatus: e.target.value})}
+                                                className="w-full px-3 py-2 border border-[#E5E7EB] rounded-lg text-sm bg-white text-[#1F2937] focus:outline-none focus:ring-2 focus:ring-[#10B981]"
+                                            >
+                                                <option value="Self-Employed (Sole Trader)">Self-Employed (Sole Trader)</option>
+                                                <option value="PAYE (Agency Contract)">PAYE (Agency Contract)</option>
+                                                <option value="Limited Company Director">Limited Company Director</option>
+                                            </select>
+                                        </div>
+                                    </div>
+
+                                    <div className="grid grid-cols-2 gap-4">
+                                        <div>
+                                            <label className="block text-xs text-[#4B5563] mb-1 font-medium">IBAN Account Number</label>
+                                            <input 
+                                                type="text" 
+                                                value={addForm.iban}
+                                                onChange={e => setAddForm({...addForm, iban: e.target.value})}
+                                                placeholder="e.g. IE29 AIBK ..."
+                                                className="w-full px-3 py-2 border border-[#E5E7EB] rounded-lg text-sm bg-white text-[#1F2937] focus:outline-none focus:ring-2 focus:ring-[#10B981]"
+                                            />
+                                        </div>
+                                        <div>
+                                            <label className="block text-xs text-[#4B5563] mb-1 font-medium">BIC / SWIFT Code</label>
+                                            <input 
+                                                type="text" 
+                                                value={addForm.bic}
+                                                onChange={e => setAddForm({...addForm, bic: e.target.value})}
+                                                placeholder="e.g. AIBKIE2D"
+                                                className="w-full px-3 py-2 border border-[#E5E7EB] rounded-lg text-sm bg-white text-[#1F2937] focus:outline-none focus:ring-2 focus:ring-[#10B981]"
+                                            />
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+
+                        <div className="flex gap-2 p-5 border-t border-[#E5E7EB] bg-[#F9FAFB] justify-end flex-shrink-0">
+                            <button type="button" onClick={() => setShowAddDialog(false)} className="px-4 py-2 text-sm border border-[#E5E7EB] text-[#6B7280] rounded-lg hover:bg-gray-50">Cancel</button>
                             <button type="submit" className="px-4 py-2 text-sm bg-[#10B981] text-white rounded-lg hover:bg-[#059669]">Add Locum</button>
                         </div>
                     </form>

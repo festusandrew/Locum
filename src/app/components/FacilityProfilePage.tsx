@@ -4,9 +4,11 @@ import {
     ArrowLeft, Building2, MapPin, Phone, Mail, Globe, Star, Users,
     Calendar, Clock, FileText, ShieldCheck, Download, Edit, MoreHorizontal,
     CheckCircle, AlertTriangle, User, Banknote, CreditCard, Award,
-    MessageSquare, Activity, Briefcase, Heart, Hash, BadgeCheck, Bed, X, Sparkles
+    MessageSquare, Activity, Briefcase, Heart, Hash, BadgeCheck, Bed, X, Sparkles,
+    Archive, RotateCcw
 } from 'lucide-react';
 import { useSystemSettings } from '../contexts/SystemSettingsContext';
+import { AddNoteModal } from './ui/AddNoteModal';
 
 interface FacilityProfilePageProps {
     facilityId: string;
@@ -33,6 +35,7 @@ const facilityProfiles: Record<string, any> = {
             hiqaStatus: 'Compliant',
             jciAccredited: true,
             description: "St. James's Hospital is Ireland's largest acute academic teaching hospital. It serves as the national centre for several specialties and is the primary teaching hospital of Trinity College Dublin.",
+            nationality: 'Irish',
         },
         contacts: {
             primary: { name: "Siobhan O'Reilly", role: 'Locum Coordinator / HR Manager', phone: '+353 1 410 3100', email: 'siobhan.oreilly@stjames.ie', mobile: '+353 87 234 5678' },
@@ -162,6 +165,7 @@ const facilityProfiles: Record<string, any> = {
             hiqaStatus: 'Compliant',
             jciAccredited: false,
             description: 'Cork University Hospital is a major academic teaching hospital and the largest hospital in the HSE South region, providing tertiary referral services across a wide range of specialties.',
+            nationality: 'Irish',
         },
         contacts: {
             primary: { name: 'Patrick Murphy', role: 'Medical HR Coordinator', phone: '+353 21 492 2100', email: 'pmurphy@cuh.ie', mobile: '+353 86 123 4567' },
@@ -290,6 +294,7 @@ export function FacilityProfilePage({ facilityId, onBack }: FacilityProfilePageP
         hiqaLastInspection: profile.overview?.hiqaLastInspection || '',
         hiqaStatus: profile.overview?.hiqaStatus || 'Compliant',
         jciAccredited: profile.overview?.jciAccredited || false,
+        nationality: profile.overview?.nationality || 'Irish',
 
         // Contacts
         primaryContactName: profile.contacts?.primary?.name || '',
@@ -338,12 +343,20 @@ export function FacilityProfilePage({ facilityId, onBack }: FacilityProfilePageP
         themeColor: profile.themeColor || '#10B981',
     });
 
-    const [newNoteAuthor, setNewNoteAuthor] = useState('');
-    const [newNoteContent, setNewNoteContent] = useState('');
+
+
+    const [showArchived, setShowArchived] = useState(false);
+    const [noteToEdit, setNoteToEdit] = useState<any>(null);
 
     useEffect(() => {
         const stored = localStorage.getItem(`mployus_facility_profile_${facilityId}`);
         const currentProfile = stored ? JSON.parse(stored) : (facilityProfiles[facilityId] || facilityProfiles['CL-001']);
+        if (currentProfile.notes) {
+            currentProfile.notes = currentProfile.notes.map((n: any, idx: number) => ({
+                id: n.id || `note-${idx}-${n.date}-${Math.random().toString(36).substring(2, 6)}`,
+                ...n
+            }));
+        }
         setProfile(currentProfile);
         setEditForm({
             name: currentProfile.name,
@@ -365,6 +378,7 @@ export function FacilityProfilePage({ facilityId, onBack }: FacilityProfilePageP
             hiqaLastInspection: currentProfile.overview?.hiqaLastInspection || '',
             hiqaStatus: currentProfile.overview?.hiqaStatus || 'Compliant',
             jciAccredited: currentProfile.overview?.jciAccredited || false,
+            nationality: currentProfile.overview?.nationality || 'Irish',
 
             // Contacts
             primaryContactName: currentProfile.contacts?.primary?.name || '',
@@ -467,6 +481,7 @@ export function FacilityProfilePage({ facilityId, onBack }: FacilityProfilePageP
             hiqaLastInspection: profile.overview?.hiqaLastInspection || '',
             hiqaStatus: profile.overview?.hiqaStatus || 'Compliant',
             jciAccredited: profile.overview?.jciAccredited || false,
+            nationality: profile.overview?.nationality || 'Irish',
 
             // Contacts
             primaryContactName: profile.contacts?.primary?.name || '',
@@ -545,6 +560,7 @@ export function FacilityProfilePage({ facilityId, onBack }: FacilityProfilePageP
                 hiqaLastInspection: editForm.hiqaLastInspection,
                 hiqaStatus: editForm.hiqaStatus,
                 jciAccredited: editForm.jciAccredited,
+                nationality: editForm.nationality,
             },
             contacts: {
                 ...profile.contacts,
@@ -604,20 +620,35 @@ export function FacilityProfilePage({ facilityId, onBack }: FacilityProfilePageP
         toast.success('Facility profile updated successfully');
     };
 
-    const handleAddNoteSubmit = (e: React.FormEvent) => {
-        e.preventDefault();
-        if (!newNoteContent.trim()) return;
-        const newNote = {
-            date: new Date().toISOString().split('T')[0],
-            author: newNoteAuthor.trim() || 'System Admin',
-            content: newNoteContent.trim()
-        };
-        const updatedNotes = [newNote, ...profile.notes];
+    const handleAddFacilityNote = (newNote: any) => {
+        let updatedNotes;
+        const noteIndex = profile.notes.findIndex((n: any) => n.id === newNote.id);
+        if (noteIndex > -1) {
+            updatedNotes = profile.notes.map((n: any) => n.id === newNote.id ? newNote : n);
+            toast.success('Internal note updated successfully');
+        } else {
+            updatedNotes = [newNote, ...profile.notes];
+            toast.success('Internal note added successfully');
+        }
         updateProfile({ ...profile, notes: updatedNotes });
-        setNewNoteContent('');
-        setNewNoteAuthor('');
-        setShowAddNoteModal(false);
-        toast.success('Internal note added successfully');
+        setNoteToEdit(null);
+    };
+
+    const handleArchiveFacilityNote = (noteId: string) => {
+        const updatedNotes = profile.notes.map((n: any) => {
+            if (n.id === noteId) {
+                return { ...n, isArchived: !n.isArchived };
+            }
+            return n;
+        });
+        updateProfile({ ...profile, notes: updatedNotes });
+        const note = updatedNotes.find((n: any) => n.id === noteId);
+        toast.success(note?.isArchived ? 'Note archived successfully' : 'Note restored successfully');
+    };
+
+    const handleTriggerEditNote = (note: any) => {
+        setNoteToEdit(note);
+        setShowAddNoteModal(true);
     };
 
     const handleExport = () => {
@@ -818,7 +849,7 @@ export function FacilityProfilePage({ facilityId, onBack }: FacilityProfilePageP
                                     <div className="bg-[#F9FAFB] rounded-lg p-4 space-y-3">
                                         {[
                                             { label: 'Full Address', value: profile.overview.address },
-                                            { label: 'Eircode', value: profile.overview.eircode },
+                                            { label: 'Zip / Postal Code', value: profile.overview.eircode },
                                             { label: 'Phone', value: profile.overview.phone },
                                             { label: 'Fax', value: profile.overview.fax },
                                             { label: 'Email', value: profile.overview.email },
@@ -826,6 +857,7 @@ export function FacilityProfilePage({ facilityId, onBack }: FacilityProfilePageP
                                             { label: 'Established', value: profile.overview.established },
                                             { label: 'Ownership', value: profile.overview.ownership },
                                             { label: 'Bed Capacity', value: `${profile.overview.beds} beds` },
+                                            { label: 'Nationality', value: profile.overview.nationality || 'Irish' },
                                         ].map(item => (
                                             <div key={item.label} className="flex justify-between items-start">
                                                 <span className="text-xs text-[#9CA3AF] min-w-[120px]">{item.label}</span>
@@ -837,14 +869,14 @@ export function FacilityProfilePage({ facilityId, onBack }: FacilityProfilePageP
 
                                 {/* Regulatory & HSE */}
                                 <div className="space-y-4">
-                                    <h4 className="text-sm text-[#1F2937] flex items-center gap-2" style={{ fontWeight: 600 }}><ShieldCheck className="w-4 h-4 text-[#10B981]" /> Regulatory & HSE Information</h4>
+                                    <h4 className="text-sm text-[#1F2937] flex items-center gap-2" style={{ fontWeight: 600 }}><ShieldCheck className="w-4 h-4 text-[#10B981]" /> Accreditation & Compliance</h4>
                                     <div className="bg-[#F0FDF4] rounded-lg p-4 space-y-3">
                                         {[
-                                            { label: 'HSE Region', value: profile.overview.hseRegion },
-                                            { label: 'HSE Area / CHO', value: profile.overview.hseArea },
-                                            { label: 'HIQA Registration', value: profile.overview.hiqaRegistration },
-                                            { label: 'HIQA Last Inspection', value: profile.overview.hiqaLastInspection },
-                                            { label: 'HIQA Status', value: profile.overview.hiqaStatus },
+                                            { label: 'Health Authority Region', value: profile.overview.hseRegion },
+                                            { label: 'Service Area / Sub-District', value: profile.overview.hseArea },
+                                            { label: 'Regulatory License / Registration ID', value: profile.overview.hiqaRegistration },
+                                            { label: 'Last Inspection / Audit Date', value: profile.overview.hiqaLastInspection },
+                                            { label: 'Compliance / Registration Status', value: profile.overview.hiqaStatus },
                                             { label: 'JCI Accredited', value: profile.overview.jciAccredited ? 'Yes' : 'No' },
                                         ].map(item => (
                                             <div key={item.label} className="flex justify-between items-start">
@@ -1139,25 +1171,65 @@ export function FacilityProfilePage({ facilityId, onBack }: FacilityProfilePageP
                         <div className="space-y-4">
                             <div className="flex items-center justify-between">
                                 <h4 className="text-sm text-[#1F2937]" style={{ fontWeight: 600 }}>Internal Notes & Activity Log</h4>
-                                <button onClick={() => setShowAddNoteModal(true)} className="flex items-center gap-1.5 px-3 py-1.5 text-sm bg-[#10B981] text-white rounded-lg hover:bg-[#059669] transition-colors">
-                                    <MessageSquare className="w-3.5 h-3.5" /> Add Note
-                                </button>
+                                <div className="flex items-center gap-4">
+                                    <label className="flex items-center gap-2 text-xs text-[#6B7280] cursor-pointer">
+                                        <input 
+                                            type="checkbox" 
+                                            checked={showArchived} 
+                                            onChange={(e) => setShowArchived(e.target.checked)} 
+                                            className="rounded text-[#10B981] focus:ring-[#10B981] border-[#E5E7EB] h-3.5 w-3.5"
+                                        />
+                                        Show Archived Notes
+                                    </label>
+                                    <button 
+                                        onClick={() => { setNoteToEdit(null); setShowAddNoteModal(true); }} 
+                                        className="flex items-center gap-1.5 px-3 py-1.5 text-sm bg-[#10B981] hover:bg-[#059669] text-white rounded-lg font-medium shadow-sm hover:shadow transition-all duration-200"
+                                    >
+                                        <MessageSquare className="w-3.5 h-3.5" /> Add Note
+                                    </button>
+                                </div>
                             </div>
                             <div className="space-y-3">
-                                {profile.notes.map((note: any, i: number) => (
-                                    <div key={i} className="p-4 border border-[#E5E7EB] rounded-lg">
-                                        <div className="flex items-center justify-between mb-2">
-                                            <div className="flex items-center gap-2">
-                                                <div className="w-7 h-7 bg-[#EDE9FE] rounded-full flex items-center justify-center">
-                                                    <User className="w-3.5 h-3.5 text-[#8B5CF6]" />
+                                {profile.notes
+                                    .filter((note: any) => showArchived || !note.isArchived)
+                                    .map((note: any, i: number) => (
+                                        <div 
+                                            key={note.id || i} 
+                                            className={`p-4 border rounded-lg transition-all ${note.isArchived ? 'bg-[#F9FAFB] border-dashed border-[#D1D5DB] opacity-75' : 'border-[#E5E7EB]'}`}
+                                        >
+                                            <div className="flex items-center justify-between mb-2">
+                                                <div className="flex items-center gap-2">
+                                                    <div className="w-7 h-7 bg-[#EDE9FE] rounded-full flex items-center justify-center">
+                                                        <User className="w-3.5 h-3.5 text-[#8B5CF6]" />
+                                                    </div>
+                                                    <span className="text-sm text-[#1F2937]" style={{ fontWeight: 500 }}>{note.author}</span>
+                                                    {note.isArchived && (
+                                                        <span className="px-1.5 py-0.5 text-[10px] font-medium bg-[#E5E7EB] text-[#4B5563] rounded">Archived</span>
+                                                    )}
                                                 </div>
-                                                <span className="text-sm text-[#1F2937]" style={{ fontWeight: 500 }}>{note.author}</span>
+                                                <div className="flex items-center gap-3">
+                                                    <span className="text-xs text-[#9CA3AF]">{note.date}</span>
+                                                    <div className="flex items-center gap-1">
+                                                        <button 
+                                                            onClick={() => handleTriggerEditNote(note)}
+                                                            className="p-1 text-[#9CA3AF] hover:text-[#3B82F6] hover:bg-gray-100 rounded transition-colors"
+                                                            title="Edit Note"
+                                                        >
+                                                            <Edit className="w-3.5 h-3.5" />
+                                                        </button>
+                                                        <button 
+                                                            onClick={() => handleArchiveFacilityNote(note.id)}
+                                                            className={`p-1 rounded transition-colors ${note.isArchived ? 'text-[#10B981] hover:text-[#059669] hover:bg-[#ECFDF5]' : 'text-[#9CA3AF] hover:text-[#EF4444] hover:bg-red-50'}`}
+                                                            title={note.isArchived ? "Restore Note" : "Archive Note"}
+                                                        >
+                                                            {note.isArchived ? <RotateCcw className="w-3.5 h-3.5" /> : <Archive className="w-3.5 h-3.5" />}
+                                                        </button>
+                                                    </div>
+                                                </div>
                                             </div>
-                                            <span className="text-xs text-[#9CA3AF]">{note.date}</span>
+                                            <p className="text-sm text-[#6B7280] pl-9">{note.content}</p>
                                         </div>
-                                        <p className="text-sm text-[#6B7280] pl-9">{note.content}</p>
-                                    </div>
-                                ))}
+                                    ))}
                             </div>
                         </div>
                     )}
@@ -1178,8 +1250,8 @@ export function FacilityProfilePage({ facilityId, onBack }: FacilityProfilePageP
                         {/* Modal Tab Headers */}
                         <div className="flex border-b border-[#E5E7EB] px-6 bg-[#F9FAFB] flex-shrink-0 overflow-x-auto">
                             {[
-                                { id: 'overview' as const, label: '1. Overview & HIQA' },
-                                { id: 'location' as const, label: '2. Location & HSE' },
+                                { id: 'overview' as const, label: '1. Overview & Accreditation' },
+                                { id: 'location' as const, label: '2. Location & Region' },
                                 { id: 'contacts' as const, label: '3. Contacts' },
                                 { id: 'contract' as const, label: '4. Contract Terms' },
                             ].map(tab => (
@@ -1347,7 +1419,7 @@ export function FacilityProfilePage({ facilityId, onBack }: FacilityProfilePageP
                                                 />
                                             </div>
                                         </div>
-                                        <div className="grid grid-cols-2 gap-4">
+                                        <div className="grid grid-cols-3 gap-4">
                                             <div>
                                                 <label className="block text-xs text-[#6B7280] font-medium mb-1">Established Year</label>
                                                 <input
@@ -1366,6 +1438,25 @@ export function FacilityProfilePage({ facilityId, onBack }: FacilityProfilePageP
                                                     className="w-full px-3 py-2 border border-[#E5E7EB] rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#10B981] bg-white text-[#1F2937]"
                                                 />
                                             </div>
+                                            <div>
+                                                <label className="block text-xs text-[#6B7280] font-medium mb-1">Nationality <span className="text-[#EF4444]">*</span></label>
+                                                <select
+                                                    value={editForm.nationality}
+                                                    onChange={e => setEditForm({ ...editForm, nationality: e.target.value })}
+                                                    className="w-full px-3 py-2 border border-[#E5E7EB] rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#10B981] bg-white text-[#1F2937]"
+                                                >
+                                                    <option value="Irish">Irish</option>
+                                                    <option value="British">British</option>
+                                                    <option value="American">American</option>
+                                                    <option value="Canadian">Canadian</option>
+                                                    <option value="Australian">Australian</option>
+                                                    <option value="German">German</option>
+                                                    <option value="French">French</option>
+                                                    <option value="Spanish">Spanish</option>
+                                                    <option value="Italian">Italian</option>
+                                                    <option value="Other">Other</option>
+                                                </select>
+                                            </div>
                                         </div>
                                         <div>
                                             <label className="block text-xs text-[#6B7280] font-medium mb-1">Description</label>
@@ -1379,11 +1470,11 @@ export function FacilityProfilePage({ facilityId, onBack }: FacilityProfilePageP
                                         <div className="border-t border-[#E5E7EB] pt-4">
                                             <div className="flex items-center gap-2 mb-3">
                                                 <ShieldCheck className="w-4 h-4 text-[#10B981]" />
-                                                <h4 className="text-sm font-semibold text-[#1F2937]">HIQA & Accreditation</h4>
+                                                <h4 className="text-sm font-semibold text-[#1F2937]">Accreditation & Compliance</h4>
                                             </div>
                                             <div className="grid grid-cols-2 gap-4">
                                                 <div>
-                                                    <label className="block text-xs text-[#6B7280] font-medium mb-1">HIQA Registration</label>
+                                                    <label className="block text-xs text-[#6B7280] font-medium mb-1">Accreditation Code</label>
                                                     <input
                                                         type="text"
                                                         value={editForm.hiqaRegistration}
@@ -1393,7 +1484,7 @@ export function FacilityProfilePage({ facilityId, onBack }: FacilityProfilePageP
                                                     />
                                                 </div>
                                                 <div>
-                                                    <label className="block text-xs text-[#6B7280] font-medium mb-1">HIQA Status</label>
+                                                    <label className="block text-xs text-[#6B7280] font-medium mb-1">Compliance Status</label>
                                                     <select
                                                         value={editForm.hiqaStatus}
                                                         onChange={e => setEditForm({ ...editForm, hiqaStatus: e.target.value })}
@@ -1406,7 +1497,7 @@ export function FacilityProfilePage({ facilityId, onBack }: FacilityProfilePageP
                                                     </select>
                                                 </div>
                                                 <div>
-                                                    <label className="block text-xs text-[#6B7280] font-medium mb-1">Last Inspection Date</label>
+                                                    <label className="block text-xs text-[#6B7280] font-medium mb-1">Last Audit Date</label>
                                                     <input
                                                         type="date"
                                                         value={editForm.hiqaLastInspection}
@@ -1444,7 +1535,7 @@ export function FacilityProfilePage({ facilityId, onBack }: FacilityProfilePageP
                                                 />
                                             </div>
                                             <div>
-                                                <label className="block text-xs text-[#6B7280] font-medium mb-1">Eircode</label>
+                                                <label className="block text-xs text-[#6B7280] font-medium mb-1">Zip / Postal Code</label>
                                                 <input
                                                     type="text"
                                                     value={editForm.eircode}
@@ -1494,26 +1585,21 @@ export function FacilityProfilePage({ facilityId, onBack }: FacilityProfilePageP
                                         <div className="border-t border-[#E5E7EB] pt-4">
                                             <div className="flex items-center gap-2 mb-3">
                                                 <FileText className="w-4 h-4 text-[#059669]" />
-                                                <h4 className="text-sm font-semibold text-[#1F2937]">HSE Information</h4>
+                                                <h4 className="text-sm font-semibold text-[#1F2937]">Region & Jurisdiction</h4>
                                             </div>
                                             <div className="grid grid-cols-2 gap-4">
                                                 <div>
-                                                    <label className="block text-xs text-[#6B7280] font-medium mb-1">HSE Region</label>
-                                                    <select
+                                                    <label className="block text-xs text-[#6B7280] font-medium mb-1">Region</label>
+                                                    <input
+                                                        type="text"
                                                         value={editForm.hseRegion}
                                                         onChange={e => setEditForm({ ...editForm, hseRegion: e.target.value })}
+                                                        placeholder="e.g., NHS London, NSW Health, State Health Dept"
                                                         className="w-full px-3 py-2 border border-[#E5E7EB] rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#10B981] bg-white text-[#1F2937]"
-                                                    >
-                                                        <option value="">Select Region</option>
-                                                        <option value="HSE Dublin Midlands">HSE Dublin Midlands</option>
-                                                        <option value="HSE South">HSE South</option>
-                                                        <option value="HSE West">HSE West</option>
-                                                        <option value="HSE Mid-West">HSE Mid-West</option>
-                                                        <option value="HSE South East">HSE South East</option>
-                                                    </select>
+                                                    />
                                                 </div>
                                                 <div>
-                                                    <label className="block text-xs text-[#6B7280] font-medium mb-1">HSE Area / CHO</label>
+                                                    <label className="block text-xs text-[#6B7280] font-medium mb-1">Service Area</label>
                                                     <input
                                                         type="text"
                                                         value={editForm.hseArea}
@@ -1916,58 +2002,15 @@ export function FacilityProfilePage({ facilityId, onBack }: FacilityProfilePageP
             )}
 
             {/* Add Note Modal */}
-            {showAddNoteModal && (
-                <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-6 animate-in fade-in duration-200">
-                    <div className="bg-white rounded-xl w-full max-w-md shadow-2xl animate-in fade-in zoom-in-95 duration-200 overflow-hidden">
-                        <div className="p-5 border-b border-[#E5E7EB] flex items-center justify-between bg-white">
-                            <h3 className="text-lg font-semibold text-[#1F2937]">Add Internal Note</h3>
-                            <button onClick={() => setShowAddNoteModal(false)} className="text-[#9CA3AF] hover:text-[#6B7280] p-1.5 rounded-lg hover:bg-[#F3F4F6] transition-colors">
-                                <X className="w-5 h-5" />
-                            </button>
-                        </div>
-                        <form onSubmit={handleAddNoteSubmit}>
-                            <div className="p-6 space-y-4">
-                                <div>
-                                    <label className="block text-xs text-[#6B7280] font-medium mb-1">Author Name</label>
-                                    <input
-                                        type="text"
-                                        placeholder="System Admin"
-                                        value={newNoteAuthor}
-                                        onChange={e => setNewNoteAuthor(e.target.value)}
-                                        className="w-full px-3 py-2 border border-[#E5E7EB] rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#10B981] bg-white text-[#1F2937]"
-                                    />
-                                </div>
-                                <div>
-                                    <label className="block text-xs text-[#6B7280] font-medium mb-1">Note Content</label>
-                                    <textarea
-                                        required
-                                        rows={4}
-                                        placeholder="Type internal note content here..."
-                                        value={newNoteContent}
-                                        onChange={e => setNewNoteContent(e.target.value)}
-                                        className="w-full px-3 py-2 border border-[#E5E7EB] rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#10B981] bg-white text-[#1F2937]"
-                                    />
-                                </div>
-                            </div>
-                            <div className="p-4 border-t border-[#E5E7EB] bg-[#F9FAFB] flex justify-end gap-3">
-                                <button
-                                    type="button"
-                                    onClick={() => setShowAddNoteModal(false)}
-                                    className="px-4 py-2 border border-[#E5E7EB] rounded-lg text-sm text-[#4B5563] bg-white hover:bg-[#F9FAFB] transition-colors"
-                                >
-                                    Cancel
-                                </button>
-                                <button
-                                    type="submit"
-                                    className="px-4 py-2 bg-[#10B981] hover:bg-[#059669] text-white rounded-lg text-sm font-medium transition-colors"
-                                >
-                                    Add Note
-                                </button>
-                            </div>
-                        </form>
-                    </div>
-                </div>
-            )}
+            <AddNoteModal
+                isOpen={showAddNoteModal}
+                onClose={() => { setShowAddNoteModal(false); setNoteToEdit(null); }}
+                onAddNote={handleAddFacilityNote}
+                defaultAuthor="System Admin"
+                title="Add Facility Note"
+                placeholder="Type internal facility note content here..."
+                noteToEdit={noteToEdit}
+            />
         </div>
     );
 }

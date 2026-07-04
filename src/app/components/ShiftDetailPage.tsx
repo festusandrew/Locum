@@ -3,9 +3,10 @@ import {
     ArrowLeft, Calendar, Clock, MapPin, DollarSign, Users, Building2,
     CheckCircle, AlertTriangle, Edit, Ban, UserPlus, Download, MoreHorizontal,
     Phone, Mail, ShieldCheck, FileText, Activity, MessageSquare, X,
-    Copy, Send, TrendingUp, Trash2
+    Copy, Send, TrendingUp, Trash2, Archive, RotateCcw
 } from 'lucide-react';
 import { toast } from 'sonner';
+import { AddNoteModal } from './ui/AddNoteModal';
 
 interface ShiftDetailPageProps {
     shiftId: string;
@@ -173,14 +174,24 @@ function getShiftProfile(id: string) {
 }
 
 export function ShiftDetailPage({ shiftId, onBack, onViewLocumProfile }: ShiftDetailPageProps) {
-    const [profile, setProfile] = useState<any>(() => ({ ...getShiftProfile(shiftId) }));
+    const [profile, setProfile] = useState<any>(() => {
+        const p = { ...getShiftProfile(shiftId) };
+        if (p.notes) {
+            p.notes = p.notes.map((n: any, idx: number) => ({
+                id: n.id || `note-${idx}-${n.date}-${Math.random().toString(36).substring(2, 6)}`,
+                ...n
+            }));
+        }
+        return p;
+    });
     const [activeTab, setActiveTab] = useState<'details' | 'compliance' | 'timeline' | 'notes'>('details');
     const [showAssignModal, setShowAssignModal] = useState(false);
     const [showCancelModal, setShowCancelModal] = useState(false);
     const [cancelReason, setCancelReason] = useState('');
     const [selectedAssignee, setSelectedAssignee] = useState('Sarah Mitchell');
-    const [showAddNoteInput, setShowAddNoteInput] = useState(false);
-    const [newNoteContent, setNewNoteContent] = useState('');
+    const [showAddNoteModal, setShowAddNoteModal] = useState(false);
+    const [showArchived, setShowArchived] = useState(false);
+    const [noteToEdit, setNoteToEdit] = useState<any>(null);
 
     const [showEditModal, setShowEditModal] = useState(false);
     const [modalTab, setModalTab] = useState<'shift' | 'facility'>('shift');
@@ -416,21 +427,45 @@ Generated on: ${new Date().toLocaleString()}
         toast.success("Shift cancelled successfully.");
     };
 
-    const handleAddNote = () => {
-        if (!newNoteContent.trim()) {
-            toast.error("Please enter note content.");
-            return;
-        }
-        setProfile((prev: any) => ({
-            ...prev,
-            notes: [
-                { date: new Date().toISOString().split('T')[0], author: 'Omar Murphy', content: newNoteContent },
-                ...prev.notes
-            ]
-        }));
-        setNewNoteContent('');
-        setShowAddNoteInput(false);
-        toast.success("Note added successfully!");
+    const handleAddShiftNote = (newNote: any) => {
+        setProfile((prev: any) => {
+            let updatedNotes;
+            const noteIndex = prev.notes.findIndex((n: any) => n.id === newNote.id);
+            if (noteIndex > -1) {
+                updatedNotes = prev.notes.map((n: any) => n.id === newNote.id ? newNote : n);
+                toast.success('Note updated successfully');
+            } else {
+                updatedNotes = [newNote, ...prev.notes];
+                toast.success('Note added successfully');
+            }
+            return {
+                ...prev,
+                notes: updatedNotes
+            };
+        });
+        setNoteToEdit(null);
+    };
+
+    const handleArchiveShiftNote = (noteId: string) => {
+        setProfile((prev: any) => {
+            const updatedNotes = prev.notes.map((n: any) => {
+                if (n.id === noteId) {
+                    return { ...n, isArchived: !n.isArchived };
+                }
+                return n;
+            });
+            const note = updatedNotes.find((n: any) => n.id === noteId);
+            toast.success(note?.isArchived ? 'Note archived successfully' : 'Note restored successfully');
+            return {
+                ...prev,
+                notes: updatedNotes
+            };
+        });
+    };
+
+    const handleTriggerEditNote = (note: any) => {
+        setNoteToEdit(note);
+        setShowAddNoteModal(true);
     };
 
     const handleExport = () => {
@@ -812,53 +847,70 @@ Generated on: ${new Date().toLocaleString()}
                         <div className="space-y-4">
                             <div className="flex items-center justify-between">
                                 <h4 className="text-sm text-[#1F2937]" style={{ fontWeight: 600 }}>Shift Notes</h4>
-                                <button 
-                                    onClick={() => setShowAddNoteInput(true)}
-                                    className="flex items-center gap-1.5 px-3 py-1.5 text-sm text-[#10B981] border border-[#10B981] rounded-lg hover:bg-[#ECFDF5]"
-                                >
-                                    <MessageSquare className="w-3.5 h-3.5" /> Add Note
-                                </button>
+                                <div className="flex items-center gap-4">
+                                    <label className="flex items-center gap-2 text-xs text-[#6B7280] cursor-pointer">
+                                        <input 
+                                            type="checkbox" 
+                                            checked={showArchived} 
+                                            onChange={(e) => setShowArchived(e.target.checked)} 
+                                            className="rounded text-[#10B981] focus:ring-[#10B981] border-[#E5E7EB] h-3.5 w-3.5"
+                                        />
+                                        Show Archived Notes
+                                    </label>
+                                    <button 
+                                        onClick={() => { setNoteToEdit(null); setShowAddNoteModal(true); }}
+                                        className="flex items-center gap-1.5 px-3 py-1.5 text-sm bg-[#10B981] hover:bg-[#059669] text-white rounded-lg font-medium shadow-sm hover:shadow transition-all duration-200"
+                                    >
+                                        <MessageSquare className="w-3.5 h-3.5" /> Add Note
+                                    </button>
+                                </div>
                             </div>
-                            
-                            {showAddNoteInput && (
-                                <div className="border border-[#E5E7EB] rounded-lg p-4 bg-[#F9FAFB] space-y-3">
-                                    <textarea
-                                        value={newNoteContent}
-                                        onChange={e => setNewNoteContent(e.target.value)}
-                                        placeholder="Type your note here..."
-                                        className="w-full px-3 py-2 border border-[#E5E7EB] rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#10B981] bg-white text-[#1F2937]"
-                                        rows={3}
-                                    />
-                                    <div className="flex justify-end gap-2">
-                                        <button 
-                                            onClick={() => setShowAddNoteInput(false)}
-                                            className="px-3 py-1.5 border border-[#E5E7EB] rounded-lg text-xs text-[#6B7280] hover:bg-[#F3F4F6]"
-                                        >
-                                            Cancel
-                                        </button>
-                                        <button 
-                                            onClick={handleAddNote}
-                                            className="px-3 py-1.5 bg-[#10B981] text-white rounded-lg text-xs hover:bg-[#059669]"
-                                        >
-                                            Save Note
-                                        </button>
-                                    </div>
+                            {profile.notes.filter((note: any) => showArchived || !note.isArchived).length > 0 ? (
+                                <div className="space-y-3">
+                                    {profile.notes
+                                        .filter((note: any) => showArchived || !note.isArchived)
+                                        .map((note: any, idx: number) => (
+                                            <div 
+                                                key={note.id || idx} 
+                                                className={`p-4 border rounded-lg transition-all ${note.isArchived ? 'bg-[#F9FAFB] border-dashed border-[#D1D5DB] opacity-75' : 'border-[#E5E7EB] bg-[#FFFBEB]'}`}
+                                            >
+                                                <div className="flex items-start justify-between mb-2">
+                                                    <div>
+                                                        <div className="flex items-center gap-2">
+                                                            <p className="text-sm text-[#1F2937]" style={{ fontWeight: 500 }}>{note.author}</p>
+                                                            {note.isArchived && (
+                                                                <span className="px-1.5 py-0.5 text-[10px] font-medium bg-[#E5E7EB] text-[#4B5563] rounded">Archived</span>
+                                                            )}
+                                                        </div>
+                                                        <p className="text-xs text-[#9CA3AF]">{formatDate(note.date)}</p>
+                                                    </div>
+                                                    <div className="flex items-center gap-1">
+                                                        <button 
+                                                            onClick={() => handleTriggerEditNote(note)}
+                                                            className="p-1 text-[#9CA3AF] hover:text-[#3B82F6] hover:bg-gray-100 rounded transition-colors"
+                                                            title="Edit Note"
+                                                        >
+                                                            <Edit className="w-3.5 h-3.5" />
+                                                        </button>
+                                                        <button 
+                                                            onClick={() => handleArchiveShiftNote(note.id)}
+                                                            className={`p-1 rounded transition-colors ${note.isArchived ? 'text-[#10B981] hover:text-[#059669] hover:bg-[#ECFDF5]' : 'text-[#9CA3AF] hover:text-[#EF4444] hover:bg-red-50'}`}
+                                                            title={note.isArchived ? "Restore Note" : "Archive Note"}
+                                                        >
+                                                            {note.isArchived ? <RotateCcw className="w-3.5 h-3.5" /> : <Archive className="w-3.5 h-3.5" />}
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                                <p className="text-sm text-[#6B7280]">{note.content}</p>
+                                            </div>
+                                        ))}
+                                </div>
+                            ) : (
+                                <div className="border border-[#E5E7EB] rounded-lg p-8 text-center">
+                                    <MessageSquare className="w-8 h-8 text-[#9CA3AF] mx-auto mb-2" />
+                                    <p className="text-sm text-[#9CA3AF]">No notes added yet</p>
                                 </div>
                             )}
-
-                            <div className="space-y-3">
-                                {profile.notes.map((note: any, idx: number) => (
-                                    <div key={idx} className="border border-[#E5E7EB] rounded-lg p-4 bg-[#FFFBEB]">
-                                        <div className="flex items-start justify-between mb-2">
-                                            <div>
-                                                <p className="text-sm text-[#1F2937]" style={{ fontWeight: 500 }}>{note.author}</p>
-                                                <p className="text-xs text-[#9CA3AF]">{formatDate(note.date)}</p>
-                                            </div>
-                                        </div>
-                                        <p className="text-sm text-[#6B7280]">{note.content}</p>
-                                    </div>
-                                ))}
-                            </div>
                         </div>
                     )}
                 </div>
@@ -1240,6 +1292,16 @@ Generated on: ${new Date().toLocaleString()}
                     </div>
                 </div>
             )}
+            {/* Add Note Modal */}
+            <AddNoteModal
+                isOpen={showAddNoteModal}
+                onClose={() => { setShowAddNoteModal(false); setNoteToEdit(null); }}
+                onAddNote={handleAddShiftNote}
+                defaultAuthor="Omar Murphy"
+                title="Add Shift Note"
+                placeholder="Type shift note content here..."
+                noteToEdit={noteToEdit}
+            />
         </div>
     );
 }

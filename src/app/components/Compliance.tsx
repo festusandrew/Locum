@@ -26,8 +26,11 @@ import {
     History,
     Archive,
     StickyNote,
-    FileText
+    MessageSquare,
+    FileText,
+    RotateCcw
 } from 'lucide-react';
+import { AddNoteModal } from './ui/AddNoteModal';
 import { useState, useRef, useEffect } from 'react';
 import { toast } from 'sonner';
 import { LocumProfile } from './LocumProfile';
@@ -49,7 +52,21 @@ export function Compliance({ onViewComplianceDetail }: { onViewComplianceDetail?
         const fetchCompliance = async () => {
             try {
                 const data = await complianceService.getAllRecords();
-                setComplianceData(data);
+                // Map fallback IDs for notes inside each document
+                const mapped = data.map(locum => {
+                    const docs = { ...locum.documents };
+                    Object.keys(docs).forEach((key: any) => {
+                        const doc = (docs as any)[key];
+                        if (doc && (doc as any).notes) {
+                            (doc as any).notes = (doc as any).notes.map((n: any, idx: number) => ({
+                                id: n.id || `note-${idx}-${n.date}-${Math.random().toString(36).substring(2, 6)}`,
+                                ...n
+                            }));
+                        }
+                    });
+                    return { ...locum, documents: docs };
+                });
+                setComplianceData(mapped);
             } catch (err) {
                 console.error("Failed to load compliance data:", err);
             } finally {
@@ -103,6 +120,9 @@ export function Compliance({ onViewComplianceDetail }: { onViewComplianceDetail?
     const [showHistoryDialog, setShowHistoryDialog] = useState(false);
     const [showArchiveDialog, setShowArchiveDialog] = useState(false);
     const [showNotesDialog, setShowNotesDialog] = useState(false);
+    const [showAddNoteModal, setShowAddNoteModal] = useState(false);
+    const [showArchived, setShowArchived] = useState(false);
+    const [noteToEdit, setNoteToEdit] = useState<any>(null);
     const [showDeleteDialog, setShowDeleteDialog] = useState(false);
     const [selectedDocument, setSelectedDocument] = useState<{
         locum: ComplianceRecord;
@@ -203,14 +223,98 @@ export function Compliance({ onViewComplianceDetail }: { onViewComplianceDetail?
         }
     };
 
-    const handleAddDocNote = () => {
-        if (!documentNotes.trim()) {
-            toast.error("Please enter a note.");
-            return;
+    const handleAddDocNote = (newNote: any) => {
+        if (!selectedDocument) return;
+
+        const updatedData = complianceData.map(locum => {
+            if (locum.id === selectedDocument.locum.id) {
+                const doc = locum.documents[selectedDocument.docType];
+                const existingNotes = (doc as any).notes || [];
+                
+                let updatedNotes;
+                const noteIndex = existingNotes.findIndex((n: any) => n.id === newNote.id);
+                if (noteIndex > -1) {
+                    updatedNotes = existingNotes.map((n: any) => n.id === newNote.id ? newNote : n);
+                    toast.success("Document note updated successfully!");
+                } else {
+                    updatedNotes = [newNote, ...existingNotes];
+                    toast.success("Document note added successfully!");
+                }
+
+                const updatedDoc = {
+                    ...doc,
+                    notes: updatedNotes
+                };
+                return {
+                    ...locum,
+                    documents: {
+                        ...locum.documents,
+                        [selectedDocument.docType]: updatedDoc
+                    }
+                };
+            }
+            return locum;
+        });
+
+        setComplianceData(updatedData);
+        complianceService.saveAll(updatedData);
+
+        const updatedLocum = updatedData.find(l => l.id === selectedDocument.locum.id);
+        if (updatedLocum) {
+            setSelectedDocument({
+                ...selectedDocument,
+                locum: updatedLocum
+            });
         }
-        toast.success("Note added successfully!");
-        setDocumentNotes('');
-        setShowNotesDialog(false);
+        setNoteToEdit(null);
+    };
+
+    const handleArchiveDocNote = (noteId: string) => {
+        if (!selectedDocument) return;
+
+        const updatedData = complianceData.map(locum => {
+            if (locum.id === selectedDocument.locum.id) {
+                const doc = locum.documents[selectedDocument.docType];
+                const existingNotes = (doc as any).notes || [];
+                const updatedNotes = existingNotes.map((n: any) => {
+                    if (n.id === noteId) {
+                        return { ...n, isArchived: !n.isArchived };
+                    }
+                    return n;
+                });
+                const updatedDoc = {
+                    ...doc,
+                    notes: updatedNotes
+                };
+                return {
+                    ...locum,
+                    documents: {
+                        ...locum.documents,
+                        [selectedDocument.docType]: updatedDoc
+                    }
+                };
+            }
+            return locum;
+        });
+
+        setComplianceData(updatedData);
+        complianceService.saveAll(updatedData);
+
+        const updatedLocum = updatedData.find(l => l.id === selectedDocument.locum.id);
+        if (updatedLocum) {
+            setSelectedDocument({
+                ...selectedDocument,
+                locum: updatedLocum
+            });
+            const doc = updatedLocum.documents[selectedDocument.docType];
+            const note = (doc as any).notes?.find((n: any) => n.id === noteId);
+            toast.success(note?.isArchived ? 'Note archived successfully' : 'Note restored successfully');
+        }
+    };
+
+    const handleTriggerEditNote = (note: any) => {
+        setNoteToEdit(note);
+        setShowAddNoteModal(true);
     };
 
     // Calculate stats
@@ -1007,24 +1111,69 @@ export function Compliance({ onViewComplianceDetail }: { onViewComplianceDetail?
                         </div>
 
                         {/* Add New Note */}
-                        <div className="mb-6">
-                            <label className="block text-sm font-medium text-[#1F2937] mb-2">Add Note</label>
-                            <textarea
-                                rows={4}
-                                value={documentNotes}
-                                onChange={(e) => setDocumentNotes(e.target.value)}
-                                placeholder="Enter your note here..."
-                                className="w-full px-3 py-2 border border-[#E5E7EB] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#10B981]"
-                            ></textarea>
-                            <button onClick={handleAddDocNote} className="mt-2 px-4 py-2 bg-[#10B981] text-white rounded-lg hover:bg-[#059669] text-sm">
-                                Add Note
-                            </button>
+                        <div className="mb-6 flex justify-between items-center border-b border-[#E5E7EB] pb-4">
+                            <h4 className="text-sm font-medium text-[#1F2937]">Document Notes</h4>
+                            <div className="flex items-center gap-4">
+                                <label className="flex items-center gap-2 text-xs text-[#6B7280] cursor-pointer">
+                                    <input 
+                                        type="checkbox" 
+                                        checked={showArchived} 
+                                        onChange={(e) => setShowArchived(e.target.checked)} 
+                                        className="rounded text-[#10B981] focus:ring-[#10B981] border-[#E5E7EB] h-3.5 w-3.5"
+                                    />
+                                    Show Archived
+                                </label>
+                                <button 
+                                    onClick={() => { setNoteToEdit(null); setShowAddNoteModal(true); }} 
+                                    className="flex items-center gap-1.5 px-3 py-1.5 text-sm bg-[#10B981] hover:bg-[#059669] text-white rounded-lg font-medium shadow-sm hover:shadow transition-all duration-200"
+                                >
+                                    <MessageSquare className="w-3.5 h-3.5" /> Add Note
+                                </button>
+                            </div>
                         </div>
 
                         {/* Existing Notes */}
                         <div>
                             <h4 className="text-sm font-medium text-[#1F2937] mb-3">Previous Notes</h4>
-                            <div className="space-y-3">
+                            <div className="space-y-3 max-h-[300px] overflow-y-auto pr-1">
+                                {(selectedDocument.locum.documents[selectedDocument.docType] as any).notes
+                                    ?.filter((note: any) => showArchived || !note.isArchived)
+                                    .map((note: any, idx: number) => (
+                                        <div 
+                                            key={note.id || idx} 
+                                            className={`p-4 border rounded-lg transition-all ${note.isArchived ? 'bg-[#F9FAFB] border-dashed border-[#D1D5DB] opacity-75' : 'bg-[#FFFBEB] border-[#E5E7EB]'}`}
+                                        >
+                                            <div className="flex items-center justify-between mb-2">
+                                                <div className="flex items-center gap-2">
+                                                    <span className="text-sm font-medium text-[#1F2937]">{note.author}</span>
+                                                    {note.isArchived && (
+                                                        <span className="px-1.5 py-0.5 text-[10px] font-medium bg-[#E5E7EB] text-[#4B5563] rounded">Archived</span>
+                                                    )}
+                                                </div>
+                                                <div className="flex items-center gap-3">
+                                                    <span className="text-xs text-[#6B7280]">{note.date}</span>
+                                                    <div className="flex items-center gap-1">
+                                                        <button 
+                                                            onClick={() => handleTriggerEditNote(note)}
+                                                            className="p-1 text-[#9CA3AF] hover:text-[#3B82F6] hover:bg-gray-100 rounded transition-colors"
+                                                            title="Edit Note"
+                                                        >
+                                                            <Edit className="w-3.5 h-3.5" />
+                                                        </button>
+                                                        <button 
+                                                            onClick={() => handleArchiveDocNote(note.id)}
+                                                            className={`p-1 rounded transition-colors ${note.isArchived ? 'text-[#10B981] hover:text-[#059669] hover:bg-[#ECFDF5]' : 'text-[#9CA3AF] hover:text-[#EF4444] hover:bg-red-50'}`}
+                                                            title={note.isArchived ? "Restore Note" : "Archive Note"}
+                                                        >
+                                                            {note.isArchived ? <RotateCcw className="w-3.5 h-3.5" /> : <Archive className="w-3.5 h-3.5" />}
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <p className="text-sm text-[#6B7280]">{note.content}</p>
+                                        </div>
+                                    ))}
+
                                 {/* Mock notes */}
                                 <div className="p-4 bg-[#F9FAFB] rounded-lg border border-[#E5E7EB]">
                                     <div className="flex items-center justify-between mb-2">
@@ -1113,6 +1262,18 @@ export function Compliance({ onViewComplianceDetail }: { onViewComplianceDetail?
                         </div>
                     </div>
                 </div>
+            )}
+            {/* Add Note Modal */}
+            {showAddNoteModal && selectedDocument && (
+                <AddNoteModal
+                    isOpen={showAddNoteModal}
+                    onClose={() => { setShowAddNoteModal(false); setNoteToEdit(null); }}
+                    onAddNote={handleAddDocNote}
+                    defaultAuthor="Admin User"
+                    title="Add Document Note"
+                    placeholder="Type document note content here..."
+                    noteToEdit={noteToEdit}
+                />
             )}
         </div>
     );
