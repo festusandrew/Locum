@@ -6,6 +6,7 @@ import {
 import { Shift } from '../types';
 import { shiftService } from '../services/shiftService';
 import { toast } from 'sonner';
+import { Pagination } from './ui/Pagination';
 
 const statusConfig: Record<string, { label: string; color: string; bg: string; border: string }> = {
     open: { label: 'Open', color: '#3B82F6', bg: '#DBEAFE', border: '#BFDBFE' },
@@ -28,6 +29,12 @@ export function ShiftBooking({ subPage = 'board', onViewShiftDetail }: { subPage
     const [showCreateShift, setShowCreateShift] = useState(false);
     const [viewMode, setViewMode] = useState<'board' | 'calendar'>(subPage === 'calendar' ? 'calendar' : 'board');
     const [openActionMenu, setOpenActionMenu] = useState<string | null>(null);
+    const [shiftPage, setShiftPage] = useState(1);
+    const shiftPageSize = 5;
+
+    useEffect(() => {
+        setShiftPage(1);
+    }, [searchTerm, statusFilter, specialtyFilter, departmentFilter]);
     
     // Actions modals & inputs
     const [showAssignModal, setShowAssignModal] = useState(false);
@@ -363,7 +370,7 @@ export function ShiftBooking({ subPage = 'board', onViewShiftDetail }: { subPage
                                 </tr>
                             </thead>
                             <tbody>
-                                {filteredShifts.map(shift => {
+                                {filteredShifts.slice((shiftPage - 1) * shiftPageSize, shiftPage * shiftPageSize).map(shift => {
                                     const config = statusConfig[shift.status];
                                     return (
                                         <tr key={shift.id} className="border-b border-[#F3F4F6] hover:bg-[#F9FAFB]">
@@ -445,6 +452,12 @@ export function ShiftBooking({ subPage = 'board', onViewShiftDetail }: { subPage
                                 })}
                             </tbody>
                         </table>
+                        <Pagination
+                            currentPage={shiftPage}
+                            totalItems={filteredShifts.length}
+                            pageSize={shiftPageSize}
+                            onPageChange={setShiftPage}
+                        />
                     </div>
                 </div>
             )}

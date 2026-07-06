@@ -3,6 +3,7 @@ import { locumService } from '../services/locumService';
 import { Locum, PayrollItem, Invoice } from '../types';
 import { payrollService } from '../services/payrollService';
 import { toast } from 'sonner';
+import { Pagination } from './ui/Pagination';
 import {
     Wallet, FileText, CreditCard, Download, Search, Eye, X,
     CheckCircle, Clock, AlertCircle, TrendingUp, ArrowUp, ArrowDown,
@@ -49,6 +50,15 @@ export function PayrollInvoicing() {
     const [selectedPayroll, setSelectedPayroll] = useState<PayrollItem | null>(null);
     const [locumsList, setLocumsList] = useState<Locum[]>([]);
     const [selectedDepartment, setSelectedDepartment] = useState('');
+    const [payrollPage, setPayrollPage] = useState(1);
+    const payrollPageSize = 5;
+    const [invoicePage, setInvoicePage] = useState(1);
+    const invoicePageSize = 5;
+
+    useEffect(() => {
+        setPayrollPage(1);
+        setInvoicePage(1);
+    }, [searchTerm, selectedDepartment]);
 
     useEffect(() => {
         const fetchData = async () => {
@@ -252,7 +262,7 @@ export function PayrollInvoicing() {
                                 </tr>
                             </thead>
                             <tbody>
-                                {payrollItems.map(p => {
+                                {payrollItems.slice((payrollPage - 1) * payrollPageSize, payrollPage * payrollPageSize).map(p => {
                                     const sc = payStatusConfig[p.status];
                                     return (
                                         <tr
@@ -292,6 +302,12 @@ export function PayrollInvoicing() {
                                 </tr>
                             </tfoot>
                         </table>
+                        <Pagination
+                            currentPage={payrollPage}
+                            totalItems={payrollItems.length}
+                            pageSize={payrollPageSize}
+                            onPageChange={setPayrollPage}
+                        />
                     </div>
                 )}
 
@@ -306,7 +322,7 @@ export function PayrollInvoicing() {
                                 </tr>
                             </thead>
                             <tbody>
-                                {invoices.map(inv => {
+                                {invoices.slice((invoicePage - 1) * invoicePageSize, invoicePage * invoicePageSize).map(inv => {
                                     const sc = invStatusConfig[inv.status];
                                     return (
                                         <tr key={inv.id} className="border-b border-[#F3F4F6] hover:bg-[#F9FAFB]">
@@ -342,6 +358,12 @@ export function PayrollInvoicing() {
                                 })}
                             </tbody>
                         </table>
+                        <Pagination
+                            currentPage={invoicePage}
+                            totalItems={invoices.length}
+                            pageSize={invoicePageSize}
+                            onPageChange={setInvoicePage}
+                        />
                     </div>
                 )}
 

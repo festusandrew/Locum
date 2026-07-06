@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useSystemSettings } from '../contexts/SystemSettingsContext';
+import { Pagination } from './ui/Pagination';
 import {
     Users, Calendar, Clock, AlertTriangle, ShieldCheck, Wallet,
     TrendingUp, ArrowUp, ArrowDown, Plus, Send, Upload, CheckCircle,
@@ -64,6 +65,8 @@ interface DashboardOverviewProps {
 
 export function DashboardOverview({ onNavigate }: DashboardOverviewProps) {
     const [selectedPeriod, setSelectedPeriod] = useState('7d');
+    const [upcomingPage, setUpcomingPage] = useState(1);
+    const upcomingPageSize = 3;
     const { formatCurrency, getHospitals, t } = useSystemSettings();
     const hospitals = getHospitals();
 
@@ -123,7 +126,7 @@ export function DashboardOverview({ onNavigate }: DashboardOverviewProps) {
             )}
 
             {/* KPI Cards Row 1 */}
-            <div className="grid grid-cols-5 gap-4">
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-4">
                 {[
                     { label: 'Active Shifts Today', value: '47', change: '+8', trend: 'up', icon: Activity, color: '#10B981', bg: '#D1FAE5' },
                     { label: 'Open Requests', value: '12', change: '-3', trend: 'down', icon: Calendar, color: '#3B82F6', bg: '#DBEAFE' },
@@ -151,7 +154,7 @@ export function DashboardOverview({ onNavigate }: DashboardOverviewProps) {
             </div>
 
             {/* KPI Cards Row 2 */}
-            <div className="grid grid-cols-5 gap-4">
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-4">
                 {[
                     { label: 'Payroll This Month', value: formatCurrency(245800, 0), sub: '+12% vs last month', icon: Wallet },
                     { label: 'Revenue MTD', value: formatCurrency(368200, 0), sub: '+18% vs last month', icon: TrendingUp },
@@ -176,7 +179,7 @@ export function DashboardOverview({ onNavigate }: DashboardOverviewProps) {
             {/* Quick Actions */}
             <div className="bg-white rounded-xl border border-[#E5E7EB] p-4">
                 <h3 className="text-[#1F2937] mb-3">Quick Actions</h3>
-                <div className="flex gap-3">
+                <div className="grid grid-cols-2 sm:grid-cols-3 lg:flex lg:flex-wrap gap-3">
                     {[
                         { label: 'Post New Shift', icon: Plus, color: '#10B981', onClick: () => onNavigate('shifts') },
                         { label: 'Book Locum', icon: Users, color: '#3B82F6', onClick: () => onNavigate('locums') },
@@ -190,7 +193,7 @@ export function DashboardOverview({ onNavigate }: DashboardOverviewProps) {
                             <button
                                 key={action.label}
                                 onClick={action.onClick}
-                                className="flex-1 flex flex-col items-center gap-2 py-3 rounded-lg border border-[#E5E7EB] hover:border-[#10B981] hover:shadow-sm transition-all"
+                                className="flex-1 flex flex-col items-center gap-2 py-3 rounded-lg border border-[#E5E7EB] hover:border-[#10B981] hover:shadow-sm transition-all min-w-[120px]"
                             >
                                 <div className="w-9 h-9 rounded-lg flex items-center justify-center" style={{ backgroundColor: `${action.color}15` }}>
                                     <Icon className="w-[18px] h-[18px]" style={{ color: action.color }} />
@@ -203,9 +206,9 @@ export function DashboardOverview({ onNavigate }: DashboardOverviewProps) {
             </div>
 
             {/* Charts Row */}
-            <div className="grid grid-cols-3 gap-5">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
                 {/* Shift Fill Trends */}
-                <div className="col-span-2 bg-white rounded-xl p-5 border border-[#E5E7EB]">
+                <div className="lg:col-span-2 bg-white rounded-xl p-5 border border-[#E5E7EB]">
                     <div className="flex items-center justify-between mb-4">
                         <div>
                             <h3 className="text-[#1F2937]">Shift Fill Trends</h3>
@@ -287,9 +290,9 @@ export function DashboardOverview({ onNavigate }: DashboardOverviewProps) {
             </div>
 
             {/* Revenue & Bookings Row */}
-            <div className="grid grid-cols-3 gap-5">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
                 {/* Revenue Chart */}
-                <div className="col-span-2 bg-white rounded-xl p-5 border border-[#E5E7EB]">
+                <div className="lg:col-span-2 bg-white rounded-xl p-5 border border-[#E5E7EB]">
                     <div className="flex items-center justify-between mb-4">
                         <div>
                             <h3 className="text-[#1F2937]">Revenue & Cost Overview</h3>
@@ -364,7 +367,7 @@ export function DashboardOverview({ onNavigate }: DashboardOverviewProps) {
                             </tr>
                         </thead>
                         <tbody>
-                            {upcomingBookings.map(b => (
+                            {upcomingBookings.slice((upcomingPage - 1) * upcomingPageSize, upcomingPage * upcomingPageSize).map(b => (
                                 <tr key={b.id} className="border-b border-[#F3F4F6] hover:bg-[#F9FAFB]">
                                     <td className="px-4 py-3 text-xs text-[#6B7280]">{b.id}</td>
                                     <td className="px-4 py-3 text-sm text-[#1F2937]">{b.locum}</td>
@@ -394,6 +397,12 @@ export function DashboardOverview({ onNavigate }: DashboardOverviewProps) {
                         </tbody>
                     </table>
                 </div>
+                <Pagination
+                    currentPage={upcomingPage}
+                    totalItems={upcomingBookings.length}
+                    pageSize={upcomingPageSize}
+                    onPageChange={setUpcomingPage}
+                />
             </div>
 
             {/* Performance Metrics Row */}

@@ -17,6 +17,7 @@ import {
     ChevronDown
 } from 'lucide-react';
 import { useState } from 'react';
+import { Pagination } from './ui/Pagination';
 import { BarChart, Bar, LineChart, Line, PieChart as RechartsPie, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts';
 
 interface ReportTemplate {
@@ -114,6 +115,8 @@ export function Reports() {
     const [dateRange, setDateRange] = useState('last-30-days');
     const [showGenerateDialog, setShowGenerateDialog] = useState(false);
     const [selectedReport, setSelectedReport] = useState<ReportTemplate | null>(null);
+    const [locumPage, setLocumPage] = useState(1);
+    const locumPageSize = 3;
 
     const filteredTemplates = selectedCategory === 'all'
         ? reportTemplates
@@ -364,42 +367,51 @@ export function Reports() {
                             </tr>
                         </thead>
                         <tbody>
-                            {topPerformingLocums.map((locum, index) => (
-                                <tr key={locum.name} className="border-b border-[#F3F4F6] hover:bg-[#F9FAFB]">
-                                    <td className="px-5 py-4">
-                                        <div className={`w-8 h-8 rounded-full flex items-center justify-center font-semibold text-sm ${index === 0 ? 'bg-[#FEF3C7] text-[#D97706]' :
-                                                index === 1 ? 'bg-[#E5E7EB] text-[#6B7280]' :
-                                                    index === 2 ? 'bg-[#FED7AA] text-[#C2410C]' :
-                                                        'bg-[#F3F4F6] text-[#9CA3AF]'
-                                            }`}>
-                                            {index + 1}
-                                        </div>
-                                    </td>
-                                    <td className="px-5 py-4">
-                                        <p className="text-sm font-medium text-[#1F2937]">{locum.name}</p>
-                                    </td>
-                                    <td className="px-5 py-4">
-                                        <p className="text-sm text-[#1F2937]">{locum.shifts}</p>
-                                    </td>
-                                    <td className="px-5 py-4">
-                                        <div className="flex items-center gap-1">
-                                            <span className="text-sm font-medium text-[#1F2937]">{locum.rating}</span>
-                                            <span className="text-sm">⭐</span>
-                                        </div>
-                                    </td>
-                                    <td className="px-5 py-4">
-                                        <p className="text-sm font-semibold text-[#1F2937]">{formatCurrency(locum.revenue)}</p>
-                                    </td>
-                                    <td className="px-5 py-4">
-                                        <div className={`flex items-center gap-1 text-xs ${locum.change >= 0 ? 'text-[#10B981]' : 'text-[#EF4444]'}`}>
-                                            {locum.change >= 0 ? <ArrowUp className="w-3 h-3" /> : <ArrowDown className="w-3 h-3" />}
-                                            <span>{Math.abs(locum.change)}%</span>
-                                        </div>
-                                    </td>
-                                </tr>
-                            ))}
+                            {topPerformingLocums.slice((locumPage - 1) * locumPageSize, locumPage * locumPageSize).map((locum, sIndex) => {
+                                const index = (locumPage - 1) * locumPageSize + sIndex;
+                                return (
+                                    <tr key={locum.name} className="border-b border-[#F3F4F6] hover:bg-[#F9FAFB]">
+                                        <td className="px-5 py-4">
+                                            <div className={`w-8 h-8 rounded-full flex items-center justify-center font-semibold text-sm ${index === 0 ? 'bg-[#FEF3C7] text-[#D97706]' :
+                                                    index === 1 ? 'bg-[#E5E7EB] text-[#6B7280]' :
+                                                        index === 2 ? 'bg-[#FED7AA] text-[#C2410C]' :
+                                                            'bg-[#F3F4F6] text-[#9CA3AF]'
+                                                }`}>
+                                                {index + 1}
+                                            </div>
+                                        </td>
+                                        <td className="px-5 py-4">
+                                            <p className="text-sm font-medium text-[#1F2937]">{locum.name}</p>
+                                        </td>
+                                        <td className="px-5 py-4">
+                                            <p className="text-sm text-[#1F2937]">{locum.shifts}</p>
+                                        </td>
+                                        <td className="px-5 py-4">
+                                            <div className="flex items-center gap-1">
+                                                <span className="text-sm font-medium text-[#1F2937]">{locum.rating}</span>
+                                                <span className="text-sm">⭐</span>
+                                            </div>
+                                        </td>
+                                        <td className="px-5 py-4">
+                                            <p className="text-sm font-semibold text-[#1F2937]">{formatCurrency(locum.revenue)}</p>
+                                        </td>
+                                        <td className="px-5 py-4">
+                                            <div className={`flex items-center gap-1 text-xs ${locum.change >= 0 ? 'text-[#10B981]' : 'text-[#EF4444]'}`}>
+                                                {locum.change >= 0 ? <ArrowUp className="w-3 h-3" /> : <ArrowDown className="w-3 h-3" />}
+                                                <span>{Math.abs(locum.change)}%</span>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                );
+                            })}
                         </tbody>
                     </table>
+                    <Pagination
+                        currentPage={locumPage}
+                        totalItems={topPerformingLocums.length}
+                        pageSize={locumPageSize}
+                        onPageChange={setLocumPage}
+                    />
                 </div>
             </div>
 

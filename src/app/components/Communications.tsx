@@ -3,6 +3,7 @@ import {
     Bell, Mail, Megaphone, X, Send, Users, CheckCircle, Eye
 } from 'lucide-react';
 import { toast } from 'sonner';
+import { Pagination } from './ui/Pagination';
 import { Notification, EmailLog } from '../types';
 import { communicationService } from '../services/communicationService';
 
@@ -18,6 +19,8 @@ export function Communications() {
     const [notifications, setNotifications] = useState<Notification[]>([]);
     const [emailLogs, setEmailLogs] = useState<EmailLog[]>([]);
     const [loading, setLoading] = useState(true);
+    const [notificationPage, setNotificationPage] = useState(1);
+    const notificationPageSize = 5;
     const [showBroadcastModal, setShowBroadcastModal] = useState(false);
     const [broadcastForm, setBroadcastForm] = useState({
         type: 'email' as 'email' | 'sms',
@@ -185,7 +188,7 @@ export function Communications() {
                         <button onClick={handleMarkAllAsRead} className="text-xs text-[#10B981] hover:underline">Mark all as read</button>
                     </div>
                     <div className="divide-y divide-[#F3F4F6]">
-                        {notifications.map(n => (
+                        {notifications.slice((notificationPage - 1) * notificationPageSize, notificationPage * notificationPageSize).map(n => (
                             <div key={n.id} className={`p-4 flex items-start gap-3 hover:bg-[#F9FAFB] ${!n.read ? 'bg-[#F0FDF4]' : ''}`}>
                                 <div className="w-2 h-2 rounded-full mt-2" style={{ backgroundColor: !n.read ? typeColors[n.type] : '#E5E7EB' }} />
                                 <div className="flex-1">
@@ -199,6 +202,12 @@ export function Communications() {
                             </div>
                         ))}
                     </div>
+                    <Pagination
+                        currentPage={notificationPage}
+                        totalItems={notifications.length}
+                        pageSize={notificationPageSize}
+                        onPageChange={setNotificationPage}
+                    />
                 </div>
             )}
 

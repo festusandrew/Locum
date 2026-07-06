@@ -22,7 +22,7 @@ import { FacilityProfilePage } from './components/FacilityProfilePage';
 import { ShiftDetailPage } from './components/ShiftDetailPage';
 import { TimesheetDetailPage } from './components/TimesheetDetailPage';
 import { ComplianceDetailPage } from './components/ComplianceDetailPage';
-import { Mail, Bell, Search, Plus, ChevronRight, Globe, ChevronDown } from 'lucide-react';
+import { Mail, Bell, Search, Plus, ChevronRight, Globe, ChevronDown, Menu } from 'lucide-react';
 import { Toaster } from './components/ui/sonner';
 import { toast } from 'sonner';
 
@@ -67,6 +67,7 @@ function AppContent() {
     const initialUrl = parseUrl();
     const [currentPage, setCurrentPageState] = useState(initialUrl.page);
     const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+    const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
     const [showCreateDialog, setShowCreateDialog] = useState(false);
     const [searchOpen, setSearchOpen] = useState(false);
     const [globalSearch, setGlobalSearch] = useState('');
@@ -101,6 +102,7 @@ function AppContent() {
             setSelectedProfileId('');
         }
         setCurrentPageState(page);
+        setMobileSidebarOpen(false);
     };
 
     // Synchronize local state with URL
@@ -240,9 +242,11 @@ function AppContent() {
                 onNavigate={setCurrentPage} 
                 isCollapsed={sidebarCollapsed} 
                 onToggleCollapse={() => setSidebarCollapsed(!sidebarCollapsed)} 
+                mobileOpen={mobileSidebarOpen}
+                onCloseMobile={() => setMobileSidebarOpen(false)}
             />
 
-            <div className={`transition-all duration-300 ease-in-out ${sidebarCollapsed ? 'ml-[72px]' : 'ml-[240px]'}`}>
+            <div className={`transition-all duration-300 ease-in-out ml-0 ${sidebarCollapsed ? 'md:ml-[72px]' : 'md:ml-[240px]'}`}>
                 {/* Active Client Preview Banner */}
                 {isWhitelabelActive && (
                     <div className="px-6 py-2.5 bg-[#FEF3C7] border-b border-[#F59E0B] flex items-center justify-between text-xs font-semibold animate-in slide-in-from-top duration-300">
@@ -267,60 +271,64 @@ function AppContent() {
                 )}
 
                 {/* Top Header */}
-                <div className="bg-white border-b border-[#E5E7EB] px-6 py-3 sticky top-0 z-30">
-                    <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-2">
-                            <nav className="flex items-center gap-1 text-sm">
+                <div className="bg-white border-b border-[#E5E7EB] px-4 md:px-6 py-3 sticky top-0 z-30">
+                    <div className="flex items-center justify-between gap-3">
+                        <div className="flex items-center gap-2 min-w-0">
+                            <button
+                                onClick={() => setMobileSidebarOpen(true)}
+                                className="p-1.5 rounded-lg border border-[#E5E7EB] text-[#6B7280] hover:bg-[#F9FAFB] md:hidden mr-1 flex-shrink-0"
+                            >
+                                <Menu className="w-5 h-5" />
+                            </button>
+                            <nav className="flex items-center gap-1 text-sm overflow-x-auto whitespace-nowrap scrollbar-none pr-2">
                                 <button onClick={() => setCurrentPage('dashboard')} className="text-[#9CA3AF] hover:text-[#6B7280]">Home</button>
-                                <ChevronRight className="w-3.5 h-3.5 text-[#D1D5DB]" />
+                                <ChevronRight className="w-3.5 h-3.5 text-[#D1D5DB] flex-shrink-0" />
                                 {currentPage === 'locumProfile' && (
                                     <>
                                         <button onClick={() => setCurrentPage('locums')} className="text-[#9CA3AF] hover:text-[#6B7280]">Locum Professionals</button>
-                                        <ChevronRight className="w-3.5 h-3.5 text-[#D1D5DB]" />
+                                        <ChevronRight className="w-3.5 h-3.5 text-[#D1D5DB] flex-shrink-0" />
                                     </>
                                 )}
                                 {currentPage === 'facilityProfile' && (
                                     <>
                                         <button onClick={() => setCurrentPage('clients')} className="text-[#9CA3AF] hover:text-[#6B7280]">Clients & Facilities</button>
-                                        <ChevronRight className="w-3.5 h-3.5 text-[#D1D5DB]" />
+                                        <ChevronRight className="w-3.5 h-3.5 text-[#D1D5DB] flex-shrink-0" />
                                     </>
                                 )}
                                 {currentPage === 'shiftDetail' && (
                                     <>
                                         <button onClick={() => setCurrentPage('shifts')} className="text-[#9CA3AF] hover:text-[#6B7280]">Shifts & Booking</button>
-                                        <ChevronRight className="w-3.5 h-3.5 text-[#D1D5DB]" />
+                                        <ChevronRight className="w-3.5 h-3.5 text-[#D1D5DB] flex-shrink-0" />
                                     </>
                                 )}
                                 {currentPage === 'timesheetDetail' && (
                                     <>
                                         <button onClick={() => setCurrentPage('timesheets')} className="text-[#9CA3AF] hover:text-[#6B7280]">Timesheets & Attendance</button>
-                                        <ChevronRight className="w-3.5 h-3.5 text-[#D1D5DB]" />
+                                        <ChevronRight className="w-3.5 h-3.5 text-[#D1D5DB] flex-shrink-0" />
                                     </>
                                 )}
                                 {currentPage === 'complianceDetail' && (
                                     <>
                                         <button onClick={() => setCurrentPage('compliance')} className="text-[#9CA3AF] hover:text-[#6B7280]">Compliance & Credentialing</button>
-                                        <ChevronRight className="w-3.5 h-3.5 text-[#D1D5DB]" />
+                                        <ChevronRight className="w-3.5 h-3.5 text-[#D1D5DB] flex-shrink-0" />
                                     </>
                                 )}
-                                <span className="text-[#1F2937]" style={{ fontWeight: 500 }}>{getPageTitle()}</span>
+                                <span className="text-[#1F2937] truncate" style={{ fontWeight: 500 }}>{getPageTitle()}</span>
                             </nav>
                         </div>
-                        <div className="flex items-center gap-3">
+                        <div className="flex items-center gap-2 md:gap-3 flex-shrink-0">
                             {/* Global Search */}
-                            <div className="relative">
+                            <div className="relative hidden sm:block">
                                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#9CA3AF]" />
                                 <input
                                     type="text"
                                     placeholder="Search anything..."
                                     value={globalSearch}
                                     onChange={(e) => setGlobalSearch(e.target.value)}
-                                    className="pl-9 pr-4 py-2 text-sm border border-[#E5E7EB] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#10B981] w-64 bg-[#F9FAFB]"
+                                    className="pl-9 pr-4 py-2 text-sm border border-[#E5E7EB] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#10B981] w-48 lg:w-64 bg-[#F9FAFB]"
                                 />
                             </div>
                             
-
-
                             <button className="relative w-9 h-9 bg-white border border-[#E5E7EB] rounded-lg flex items-center justify-center hover:bg-[#F9FAFB] transition-colors">
                                 <Mail className="w-4 h-4 text-[#6B7280]" />
                             </button>

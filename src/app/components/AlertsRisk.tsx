@@ -1,10 +1,12 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
     AlertTriangle, Shield, Users, Clock, Bell, CheckCircle,
     XCircle, MapPin, Phone, Mail, ChevronRight, FileText,
     Zap, Building2, Calendar, Activity, X, UserSearch, Send,
-    UserPlus
+    UserPlus, Plus
 } from 'lucide-react';
+import { toast } from 'sonner';
+import { Pagination } from './ui/Pagination';
 
 interface Alert {
     id: string;
@@ -68,6 +70,13 @@ export function AlertsRisk() {
     const [showFindLocum, setShowFindLocum] = useState(false);
     const [showResolveModal, setShowResolveModal] = useState(false);
     const [resolutionText, setResolutionText] = useState('');
+    const [showIncidentModal, setShowIncidentModal] = useState(false);
+    const [alertsPage, setAlertsPage] = useState(1);
+    const alertsPageSize = 5;
+
+    useEffect(() => {
+        setAlertsPage(1);
+    }, [typeFilter, severityFilter, statusFilter]);
 
     const filtered = allAlerts.filter(a => {
         const matchType = typeFilter === 'all' || a.type === typeFilter;
@@ -89,6 +98,35 @@ export function AlertsRisk() {
         setResolutionText('');
     };
 
+    const handleFileIncident = (e: React.FormEvent<HTMLFormElement>) => {
+        e.preventDefault();
+        const formData = new FormData(e.currentTarget);
+        const title = formData.get('title') as string;
+        const description = formData.get('description') as string;
+        const relatedEntity = formData.get('facility') as string;
+        const severity = formData.get('severity') as 'critical' | 'high' | 'medium' | 'low';
+
+        if (!title.trim() || !description.trim()) {
+            toast.error("Please fill in the title and description.");
+            return;
+        }
+
+        const newAlert: Alert = {
+            id: `ALT-0${allAlerts.length + 1}`,
+            title,
+            description,
+            type: 'emergency',
+            severity,
+            timestamp: new Date().toISOString().replace('T', ' ').slice(0, 16),
+            status: 'active',
+            relatedEntity: relatedEntity || undefined,
+        };
+
+        setAllAlerts([newAlert, ...allAlerts]);
+        setShowIncidentModal(false);
+        toast.success("Emergency incident filed successfully!");
+    };
+
     const mockLocums = [
         { name: 'Dr. Kevin O\'Malley', specialty: 'General Practice', availability: 'Immediate', rating: 4.9 },
         { name: 'Dr. Sarah Higgins', specialty: 'Emergency Medicine', availability: '2 hours', rating: 4.8 },
@@ -103,7 +141,7 @@ export function AlertsRisk() {
             </div>
 
             {/* Stats */}
-            <div className="grid grid-cols-4 gap-4">
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
                 {[
                     { label: 'Critical Alerts', value: criticalCount.toString(), icon: AlertTriangle, color: '#DC2626', bg: '#FEE2E2' },
                     { label: 'High Priority', value: highCount.toString(), icon: Zap, color: '#EA580C', bg: '#FFF7ED' },
@@ -127,14 +165,20 @@ export function AlertsRisk() {
                 })}
             </div>
 
-            <div className="grid grid-cols-3 gap-5">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
                 {/* Alerts List */}
-                <div className="col-span-2 bg-white rounded-xl border border-[#E5E7EB]">
+                <div className="lg:col-span-2 bg-white rounded-xl border border-[#E5E7EB]">
                     <div className="p-4 border-b border-[#E5E7EB]">
                         <div className="flex items-center justify-between mb-3">
                             <h3 className="text-[#1F2937]">All Alerts</h3>
+                            <button
+                                onClick={() => setShowIncidentModal(true)}
+                                className="flex items-center gap-1.5 px-3 py-1.5 text-xs bg-[#DC2626] text-white rounded-lg hover:bg-[#B91C1C] transition-colors font-semibold"
+                            >
+                                <Plus className="w-3.5 h-3.5" /> File emergency incident
+                            </button>
                         </div>
-                        <div className="flex gap-2">
+                        <div className="flex flex-wrap items-center gap-2">
                             <select value={typeFilter} onChange={e => setTypeFilter(e.target.value)} className="px-3 py-1.5 text-xs border border-[#E5E7EB] rounded-lg">
                                 <option value="all">All Types</option>
                                 <option value="staffing">Staffing</option>
@@ -159,7 +203,7 @@ export function AlertsRisk() {
                     </div>
 
                     <div className="divide-y divide-[#F3F4F6]">
-                        {filtered.map(alert => {
+                        {filtered.slice((alertsPage - 1) * alertsPageSize, alertsPage * alertsPageSize).map(alert => {
                             const sev = severityConfig[alert.severity];
                             const type = typeConfig[alert.type];
                             const status = statusConfig[alert.status];
@@ -235,6 +279,12 @@ export function AlertsRisk() {
                             );
                         })}
                     </div>
+                    <Pagination
+                        currentPage={alertsPage}
+                        totalItems={filtered.length}
+                        pageSize={alertsPageSize}
+                        onPageChange={setAlertsPage}
+                    />
                 </div>
 
                 {/* Right Panel */}
@@ -399,6 +449,80 @@ export function AlertsRisk() {
                                 <UserPlus className="w-4 h-4" /> Invite via Phone
                             </button>
                         </div>
+                    </div>
+                </div>
+            )}
+            {/* File Emergency Incident Modal */}
+            {showIncidentModal && (
+                <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-6">
+                    <div className="bg-white rounded-xl w-full max-w-lg shadow-2xl animate-in fade-in zoom-in duration-200 overflow-hidden">
+                        <div className="p-5 border-b border-[#E5E7EB] flex items-center justify-between bg-white">
+                            <div className="flex items-center gap-3">
+                                <div className="p-2 bg-[#FEE2E2] text-[#DC2626] rounded-lg">
+                                    <AlertTriangle className="w-5 h-5" />
+                                </div>
+                                <h3 className="text-[#1F2937]" style={{ fontWeight: 700 }}>File Emergency Incident</h3>
+                            </div>
+                            <button onClick={() => setShowIncidentModal(false)} className="p-2 hover:bg-[#F3F4F6] rounded-lg">
+                                <X className="w-5 h-5 text-[#6B7280]" />
+                            </button>
+                        </div>
+                        <form onSubmit={handleFileIncident}>
+                            <div className="p-6 space-y-4">
+                                <div>
+                                    <label className="block text-xs font-bold text-[#6B7280] uppercase tracking-wider mb-1.5">Incident Title</label>
+                                    <input
+                                        type="text"
+                                        name="title"
+                                        className="w-full px-4 py-2.5 text-sm border border-[#E5E7EB] rounded-lg focus:ring-2 focus:ring-[#DC2626] outline-none"
+                                        placeholder="e.g. Critical staff shortage in ICU"
+                                        required
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-xs font-bold text-[#6B7280] uppercase tracking-wider mb-1.5">Description</label>
+                                    <textarea
+                                        name="description"
+                                        className="w-full px-4 py-2.5 text-sm border border-[#E5E7EB] rounded-lg focus:ring-2 focus:ring-[#DC2626] h-28 outline-none resize-none"
+                                        placeholder="Describe the emergency details..."
+                                        required
+                                    ></textarea>
+                                </div>
+                                <div className="grid grid-cols-2 gap-4">
+                                    <div>
+                                        <label className="block text-xs font-bold text-[#6B7280] uppercase tracking-wider mb-1.5">Facility / Related Entity</label>
+                                        <input
+                                            type="text"
+                                            name="facility"
+                                            className="w-full px-4 py-2.5 text-sm border border-[#E5E7EB] rounded-lg focus:ring-2 focus:ring-[#DC2626] outline-none"
+                                            placeholder="e.g. St. James's Hospital"
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="block text-xs font-bold text-[#6B7280] uppercase tracking-wider mb-1.5">Severity Level</label>
+                                        <select
+                                            name="severity"
+                                            className="w-full px-4 py-2.5 text-sm border border-[#E5E7EB] rounded-lg focus:ring-2 focus:ring-[#DC2626] outline-none"
+                                            defaultValue="critical"
+                                        >
+                                            <option value="critical">Critical</option>
+                                            <option value="high">High</option>
+                                            <option value="medium">Medium</option>
+                                            <option value="low">Low</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+                            <div className="p-5 bg-[#F9FAFB] border-t border-[#E5E7EB] flex justify-end gap-3">
+                                <button type="button" onClick={() => setShowIncidentModal(false)} className="px-5 py-2 text-sm text-[#6B7280] font-bold">Cancel</button>
+                                <button
+                                    type="submit"
+                                    className="px-6 py-2 bg-[#DC2626] text-white rounded-lg text-sm font-bold hover:bg-[#B91C1C] shadow-md active:scale-95 transition-all"
+                                >
+                                    File Incident
+                                </button>
+                            </div>
+                        </form>
                     </div>
                 </div>
             )}

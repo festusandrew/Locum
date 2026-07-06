@@ -33,6 +33,7 @@ import {
 import { AddNoteModal } from './ui/AddNoteModal';
 import { useState, useRef, useEffect } from 'react';
 import { toast } from 'sonner';
+import { Pagination } from './ui/Pagination';
 import { LocumProfile } from './LocumProfile';
 import { ComplianceRecord } from '../types';
 import { complianceService } from '../services/complianceService';
@@ -47,6 +48,12 @@ export function Compliance({ onViewComplianceDetail }: { onViewComplianceDetail?
     const [selectedLocum, setSelectedLocum] = useState<ComplianceRecord | null>(null);
     const [activeTab, setActiveTab] = useState<'information' | 'schedule' | 'compliance' | 'shifts' | 'payments'>('information');
     const [showUploadDialog, setShowUploadDialog] = useState(false);
+    const [compliancePage, setCompliancePage] = useState(1);
+    const compliancePageSize = 5;
+
+    useEffect(() => {
+        setCompliancePage(1);
+    }, [searchTerm, complianceFilter, statusFilter]);
 
     useEffect(() => {
         const fetchCompliance = async () => {
@@ -635,7 +642,7 @@ export function Compliance({ onViewComplianceDetail }: { onViewComplianceDetail?
                             </tr>
                         </thead>
                         <tbody>
-                            {filteredData.map((locum) => (
+                            {filteredData.slice((compliancePage - 1) * compliancePageSize, compliancePage * compliancePageSize).map((locum) => (
                                 <tr key={locum.id} className="border-b border-[#F3F4F6] hover:bg-[#F9FAFB]">
                                     <td className="px-5 py-4">
                                         <div className="flex items-center gap-3">
@@ -703,6 +710,12 @@ export function Compliance({ onViewComplianceDetail }: { onViewComplianceDetail?
                             ))}
                         </tbody>
                     </table>
+                    <Pagination
+                        currentPage={compliancePage}
+                        totalItems={filteredData.length}
+                        pageSize={compliancePageSize}
+                        onPageChange={setCompliancePage}
+                    />
                 </div>
             </div>
 

@@ -6,6 +6,7 @@ import {
 } from 'lucide-react';
 import { Timesheet } from '../types';
 import { timesheetService } from '../services/timesheetService';
+import { Pagination } from './ui/Pagination';
 
 const statusConfig: Record<string, { label: string; color: string; bg: string; border: string }> = {
     submitted: { label: 'Submitted', color: '#3B82F6', bg: '#DBEAFE', border: '#BFDBFE' },
@@ -23,6 +24,15 @@ export function TimesheetsAttendance({ onViewTimesheetDetail }: { onViewTimeshee
     const [showDetail, setShowDetail] = useState(false);
     const [selectedTs, setSelectedTs] = useState<Timesheet | null>(null);
     const [activeTab, setActiveTab] = useState<'timesheets' | 'attendance' | 'approval'>('timesheets');
+    const [timesheetsPage, setTimesheetsPage] = useState(1);
+    const [approvalPage, setApprovalPage] = useState(1);
+    const [attendancePage, setAttendancePage] = useState(1);
+    const pageSize = 5;
+
+    useEffect(() => {
+        setTimesheetsPage(1);
+        setApprovalPage(1);
+    }, [searchTerm, statusFilter]);
 
     useEffect(() => {
         const fetchTimesheets = async () => {
@@ -158,7 +168,10 @@ export function TimesheetsAttendance({ onViewTimesheetDetail }: { onViewTimeshee
                                 </tr>
                             </thead>
                             <tbody>
-                                {(activeTab === 'approval' ? filtered.filter(t => t.status === 'submitted') : filtered).map(ts => {
+                                {(activeTab === 'approval'
+                                    ? filtered.filter(t => t.status === 'submitted').slice((approvalPage - 1) * pageSize, approvalPage * pageSize)
+                                    : filtered.slice((timesheetsPage - 1) * pageSize, timesheetsPage * pageSize)
+                                ).map(ts => {
                                     const sc = statusConfig[ts.status];
                                     return (
                                         <tr key={ts.id} className="border-b border-[#F3F4F6] hover:bg-[#F9FAFB]">
@@ -200,6 +213,12 @@ export function TimesheetsAttendance({ onViewTimesheetDetail }: { onViewTimeshee
                                 })}
                             </tbody>
                         </table>
+                        <Pagination
+                            currentPage={activeTab === 'approval' ? approvalPage : timesheetsPage}
+                            totalItems={activeTab === 'approval' ? filtered.filter(t => t.status === 'submitted').length : filtered.length}
+                            pageSize={pageSize}
+                            onPageChange={activeTab === 'approval' ? setApprovalPage : setTimesheetsPage}
+                        />
                     </div>
                 ) : (
                     /* Attendance Tracking Tab */
@@ -227,7 +246,7 @@ export function TimesheetsAttendance({ onViewTimesheetDetail }: { onViewTimeshee
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    {timesheets.slice(0, 5).map(ts => (
+                                    {timesheets.slice((attendancePage - 1) * pageSize, attendancePage * pageSize).map(ts => (
                                         <tr key={ts.id} className="border-b border-[#F3F4F6]">
                                             <td className="px-4 py-3 text-sm text-[#1F2937]">{ts.locum}</td>
                                             <td className="px-4 py-3 text-xs text-[#6B7280]">{ts.facility}</td>
@@ -249,6 +268,12 @@ export function TimesheetsAttendance({ onViewTimesheetDetail }: { onViewTimeshee
                                     ))}
                                 </tbody>
                             </table>
+                            <Pagination
+                                currentPage={attendancePage}
+                                totalItems={timesheets.length}
+                                pageSize={pageSize}
+                                onPageChange={setAttendancePage}
+                            />
                         </div>
                     </div>
                 )}

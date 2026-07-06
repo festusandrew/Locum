@@ -9,6 +9,7 @@ import {
 import { Client } from '../types';
 import { clientService } from '../services/clientService';
 import { useSystemSettings } from '../contexts/SystemSettingsContext';
+import { Pagination } from './ui/Pagination';
 
 const feedbackData = [
     { id: 'FB-001', client: "St. James's Hospital", locum: 'Sarah Mitchell', rating: 5, comment: 'Excellent surgeon, highly professional. Would definitely book again.', date: '2026-02-08' },
@@ -40,6 +41,12 @@ export function ClientManagement({ subPage = 'directory', onViewProfile }: { sub
     const [showEditModal, setShowEditModal] = useState(false);
     const [showArchiveModal, setShowArchiveModal] = useState(false);
     const [selectedClient, setSelectedClient] = useState<Client | null>(null);
+    const [clientPage, setClientPage] = useState(1);
+    const clientPageSize = 5;
+
+    useEffect(() => {
+        setClientPage(1);
+    }, [searchTerm, typeFilter]);
     const [modalTab, setModalTab] = useState<'overview' | 'location' | 'contacts' | 'contract'>('overview');
     const [formData, setFormData] = useState({
         name: '',
@@ -610,7 +617,7 @@ export function ClientManagement({ subPage = 'directory', onViewProfile }: { sub
             </div>
 
             {/* Stats */}
-            <div className="grid grid-cols-4 gap-4 mb-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
                 <div className="bg-white rounded-xl p-4 border border-[#E5E7EB]">
                     <p className="text-xs text-[#6B7280] mb-1">Total Clients</p>
                     <p className="text-2xl text-[#1F2937]" style={{ fontWeight: 700 }}>{clientsList.length}</p>
@@ -635,13 +642,13 @@ export function ClientManagement({ subPage = 'directory', onViewProfile }: { sub
 
             {/* Client List */}
             <div className="bg-white rounded-xl border border-[#E5E7EB]">
-                <div className="p-4 border-b border-[#E5E7EB] flex items-center justify-between">
+                <div className="p-4 border-b border-[#E5E7EB] flex flex-col md:flex-row md:items-center justify-between gap-3">
                     <h3 className="text-[#1F2937]">All Clients</h3>
-                    <div className="flex items-center gap-2">
-                        <div className="relative">
+                    <div className="flex flex-wrap items-center gap-2 w-full md:w-auto">
+                        <div className="relative w-full md:w-auto">
                             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#9CA3AF]" />
                             <input type="text" placeholder="Search clients..." value={searchTerm} onChange={e => setSearchTerm(e.target.value)}
-                                className="pl-9 pr-4 py-2 text-sm border border-[#E5E7EB] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#10B981]" />
+                                className="pl-9 pr-4 py-2 text-sm border border-[#E5E7EB] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#10B981] w-full md:w-auto" />
                         </div>
                         <select value={typeFilter} onChange={e => setTypeFilter(e.target.value)}
                             className="px-3 py-2 text-sm border border-[#E5E7EB] rounded-lg">
@@ -675,7 +682,7 @@ export function ClientManagement({ subPage = 'directory', onViewProfile }: { sub
                             </tr>
                         </thead>
                         <tbody>
-                            {filteredClients.map(client => (
+                            {filteredClients.slice((clientPage - 1) * clientPageSize, clientPage * clientPageSize).map(client => (
                                 <tr key={client.id} className="border-b border-[#F3F4F6] hover:bg-[#F9FAFB]">
                                     <td className="px-4 py-3 cursor-pointer" onClick={() => onViewProfile?.(client.id)}>
                                         <div className="flex items-center gap-3">
@@ -720,31 +727,6 @@ export function ClientManagement({ subPage = 'directory', onViewProfile }: { sub
                                     </td>
                                     <td className="px-4 py-3">
                                         <div className="flex items-center gap-2">
-                                            {/* Commented out whitelabel preview icon button
-                                            <button 
-                                                onClick={() => {
-                                                    const isThisClientActive = isWhitelabelActive && brandingFacilityId === client.id;
-                                                    if (isThisClientActive) {
-                                                        setIsWhitelabelActive(false);
-                                                        setBrandingFacilityId(null);
-                                                        toast.success("Returned to main portal view");
-                                                    } else {
-                                                        setBrandingFacilityId(client.id);
-                                                        setIsWhitelabelActive(true);
-                                                        toast.success(`Active Whitelabel Portal updated to ${client.name}!`);
-                                                    }
-                                                }}
-                                                className={`flex items-center justify-center w-8 h-8 rounded-lg transition-all ${
-                                                    isWhitelabelActive && brandingFacilityId === client.id
-                                                        ? 'text-white shadow-sm' 
-                                                        : 'text-[#6B7280] hover:text-amber-500 hover:bg-amber-50'
-                                                }`}
-                                                style={isWhitelabelActive && brandingFacilityId === client.id ? { backgroundColor: client.themeColor || '#10B981' } : undefined}
-                                                title={isWhitelabelActive && brandingFacilityId === client.id ? "Active Whitelabel Portal (Click to deactivate)" : "Preview Whitelabel Portal"}
-                                            >
-                                                <Sparkles className={`w-4 h-4 ${isWhitelabelActive && brandingFacilityId === client.id ? 'animate-pulse' : ''}`} />
-                                            </button>
-                                            */}
                                             <button onClick={() => onViewProfile?.(client.id)}
                                                 className="flex items-center justify-center w-8 h-8 text-[#6B7280] hover:text-[#10B981] hover:bg-[#ECFDF5] rounded-lg transition-colors"
                                                 title="View Profile">
@@ -766,6 +748,12 @@ export function ClientManagement({ subPage = 'directory', onViewProfile }: { sub
                             ))}
                         </tbody>
                     </table>
+                    <Pagination
+                        currentPage={clientPage}
+                        totalItems={filteredClients.length}
+                        pageSize={clientPageSize}
+                        onPageChange={setClientPage}
+                    />
                 </div>
             </div>
 

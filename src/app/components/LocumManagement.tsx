@@ -2,6 +2,7 @@ import { Search, SlidersHorizontal, Download, Plus, Eye, MapPin, Phone, Mail, X,
 import { useState, useRef, useEffect } from 'react';
 import { useUserRole } from '../contexts/UserRoleContext';
 import { toast } from 'sonner';
+import { Pagination } from './ui/Pagination';
 import { ShiftSlotStatus, ShiftType, ShiftSlot, DaySchedule, LocumWeekSchedule, Locum, Applicant } from '../types';
 import { locumService } from '../services/locumService';
 
@@ -163,7 +164,7 @@ export function LocumManagement({ onViewProfile }: { onViewProfile?: (id: string
         lastName: '',
         status: 'available',
         dob: '',
-        nationality: 'Irish',
+        nationality: 'Ireland',
         gender: 'Male',
         address: '',
         phone: '',
@@ -206,6 +207,15 @@ export function LocumManagement({ onViewProfile }: { onViewProfile?: (id: string
     const [departmentFilter, setDepartmentFilter] = useState('all');
     const [viewMode, setViewMode] = useState<'grid' | 'list'>('list');
     const [activeTab, setActiveTab] = useState<'directory' | 'recruitment' | 'availability'>('directory');
+    const [directoryPage, setDirectoryPage] = useState(1);
+    const directoryPageSize = 5;
+    const [recruitmentPage, setRecruitmentPage] = useState(1);
+    const recruitmentPageSize = 5;
+
+    useEffect(() => {
+        setDirectoryPage(1);
+    }, [searchTerm, statusFilter, specialtyFilter, departmentFilter]);
+    
     const { permissions } = useUserRole();
 
     // Edit Form State Variables
@@ -496,7 +506,7 @@ export function LocumManagement({ onViewProfile }: { onViewProfile?: (id: string
                 lastName: '',
                 status: 'available',
                 dob: '',
-                nationality: 'Irish',
+                nationality: 'Ireland',
                 gender: 'Male',
                 address: '',
                 phone: '',
@@ -759,7 +769,7 @@ export function LocumManagement({ onViewProfile }: { onViewProfile?: (id: string
             </div>
 
             {/* Stats */}
-            <div className="grid grid-cols-5 gap-4">
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-4">
                 {[
                     { label: 'Total Locums', value: '1,247', sub: '+12% from last month', color: '#10B981' },
                     { label: 'Available Now', value: '892', sub: '71% availability rate', color: '#3B82F6' },
@@ -777,8 +787,8 @@ export function LocumManagement({ onViewProfile }: { onViewProfile?: (id: string
 
             {/* Tabs */}
             <div className="bg-white rounded-xl border border-[#E5E7EB]">
-                <div className="border-b border-[#E5E7EB] px-5 flex items-center justify-between">
-                    <div className="flex gap-6">
+                <div className="border-b border-[#E5E7EB] px-5 flex flex-col lg:flex-row lg:items-center justify-between gap-3 py-2 lg:py-0">
+                    <div className="flex gap-4 overflow-x-auto whitespace-nowrap scrollbar-none">
                         {[
                             { id: 'directory' as const, label: 'Locum Directory' },
                             { id: 'recruitment' as const, label: 'Recruitment Pipeline', badge: 5 },
@@ -815,25 +825,27 @@ export function LocumManagement({ onViewProfile }: { onViewProfile?: (id: string
 
                 {/* Toolbar */}
                 {activeTab === 'directory' && (
-                    <div className="p-4 border-b border-[#E5E7EB] flex items-center gap-2">
-                        <div className="relative flex-1 max-w-sm">
+                    <div className="p-4 border-b border-[#E5E7EB] flex flex-col md:flex-row md:items-center gap-2">
+                        <div className="relative w-full md:max-w-sm">
                             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#9CA3AF]" />
                             <input value={searchTerm} onChange={e => setSearchTerm(e.target.value)} placeholder="Search by name, ID, specialty, or location..." className="w-full pl-9 pr-4 py-2 text-sm border border-[#E5E7EB] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#10B981]" />
                         </div>
-                        <select value={statusFilter} onChange={e => setStatusFilter(e.target.value)} className="px-3 py-2 text-sm border border-[#E5E7EB] rounded-lg bg-white">
-                            <option value="all">All Status</option>
-                            <option value="available">Available</option>
-                            <option value="booked">Booked</option>
-                            <option value="unavailable">Unavailable</option>
-                        </select>
-                        <select value={specialtyFilter} onChange={e => setSpecialtyFilter(e.target.value)} className="px-3 py-2 text-sm border border-[#E5E7EB] rounded-lg bg-white">
-                            <option value="all">All Specialties</option>
-                            {specialties.map(s => <option key={s} value={s}>{s}</option>)}
-                        </select>
-                        <select value={departmentFilter} onChange={e => setDepartmentFilter(e.target.value)} className="px-3 py-2 text-sm border border-[#E5E7EB] rounded-lg bg-white">
-                            <option value="all">All Departments</option>
-                            {departments.map(d => <option key={d} value={d}>{d}</option>)}
-                        </select>
+                        <div className="grid grid-cols-3 gap-2 w-full md:flex md:w-auto">
+                            <select value={statusFilter} onChange={e => setStatusFilter(e.target.value)} className="px-3 py-2 text-sm border border-[#E5E7EB] rounded-lg bg-white w-full">
+                                <option value="all">All Status</option>
+                                <option value="available">Available</option>
+                                <option value="booked">Booked</option>
+                                <option value="unavailable">Unavailable</option>
+                            </select>
+                            <select value={specialtyFilter} onChange={e => setSpecialtyFilter(e.target.value)} className="px-3 py-2 text-sm border border-[#E5E7EB] rounded-lg bg-white w-full">
+                                <option value="all">All Specialties</option>
+                                {specialties.map(s => <option key={s} value={s}>{s}</option>)}
+                            </select>
+                            <select value={departmentFilter} onChange={e => setDepartmentFilter(e.target.value)} className="px-3 py-2 text-sm border border-[#E5E7EB] rounded-lg bg-white w-full">
+                                <option value="all">All Departments</option>
+                                {departments.map(d => <option key={d} value={d}>{d}</option>)}
+                            </select>
+                        </div>
                     </div>
                 )}
 
@@ -849,7 +861,7 @@ export function LocumManagement({ onViewProfile }: { onViewProfile?: (id: string
                                 </tr>
                             </thead>
                             <tbody>
-                                {filteredLocums.map(locum => (
+                                {filteredLocums.slice((directoryPage - 1) * directoryPageSize, directoryPage * directoryPageSize).map(locum => (
                                     <tr key={locum.id} className="border-b border-[#F3F4F6] hover:bg-[#F9FAFB] cursor-pointer group" onClick={() => onViewProfile?.(locum.id)}>
                                         <td className="px-4 py-3">
                                             <div className="flex items-center gap-2.5">
@@ -903,49 +915,63 @@ export function LocumManagement({ onViewProfile }: { onViewProfile?: (id: string
                                 ))}
                             </tbody>
                         </table>
+                        <Pagination
+                            currentPage={directoryPage}
+                            totalItems={filteredLocums.length}
+                            pageSize={directoryPageSize}
+                            onPageChange={setDirectoryPage}
+                        />
                     </div>
                 )}
 
                 {/* Directory - Grid View */}
                 {activeTab === 'directory' && viewMode === 'grid' && (
-                    <div className="grid grid-cols-3 gap-4 p-5">
-                        {filteredLocums.map(locum => (
-                            <div key={locum.id} className="border border-[#E5E7EB] rounded-xl p-4 hover:shadow-sm transition-shadow cursor-pointer group" onClick={() => onViewProfile?.(locum.id)}>
-                                <div className="flex items-start justify-between mb-3">
-                                    <div className="flex items-center gap-2.5">
-                                        <div className="w-10 h-10 bg-[#10B981] rounded-full flex items-center justify-center text-white text-xs">{locum.avatar}</div>
-                                        <div>
-                                            <p className="text-sm text-[#1F2937]">{locum.name}</p>
-                                            <p className="text-[11px] text-[#9CA3AF]">{locum.specialty}</p>
+                    <div>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 p-5">
+                            {filteredLocums.slice((directoryPage - 1) * directoryPageSize, directoryPage * directoryPageSize).map(locum => (
+                                <div key={locum.id} className="border border-[#E5E7EB] rounded-xl p-4 hover:shadow-sm transition-shadow cursor-pointer group" onClick={() => onViewProfile?.(locum.id)}>
+                                    <div className="flex items-start justify-between mb-3">
+                                        <div className="flex items-center gap-2.5">
+                                            <div className="w-10 h-10 bg-[#10B981] rounded-full flex items-center justify-center text-white text-xs">{locum.avatar}</div>
+                                            <div>
+                                                <p className="text-sm text-[#1F2937]">{locum.name}</p>
+                                                <p className="text-[11px] text-[#9CA3AF]">{locum.specialty}</p>
+                                            </div>
                                         </div>
+                                        <span className={`px-2 py-0.5 rounded-full text-[10px] border ${locum.status === 'available' ? 'bg-[#D1FAE5] text-[#059669] border-[#A7F3D0]' :
+                                                locum.status === 'booked' ? 'bg-[#DBEAFE] text-[#1D4ED8] border-[#BFDBFE]' :
+                                                    'bg-[#FEE2E2] text-[#DC2626] border-[#FECACA]'
+                                            }`}>
+                                            {locum.status.charAt(0).toUpperCase() + locum.status.slice(1)}
+                                        </span>
                                     </div>
-                                    <span className={`px-2 py-0.5 rounded-full text-[10px] border ${locum.status === 'available' ? 'bg-[#D1FAE5] text-[#059669] border-[#A7F3D0]' :
-                                            locum.status === 'booked' ? 'bg-[#DBEAFE] text-[#1D4ED8] border-[#BFDBFE]' :
-                                                'bg-[#FEE2E2] text-[#DC2626] border-[#FECACA]'
-                                        }`}>
-                                        {locum.status.charAt(0).toUpperCase() + locum.status.slice(1)}
-                                    </span>
+                                    <div className="space-y-1.5 mb-3">
+                                        <div className="flex items-center gap-1.5 text-xs text-[#6B7280]"><MapPin className="w-3 h-3" />{locum.location}</div>
+                                        <div className="flex items-center gap-1.5 text-xs text-[#6B7280]"><Phone className="w-3 h-3" />{locum.phone}</div>
+                                        <div className="flex items-center gap-1.5 text-xs text-[#6B7280]"><Mail className="w-3 h-3" /><span className="truncate">{locum.email}</span></div>
+                                    </div>
+                                    <div className="grid grid-cols-3 gap-2 mb-3 pt-3 border-t border-[#E5E7EB]">
+                                        <div><p className="text-[10px] text-[#9CA3AF]">Shifts</p><p className="text-sm text-[#1F2937]" style={{ fontWeight: 600 }}>{locum.shifts}</p></div>
+                                        <div><p className="text-[10px] text-[#9CA3AF]">Rating</p><p className="text-sm text-[#1F2937]" style={{ fontWeight: 600 }}>{locum.rating}</p></div>
+                                        <div><p className="text-[10px] text-[#9CA3AF]">Compliance</p><p className="text-sm text-[#1F2937]" style={{ fontWeight: 600 }}>{locum.compliance}%</p></div>
+                                    </div>
+                                    <div className="flex items-center gap-2" onClick={e => e.stopPropagation()}>
+                                        <button onClick={() => { setSelectedLocum(locum); setEditTab('personal'); setShowEditDialog(true); }} className="flex-1 py-2 text-xs border border-[#E5E7EB] rounded-lg hover:bg-[#ECFDF5] hover:text-[#10B981] hover:border-[#10B981] flex items-center justify-center gap-1.5 transition-colors">
+                                            <Pencil className="w-3.5 h-3.5" /> Edit
+                                        </button>
+                                        <button onClick={() => { setSelectedLocum(locum); setShowArchiveDialog(true); }} className="flex-1 py-2 text-xs border border-[#E5E7EB] rounded-lg hover:bg-[#FEF2F2] hover:text-[#EF4444] hover:border-[#EF4444] flex items-center justify-center gap-1.5 transition-colors">
+                                            <Archive className="w-3.5 h-3.5" /> Archive
+                                        </button>
+                                    </div>
                                 </div>
-                                <div className="space-y-1.5 mb-3">
-                                    <div className="flex items-center gap-1.5 text-xs text-[#6B7280]"><MapPin className="w-3 h-3" />{locum.location}</div>
-                                    <div className="flex items-center gap-1.5 text-xs text-[#6B7280]"><Phone className="w-3 h-3" />{locum.phone}</div>
-                                    <div className="flex items-center gap-1.5 text-xs text-[#6B7280]"><Mail className="w-3 h-3" /><span className="truncate">{locum.email}</span></div>
-                                </div>
-                                <div className="grid grid-cols-3 gap-2 mb-3 pt-3 border-t border-[#E5E7EB]">
-                                    <div><p className="text-[10px] text-[#9CA3AF]">Shifts</p><p className="text-sm text-[#1F2937]" style={{ fontWeight: 600 }}>{locum.shifts}</p></div>
-                                    <div><p className="text-[10px] text-[#9CA3AF]">Rating</p><p className="text-sm text-[#1F2937]" style={{ fontWeight: 600 }}>{locum.rating}</p></div>
-                                    <div><p className="text-[10px] text-[#9CA3AF]">Compliance</p><p className="text-sm text-[#1F2937]" style={{ fontWeight: 600 }}>{locum.compliance}%</p></div>
-                                </div>
-                                <div className="flex items-center gap-2" onClick={e => e.stopPropagation()}>
-                                    <button onClick={() => { setSelectedLocum(locum); setEditTab('personal'); setShowEditDialog(true); }} className="flex-1 py-2 text-xs border border-[#E5E7EB] rounded-lg hover:bg-[#ECFDF5] hover:text-[#10B981] hover:border-[#10B981] flex items-center justify-center gap-1.5 transition-colors">
-                                        <Pencil className="w-3.5 h-3.5" /> Edit
-                                    </button>
-                                    <button onClick={() => { setSelectedLocum(locum); setShowArchiveDialog(true); }} className="flex-1 py-2 text-xs border border-[#E5E7EB] rounded-lg hover:bg-[#FEF2F2] hover:text-[#EF4444] hover:border-[#EF4444] flex items-center justify-center gap-1.5 transition-colors">
-                                        <Archive className="w-3.5 h-3.5" /> Archive
-                                    </button>
-                                </div>
-                            </div>
-                        ))}
+                            ))}
+                        </div>
+                        <Pagination
+                            currentPage={directoryPage}
+                            totalItems={filteredLocums.length}
+                            pageSize={directoryPageSize}
+                            onPageChange={setDirectoryPage}
+                        />
                     </div>
                 )}
 
@@ -956,7 +982,7 @@ export function LocumManagement({ onViewProfile }: { onViewProfile?: (id: string
                             <h4 className="text-[#1F2937]">Recruitment Pipeline</h4>
                             <button onClick={() => setShowAddApplicantDialog(true)} className="flex items-center gap-1.5 px-3 py-1.5 text-sm bg-[#10B981] text-white rounded-lg hover:bg-[#059669]"><UserPlus className="w-4 h-4" /> Add Applicant</button>
                         </div>
-                        <div className="grid grid-cols-4 gap-4 mb-4">
+                        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
                             {[
                                 { label: 'New Applications', value: applicantsList.filter(a => a.status === 'new').length, color: '#3B82F6' },
                                 { label: 'Interview Stage', value: applicantsList.filter(a => a.status === 'interview').length, color: '#F59E0B' },
@@ -969,7 +995,7 @@ export function LocumManagement({ onViewProfile }: { onViewProfile?: (id: string
                                 </div>
                             ))}
                         </div>
-                        <div className="border border-[#E5E7EB] rounded-lg overflow-hidden">
+                        <div className="overflow-x-auto border border-[#E5E7EB] rounded-lg">
                             <table className="w-full">
                                 <thead>
                                     <tr className="bg-[#F9FAFB] border-b border-[#E5E7EB]">
@@ -979,7 +1005,7 @@ export function LocumManagement({ onViewProfile }: { onViewProfile?: (id: string
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    {applicantsList.map(a => {
+                                    {applicantsList.slice((recruitmentPage - 1) * recruitmentPageSize, recruitmentPage * recruitmentPageSize).map(a => {
                                         const sc = stageConfig[a.status];
                                         return (
                                             <tr key={a.id} className="border-b border-[#F3F4F6] hover:bg-[#F9FAFB]">
@@ -1020,6 +1046,12 @@ export function LocumManagement({ onViewProfile }: { onViewProfile?: (id: string
                                     })}
                                 </tbody>
                             </table>
+                            <Pagination
+                                currentPage={recruitmentPage}
+                                totalItems={applicantsList.length}
+                                pageSize={recruitmentPageSize}
+                                onPageChange={setRecruitmentPage}
+                            />
                         </div>
                     </div>
                 )}
@@ -1028,7 +1060,7 @@ export function LocumManagement({ onViewProfile }: { onViewProfile?: (id: string
                 {activeTab === 'availability' && (
                     <div className="p-5 space-y-4">
                         {/* Summary Stats */}
-                        <div className="grid grid-cols-5 gap-3">
+                        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
                             <div className="p-3 bg-[#F0FDF4] rounded-lg border border-[#A7F3D0]">
                                 <p className="text-[10px] text-[#065F46]" style={{ fontWeight: 500 }}>Available Slots</p>
                                 <p className="text-xl text-[#065F46] mt-0.5" style={{ fontWeight: 700 }}>{weekStats.availableSlots}</p>
@@ -1154,7 +1186,7 @@ export function LocumManagement({ onViewProfile }: { onViewProfile?: (id: string
                             </div>
 
                             {/* Filters & Month Locum Selector */}
-                            <div className="flex items-center gap-2">
+                            <div className="flex flex-wrap items-center gap-2">
                                 {availSubView === 'month' && (
                                     <div className="flex items-center gap-1.5 mr-2">
                                         <span className="text-xs text-[#6B7280]">Show Locum:</span>
@@ -1220,7 +1252,7 @@ export function LocumManagement({ onViewProfile }: { onViewProfile?: (id: string
 
                         {/* Rendering different subviews */}
                         {availSubView === 'week' && (
-                            <div className="border border-[#E5E7EB] rounded-lg overflow-hidden relative" ref={tableRef}>
+                            <div className="border border-[#E5E7EB] rounded-lg overflow-x-auto relative" ref={tableRef}>
                                 <table className="w-full">
                                     <thead>
                                         <tr className="bg-[#F9FAFB] border-b border-[#E5E7EB]">
@@ -2006,13 +2038,26 @@ export function LocumManagement({ onViewProfile }: { onViewProfile?: (id: string
                                             />
                                         </div>
                                         <div>
-                                            <label className="block text-xs text-[#4B5563] mb-1 font-medium">Nationality</label>
-                                            <input 
-                                                type="text" 
+                                            <label className="block text-xs text-[#4B5563] mb-1 font-medium">Country</label>
+                                            <select 
                                                 value={addForm.nationality}
                                                 onChange={e => setAddForm({...addForm, nationality: e.target.value})}
                                                 className="w-full px-3 py-2 border border-[#E5E7EB] rounded-lg text-sm bg-white text-[#1F2937] focus:outline-none focus:ring-2 focus:ring-[#10B981]"
-                                            />
+                                            >
+                                                <option value="Ireland">Ireland</option>
+                                                <option value="United Kingdom">United Kingdom</option>
+                                                <option value="South Africa">South Africa</option>
+                                                <option value="Australia">Australia</option>
+                                                <option value="India">India</option>
+                                                <option value="Poland">Poland</option>
+                                                <option value="Spain">Spain</option>
+                                                <option value="Germany">Germany</option>
+                                                <option value="United States">United States</option>
+                                                <option value="Canada">Canada</option>
+                                                <option value="Nigeria">Nigeria</option>
+                                                <option value="France">France</option>
+                                                <option value="Other">Other</option>
+                                            </select>
                                         </div>
                                         <div>
                                             <label className="block text-xs text-[#4B5563] mb-1 font-medium">Gender</label>

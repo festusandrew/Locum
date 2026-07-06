@@ -14,6 +14,8 @@ interface SidebarProps {
     onNavigate: (page: string) => void;
     isCollapsed: boolean;
     onToggleCollapse: () => void;
+    mobileOpen?: boolean;
+    onCloseMobile?: () => void;
 }
 
 interface NavGroup {
@@ -29,7 +31,7 @@ interface NavItem {
     badgeColor?: string;
 }
 
-export function Sidebar({ currentPage, onNavigate, isCollapsed, onToggleCollapse }: SidebarProps) {
+export function Sidebar({ currentPage, onNavigate, isCollapsed, onToggleCollapse, mobileOpen, onCloseMobile }: SidebarProps) {
     const { role, setRole } = useUserRole();
     const { brandingLogo, brandingName, brandingColor, isWhitelabelActive } = useSystemSettings();
     const [collapsed, setCollapsed] = useState<Record<string, boolean>>({});
@@ -111,16 +113,28 @@ export function Sidebar({ currentPage, onNavigate, isCollapsed, onToggleCollapse
     };
 
     return (
-        <div className={`bg-white h-screen fixed left-0 top-0 flex flex-col border-r border-[#E5E7EB] z-40 transition-all duration-300 ease-in-out ${isCollapsed ? 'w-[72px]' : 'w-[240px]'}`}>
-            
-            {/* Collapse/Expand Toggle Button */}
-            <button
-                onClick={onToggleCollapse}
-                className="absolute top-6 -right-3 w-6 h-6 bg-white border border-[#E5E7EB] rounded-full flex items-center justify-center shadow-md text-[#6B7280] hover:text-[#10B981] z-50 transition-transform hover:scale-110"
-                title={isCollapsed ? "Expand Sidebar" : "Collapse Sidebar"}
-            >
-                {isCollapsed ? <ChevronRight className="w-3.5 h-3.5" /> : <ChevronLeft className="w-3.5 h-3.5" />}
-            </button>
+        <>
+            {/* Mobile Sidebar Overlay Backdrop */}
+            {mobileOpen && (
+                <div 
+                    className="fixed inset-0 bg-black/40 z-30 md:hidden"
+                    onClick={onCloseMobile}
+                />
+            )}
+            <div className={`bg-white h-screen fixed top-0 flex flex-col border-r border-[#E5E7EB] z-40 transition-all duration-300 ease-in-out ${
+                isCollapsed ? 'md:w-[72px]' : 'md:w-[240px]'
+            } ${
+                mobileOpen ? 'left-0 w-[240px]' : '-left-full md:left-0'
+            }`}>
+                
+                {/* Collapse/Expand Toggle Button */}
+                <button
+                    onClick={onToggleCollapse}
+                    className="absolute top-6 -right-3 w-6 h-6 bg-white border border-[#E5E7EB] rounded-full hidden md:flex items-center justify-center shadow-md text-[#6B7280] hover:text-[#10B981] z-50 transition-transform hover:scale-110"
+                    title={isCollapsed ? "Expand Sidebar" : "Collapse Sidebar"}
+                >
+                    {isCollapsed ? <ChevronRight className="w-3.5 h-3.5" /> : <ChevronLeft className="w-3.5 h-3.5" />}
+                </button>
  
             {/* Logo area */}
             <div className={`border-b border-[#E5E7EB] flex items-center justify-center transition-all duration-300 ${isCollapsed ? 'px-2 py-5 h-[76px]' : 'px-5 py-4 h-[97px]'}`}>
@@ -295,5 +309,6 @@ export function Sidebar({ currentPage, onNavigate, isCollapsed, onToggleCollapse
                 )}
             </div>
         </div>
-    );
+    </>
+);
 }

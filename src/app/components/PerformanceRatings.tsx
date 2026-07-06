@@ -1,9 +1,10 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
     Star, Users, Building2, TrendingUp, Award, ThumbsUp,
     Clock, Target, ArrowUp, ArrowDown, Search, Download,
     BarChart3, CheckCircle, AlertTriangle, Eye
 } from 'lucide-react';
+import { Pagination } from './ui/Pagination';
 import {
     BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip,
     ResponsiveContainer, RadarChart, Radar, PolarGrid,
@@ -74,6 +75,15 @@ const radarData = [
 export function PerformanceRatings() {
     const [activeTab, setActiveTab] = useState<'locum' | 'client' | 'kpi'>('locum');
     const [searchTerm, setSearchTerm] = useState('');
+    const [locumPage, setLocumPage] = useState(1);
+    const locumPageSize = 4;
+    const [clientPage, setClientPage] = useState(1);
+    const clientPageSize = 4;
+
+    useEffect(() => {
+        setLocumPage(1);
+        setClientPage(1);
+    }, [searchTerm]);
 
     const renderStars = (rating: number) => {
         return (
@@ -162,7 +172,7 @@ export function PerformanceRatings() {
                                 </tr>
                             </thead>
                             <tbody>
-                                {locumPerformances.map(lp => (
+                                {locumPerformances.slice((locumPage - 1) * locumPageSize, locumPage * locumPageSize).map(lp => (
                                     <tr key={lp.id} className="border-b border-[#F3F4F6] hover:bg-[#F9FAFB]">
                                         <td className="px-4 py-3">
                                             <div className="flex items-center gap-2.5">
@@ -197,6 +207,12 @@ export function PerformanceRatings() {
                                 ))}
                             </tbody>
                         </table>
+                        <Pagination
+                            currentPage={locumPage}
+                            totalItems={locumPerformances.length}
+                            pageSize={locumPageSize}
+                            onPageChange={setLocumPage}
+                        />
                     </div>
                 )}
 
@@ -211,7 +227,7 @@ export function PerformanceRatings() {
                                 </tr>
                             </thead>
                             <tbody>
-                                {clientPerformances.map(cp => (
+                                {clientPerformances.slice((clientPage - 1) * clientPageSize, clientPage * clientPageSize).map(cp => (
                                     <tr key={cp.id} className="border-b border-[#F3F4F6] hover:bg-[#F9FAFB]">
                                         <td className="px-4 py-3">
                                             <div className="flex items-center gap-2.5">
@@ -247,6 +263,12 @@ export function PerformanceRatings() {
                                 ))}
                             </tbody>
                         </table>
+                        <Pagination
+                            currentPage={clientPage}
+                            totalItems={clientPerformances.length}
+                            pageSize={clientPageSize}
+                            onPageChange={setClientPage}
+                        />
                     </div>
                 )}
 
