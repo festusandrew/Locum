@@ -206,6 +206,9 @@ export function LocumManagement({ onViewProfile }: { onViewProfile?: (id: string
     const [specialtyFilter, setSpecialtyFilter] = useState('all');
     const [departmentFilter, setDepartmentFilter] = useState('all');
     const [viewMode, setViewMode] = useState<'grid' | 'list'>('list');
+    const [customNationality, setCustomNationality] = useState('');
+    const [customGender, setCustomGender] = useState('');
+    const [customEditGender, setCustomEditGender] = useState('');
     const [activeTab, setActiveTab] = useState<'directory' | 'recruitment' | 'availability'>('directory');
     const [directoryPage, setDirectoryPage] = useState(1);
     const directoryPageSize = 5;
@@ -276,7 +279,14 @@ export function LocumManagement({ onViewProfile }: { onViewProfile?: (id: string
         // Personal
         setEditDob(selectedLocum.dob || '1984-06-15');
         setEditNationality(selectedLocum.nationality || 'Irish');
-        setEditGender(selectedLocum.gender || 'Female');
+        const g = selectedLocum.gender || 'Female';
+        if (g !== 'Male' && g !== 'Female') {
+            setEditGender('Other');
+            setCustomEditGender(g);
+        } else {
+            setEditGender(g);
+            setCustomEditGender('');
+        }
         setEditAddress(selectedLocum.address || '42 Pembroke Road, Ballsbridge, Dublin 4');
         setEditMobile(selectedLocum.phone || '');
         setEditPhone(selectedLocum.phone || '');
@@ -409,8 +419,8 @@ export function LocumManagement({ onViewProfile }: { onViewProfile?: (id: string
             status: 'available',
             personal: {
                 dob: addForm.dob || '',
-                nationality: addForm.nationality || 'Irish',
-                gender: addForm.gender || 'Male',
+                nationality: addForm.nationality === 'Other' ? customNationality : (addForm.nationality || 'Irish'),
+                gender: addForm.gender === 'Other' ? customGender : (addForm.gender || 'Male'),
                 address: addForm.address || addForm.location || 'Dublin, Ireland',
                 phone: addForm.phone || '',
                 mobile: addForm.mobile || '',
@@ -603,7 +613,7 @@ export function LocumManagement({ onViewProfile }: { onViewProfile?: (id: string
             phone: editPhone || editMobile,
             email: editEmail,
             dob: editDob,
-            gender: editGender,
+            gender: editGender === 'Other' ? customEditGender : editGender,
             nationality: editNationality,
             ppsn: editPpsn,
             address: editAddress,
@@ -2058,6 +2068,16 @@ export function LocumManagement({ onViewProfile }: { onViewProfile?: (id: string
                                                 <option value="France">France</option>
                                                 <option value="Other">Other</option>
                                             </select>
+                                            {addForm.nationality === 'Other' && (
+                                                <input 
+                                                    type="text"
+                                                    value={customNationality}
+                                                    onChange={e => setCustomNationality(e.target.value)}
+                                                    placeholder="Specify nationality"
+                                                    className="w-full mt-2 px-3 py-2 border border-[#10B981] rounded-lg text-sm bg-white text-[#1F2937] focus:outline-none focus:ring-2 focus:ring-[#10B981] animate-in slide-in-from-top-1 duration-150"
+                                                    required
+                                                />
+                                            )}
                                         </div>
                                         <div>
                                             <label className="block text-xs text-[#4B5563] mb-1 font-medium">Gender</label>
@@ -2070,6 +2090,16 @@ export function LocumManagement({ onViewProfile }: { onViewProfile?: (id: string
                                                 <option value="Female">Female</option>
                                                 <option value="Other">Other</option>
                                             </select>
+                                            {addForm.gender === 'Other' && (
+                                                <input 
+                                                    type="text"
+                                                    value={customGender}
+                                                    onChange={e => setCustomGender(e.target.value)}
+                                                    placeholder="Specify gender"
+                                                    className="w-full mt-2 px-3 py-2 border border-[#10B981] rounded-lg text-sm bg-white text-[#1F2937] focus:outline-none focus:ring-2 focus:ring-[#10B981] animate-in slide-in-from-top-1 duration-150"
+                                                    required
+                                                />
+                                            )}
                                         </div>
                                     </div>
 
@@ -2447,6 +2477,16 @@ export function LocumManagement({ onViewProfile }: { onViewProfile?: (id: string
                                                 <option value="Male">Male</option>
                                                 <option value="Other">Other</option>
                                             </select>
+                                            {editGender === 'Other' && (
+                                                <input 
+                                                    type="text"
+                                                    value={customEditGender}
+                                                    onChange={e => setCustomEditGender(e.target.value)}
+                                                    placeholder="Specify gender"
+                                                    className="w-full mt-2 px-3 py-2 border border-[#10B981] rounded-lg text-sm bg-white text-[#1F2937] focus:outline-none focus:ring-2 focus:ring-[#10B981] animate-in slide-in-from-top-1 duration-150"
+                                                    required
+                                                />
+                                            )}
                                         </div>
                                     </div>
 

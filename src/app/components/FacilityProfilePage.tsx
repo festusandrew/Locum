@@ -273,6 +273,8 @@ export function FacilityProfilePage({ facilityId, onBack }: FacilityProfilePageP
     const [showMoreMenu, setShowMoreMenu] = useState(false);
     const [modalTab, setModalTab] = useState<'overview' | 'location' | 'contacts' | 'contract'>('overview');
 
+    const [customNationality, setCustomNationality] = useState('');
+
     // Form states
     const [editForm, setEditForm] = useState({
         name: profile.name,
@@ -481,7 +483,7 @@ export function FacilityProfilePage({ facilityId, onBack }: FacilityProfilePageP
             hiqaLastInspection: profile.overview?.hiqaLastInspection || '',
             hiqaStatus: profile.overview?.hiqaStatus || 'Compliant',
             jciAccredited: profile.overview?.jciAccredited || false,
-            nationality: profile.overview?.nationality || 'Irish',
+            nationality: ['Irish', 'British', 'American', 'Canadian', 'Australian', 'German', 'French', 'Spanish', 'Italian'].includes(profile.overview?.nationality || 'Irish') ? (profile.overview?.nationality || 'Irish') : 'Other',
 
             // Contacts
             primaryContactName: profile.contacts?.primary?.name || '',
@@ -529,6 +531,12 @@ export function FacilityProfilePage({ facilityId, onBack }: FacilityProfilePageP
             logo: profile.logo || '',
             themeColor: profile.themeColor || '#10B981',
         });
+        const n = profile.overview?.nationality || 'Irish';
+        if (['Irish', 'British', 'American', 'Canadian', 'Australian', 'German', 'French', 'Spanish', 'Italian'].includes(n)) {
+            setCustomNationality('');
+        } else {
+            setCustomNationality(n);
+        }
         setModalTab('overview');
         setShowEditModal(true);
     };
@@ -560,7 +568,7 @@ export function FacilityProfilePage({ facilityId, onBack }: FacilityProfilePageP
                 hiqaLastInspection: editForm.hiqaLastInspection,
                 hiqaStatus: editForm.hiqaStatus,
                 jciAccredited: editForm.jciAccredited,
-                nationality: editForm.nationality,
+                nationality: editForm.nationality === 'Other' ? customNationality : editForm.nationality,
             },
             contacts: {
                 ...profile.contacts,
@@ -1456,6 +1464,16 @@ export function FacilityProfilePage({ facilityId, onBack }: FacilityProfilePageP
                                                     <option value="Italian">Italian</option>
                                                     <option value="Other">Other</option>
                                                 </select>
+                                                {editForm.nationality === 'Other' && (
+                                                    <input 
+                                                        type="text"
+                                                        value={customNationality}
+                                                        onChange={e => setCustomNationality(e.target.value)}
+                                                        placeholder="Specify nationality"
+                                                        className="w-full mt-2 px-3 py-2 border border-[#10B981] rounded-lg text-sm bg-white text-[#1F2937] focus:outline-none focus:ring-2 focus:ring-[#10B981] animate-in slide-in-from-top-1 duration-150"
+                                                        required
+                                                    />
+                                                )}
                                             </div>
                                         </div>
                                         <div>

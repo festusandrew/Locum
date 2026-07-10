@@ -649,6 +649,19 @@ export function LocumProfilePage({ locumId, onBack }: LocumProfilePageProps) {
         fileName: '',
         fileSize: '250 KB',
     });
+    const [showAddDocModal, setShowAddDocModal] = useState(false);
+    const [addDocForm, setAddDocForm] = useState({
+        name: '',
+        category: 'Registration',
+        reference: '',
+        awardedBy: '',
+        expiryDate: '',
+        status: 'valid' as 'valid' | 'expiring' | 'expired' | 'pending',
+        mandatory: false,
+        noExpiry: false,
+        fileName: '',
+        fileSize: '150 KB'
+    });
     const actionsDropdownRef = useRef<HTMLDivElement>(null);
 
     useEffect(() => {
@@ -678,6 +691,7 @@ export function LocumProfilePage({ locumId, onBack }: LocumProfilePageProps) {
     const [editDob, setEditDob] = useState('');
     const [editNationality, setEditNationality] = useState('');
     const [editGender, setEditGender] = useState('');
+    const [customEditGender, setCustomEditGender] = useState('');
     const [editAddress, setEditAddress] = useState('');
     const [editMobile, setEditMobile] = useState('');
     const [editPhone, setEditPhone] = useState('');
@@ -995,6 +1009,104 @@ export function LocumProfilePage({ locumId, onBack }: LocumProfilePageProps) {
         toast.success(`Document ${profile.compliance.documents[renewDocIdx!].name} renewed successfully`);
     };
 
+    const resetAddDocForm = () => {
+        setAddDocForm({
+            name: '',
+            category: 'Registration',
+            reference: '',
+            awardedBy: '',
+            expiryDate: '',
+            status: 'valid',
+            mandatory: false,
+            noExpiry: false,
+            fileName: '',
+            fileSize: '150 KB'
+        });
+    };
+
+    const handleSaveAddDoc = () => {
+        if (!addDocForm.name.trim()) {
+            toast.error('Document Name is required');
+            return;
+        }
+        if (!addDocForm.category.trim()) {
+            toast.error('Category is required');
+            return;
+        }
+
+        const isNoExpiry = addDocForm.noExpiry;
+        const newExpiry = isNoExpiry ? 'N/A' : addDocForm.expiryDate || new Date().toISOString().split('T')[0];
+
+        const newDoc: ComplianceDocument = {
+            name: addDocForm.name,
+            category: addDocForm.category,
+            status: addDocForm.status,
+            expiryDate: newExpiry,
+            uploadedDate: new Date().toISOString().split('T')[0],
+            reference: addDocForm.reference || 'N/A',
+            mandatory: addDocForm.mandatory,
+            awardedBy: addDocForm.awardedBy || 'N/A',
+            updatedBy: 'Lisa Keane',
+            updatedDate: new Date().toISOString().split('T')[0],
+            fileName: addDocForm.fileName || 'uploaded_document.pdf',
+            fileSize: addDocForm.fileSize || '150 KB',
+            comments: [],
+            history: [
+                {
+                    action: 'Uploaded',
+                    by: 'Lisa Keane',
+                    date: new Date().toISOString().split('T')[0],
+                    detail: `Initial document uploaded. Reference: ${addDocForm.reference || 'N/A'}. Status: ${addDocForm.status}.`,
+                    fileName: addDocForm.fileName || 'uploaded_document.pdf'
+                }
+            ]
+        };
+
+        const updatedDocs = [...profile.compliance.documents, newDoc];
+
+        // Recalculate overall compliance score
+        const activeDocs = updatedDocs.filter((d: ComplianceDocument) => !d.archived);
+        const validDocs = activeDocs.filter((d: ComplianceDocument) => d.status === 'valid').length;
+        const overallScore = activeDocs.length > 0 ? Math.round((validDocs / activeDocs.length) * 100) : 100;
+
+        const updatedProfile = {
+            ...profile,
+            compliance: {
+                ...profile.compliance,
+                documents: updatedDocs,
+                overall: overallScore
+            }
+        };
+
+        setProfile(updatedProfile);
+        locumProfiles[profile.id] = updatedProfile;
+        setShowAddDocModal(false);
+        resetAddDocForm();
+        toast.success('New compliance document added successfully');
+    };
+
+    const handleAddDocFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+
+        const formatBytes = (bytes: number): string => {
+            if (bytes === 0) return '0 Bytes';
+            const k = 1024;
+            const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
+        };
+
+        setAddDocForm(prev => ({
+            ...prev,
+            fileName: file.name,
+            fileSize: formatBytes(file.size),
+            name: prev.name || file.name.substring(0, file.name.lastIndexOf('.')) || file.name
+        }));
+
+        toast.success(`File "${file.name}" ready for upload`);
+    };
+
     const handleOpenEdit = () => {
         setEditName(profile.name);
         setEditStatus(profile.status);
@@ -1002,7 +1114,14 @@ export function LocumProfilePage({ locumId, onBack }: LocumProfilePageProps) {
         // Personal
         setEditDob(profile.personal.dob || '');
         setEditNationality(profile.personal.nationality || '');
-        setEditGender(profile.personal.gender || '');
+        const g = profile.personal.gender || '';
+        if (g !== 'Male' && g !== 'Female' && g !== '') {
+            setEditGender('Other');
+            setCustomEditGender(g);
+        } else {
+            setEditGender(g);
+            setCustomEditGender('');
+        }
         setEditAddress(profile.personal.address || '');
         setEditMobile(profile.personal.mobile || '');
         setEditPhone(profile.personal.phone || '');
@@ -1061,7 +1180,7 @@ export function LocumProfilePage({ locumId, onBack }: LocumProfilePageProps) {
                 ...profile.personal,
                 dob: editDob,
                 nationality: editNationality,
-                gender: editGender,
+                gender: editGender === 'Other' ? customEditGender : editGender,
                 address: editAddress,
                 mobile: editMobile,
                 phone: editPhone,
@@ -2046,6 +2165,15 @@ export function LocumProfilePage({ locumId, onBack }: LocumProfilePageProps) {
                                     Show Archived
                                 </label>
                                 <span className="text-xs text-[#9CA3AF] ml-2">{filteredDocs.length} document{filteredDocs.length !== 1 ? 's' : ''}</span>
+                                <button
+                                    onClick={() => {
+                                        resetAddDocForm();
+                                        setShowAddDocModal(true);
+                                    }}
+                                    className="ml-auto flex items-center gap-1.5 px-3 py-2 text-sm bg-[#10B981] hover:bg-[#059669] text-white rounded-lg transition-colors font-medium"
+                                >
+                                    <Plus className="w-4 h-4" /> Add Document
+                                </button>
                             </div>
 
                             {/* Document Cards by Category */}
@@ -3266,6 +3394,16 @@ export function LocumProfilePage({ locumId, onBack }: LocumProfilePageProps) {
                                                 <option value="Male">Male</option>
                                                 <option value="Other">Other</option>
                                             </select>
+                                            {editGender === 'Other' && (
+                                                <input 
+                                                    type="text"
+                                                    value={customEditGender}
+                                                    onChange={e => setCustomEditGender(e.target.value)}
+                                                    placeholder="Specify gender"
+                                                    className="w-full mt-2 px-3 py-2 border border-[#10B981] rounded-lg text-sm bg-white text-[#1F2937] focus:outline-none focus:ring-2 focus:ring-[#10B981] animate-in slide-in-from-top-1 duration-150"
+                                                    required
+                                                />
+                                            )}
                                         </div>
                                     </div>
 
@@ -3913,6 +4051,193 @@ export function LocumProfilePage({ locumId, onBack }: LocumProfilePageProps) {
                                 style={{ fontWeight: 500 }}
                             >
                                 <Check className="w-4 h-4" /> Renew Document
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Add Compliance Document Modal */}
+            {showAddDocModal && (
+                <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-6">
+                    <div className="bg-white rounded-xl w-full max-w-lg shadow-xl overflow-hidden flex flex-col max-h-[90vh]">
+                        <div className="p-5 border-b border-[#E5E7EB] flex items-center justify-between flex-shrink-0 bg-[#F9FAFB]">
+                            <div>
+                                <h3 className="text-lg text-[#1F2937]" style={{ fontWeight: 600 }}>Add Compliance Document</h3>
+                                <p className="text-xs text-[#9CA3AF]">Register a new document on the locum's profile</p>
+                            </div>
+                            <button onClick={() => setShowAddDocModal(false)} className="p-2 hover:bg-[#F3F4F6] rounded-lg">
+                                <X className="w-5 h-5 text-[#6B7280]" />
+                            </button>
+                        </div>
+
+                        <div className="p-6 space-y-4 overflow-y-auto flex-1">
+                            <div>
+                                <label className="block text-xs text-[#6B7280] mb-1.5 font-medium">Document Name <span className="text-[#EF4444]">*</span></label>
+                                <input
+                                    type="text"
+                                    value={addDocForm.name}
+                                    onChange={e => setAddDocForm({ ...addDocForm, name: e.target.value })}
+                                    placeholder="e.g. BLS certificate, Hepatitis B vaccine..."
+                                    className="w-full px-3 py-2 text-sm border border-[#E5E7EB] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#10B981] bg-white text-[#1F2937]"
+                                />
+                            </div>
+
+                            <div className="grid grid-cols-2 gap-4">
+                                <div>
+                                    <label className="block text-xs text-[#6B7280] mb-1.5 font-medium">Category <span className="text-[#EF4444]">*</span></label>
+                                    <select
+                                        value={addDocForm.category}
+                                        onChange={e => setAddDocForm({ ...addDocForm, category: e.target.value })}
+                                        className="w-full px-3 py-2 text-sm border border-[#E5E7EB] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#10B981] bg-white text-[#1F2937]"
+                                    >
+                                        <option value="Registration">Registration</option>
+                                        <option value="Mandatory Training">Mandatory Training</option>
+                                        <option value="Clinical Competency">Clinical Competency</option>
+                                        <option value="Identification & Right to Work">Identification & Right to Work</option>
+                                        <option value="Insurance & Reference">Insurance & Reference</option>
+                                        <option value="Vaccination & Health">Vaccination & Health</option>
+                                        <option value="Training">Training</option>
+                                        <option value="Vetting">Vetting</option>
+                                        <option value="Insurance">Insurance</option>
+                                        <option value="Identity">Identity</option>
+                                        <option value="Documentation">Documentation</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label className="block text-xs text-[#6B7280] mb-1.5 font-medium">Verification Status</label>
+                                    <select
+                                        value={addDocForm.status}
+                                        onChange={e => setAddDocForm({ ...addDocForm, status: e.target.value as any })}
+                                        className="w-full px-3 py-2 text-sm border border-[#E5E7EB] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#10B981] bg-white text-[#1F2937]"
+                                    >
+                                        <option value="valid">Valid</option>
+                                        <option value="expiring">Expiring</option>
+                                        <option value="expired">Expired</option>
+                                        <option value="pending">Pending</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div className="grid grid-cols-2 gap-4">
+                                <div>
+                                    <label className="block text-xs text-[#6B7280] mb-1.5 font-medium">Reference Number</label>
+                                    <input
+                                        type="text"
+                                        value={addDocForm.reference}
+                                        onChange={e => setAddDocForm({ ...addDocForm, reference: e.target.value })}
+                                        placeholder="e.g. Ref-12345"
+                                        className="w-full px-3 py-2 text-sm border border-[#E5E7EB] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#10B981] bg-white text-[#1F2937]"
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-xs text-[#6B7280] mb-1.5 font-medium">Awarded / Verified By</label>
+                                    <input
+                                        type="text"
+                                        value={addDocForm.awardedBy}
+                                        onChange={e => setAddDocForm({ ...addDocForm, awardedBy: e.target.value })}
+                                        placeholder="e.g. Medical Council"
+                                        className="w-full px-3 py-2 text-sm border border-[#E5E7EB] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#10B981] bg-white text-[#1F2937]"
+                                    />
+                                </div>
+                            </div>
+
+                            <div>
+                                <label className="block text-xs text-[#6B7280] mb-1.5 font-medium">Upload Document File</label>
+                                <div className="border border-dashed border-[#D1D5DB] hover:border-[#10B981] rounded-lg p-4 text-center cursor-pointer transition-colors relative bg-[#F9FAFB] flex flex-col items-center justify-center">
+                                    <Upload className="w-6 h-6 text-[#9CA3AF] mb-1.5" />
+                                    <span className="text-xs text-[#4B5563] font-semibold">Click to select file</span>
+                                    <span className="text-[10px] text-[#9CA3AF] mt-0.5">PDF, DOCX, PNG, or JPG up to 10MB</span>
+                                    <input
+                                        type="file"
+                                        accept=".pdf,.docx,.doc,.png,.jpg,.jpeg"
+                                        onChange={handleAddDocFileChange}
+                                        className="absolute inset-0 opacity-0 cursor-pointer"
+                                    />
+                                </div>
+                                {addDocForm.fileName && (
+                                    <div className="flex items-center gap-1.5 text-[11px] text-[#059669] mt-2 bg-[#D1FAE5] px-2 py-1 rounded w-fit font-medium">
+                                        <CheckCircle className="w-3.5 h-3.5" /> File Selected: {addDocForm.fileName} ({addDocForm.fileSize})
+                                    </div>
+                                )}
+                            </div>
+
+                            <div className="grid grid-cols-2 gap-4">
+                                <div>
+                                    <label className="block text-xs text-[#6B7280] mb-1.5 font-medium">Document File Name</label>
+                                    <input
+                                        type="text"
+                                        value={addDocForm.fileName}
+                                        onChange={e => setAddDocForm({ ...addDocForm, fileName: e.target.value })}
+                                        placeholder="e.g. cert.pdf"
+                                        className="w-full px-3 py-2 text-sm border border-[#E5E7EB] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#10B981] bg-white text-[#1F2937]"
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-xs text-[#6B7280] mb-1.5 font-medium">File Size</label>
+                                    <input
+                                        type="text"
+                                        value={addDocForm.fileSize}
+                                        onChange={e => setAddDocForm({ ...addDocForm, fileSize: e.target.value })}
+                                        placeholder="e.g. 150 KB"
+                                        className="w-full px-3 py-2 text-sm border border-[#E5E7EB] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#10B981] bg-white text-[#1F2937]"
+                                    />
+                                </div>
+                            </div>
+
+                            <div className="border-t border-[#E5E7EB] pt-4">
+                                <div className="flex items-center justify-between mb-3">
+                                    <label className="flex items-center gap-2 cursor-pointer text-xs text-[#6B7280] font-medium">
+                                        <input
+                                            type="checkbox"
+                                            checked={addDocForm.noExpiry}
+                                            onChange={e => setAddDocForm({ ...addDocForm, noExpiry: e.target.checked })}
+                                            className="w-4 h-4 rounded text-[#10B981] focus:ring-[#10B981] border-[#E5E7EB]"
+                                        />
+                                        No Expiry Date (Lifetime Validity)
+                                    </label>
+                                </div>
+
+                                {!addDocForm.noExpiry && (
+                                    <div>
+                                        <label className="block text-xs text-[#6B7280] mb-1.5 font-medium">Expiry Date</label>
+                                        <input
+                                            type="date"
+                                            value={addDocForm.expiryDate}
+                                            onChange={e => setAddDocForm({ ...addDocForm, expiryDate: e.target.value })}
+                                            className="w-full px-3 py-2 text-sm border border-[#E5E7EB] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#10B981] bg-white text-[#1F2937]"
+                                        />
+                                    </div>
+                                )}
+                            </div>
+
+                            <div className="border-t border-[#E5E7EB] pt-4">
+                                <label className="flex items-center gap-2 cursor-pointer text-xs text-[#6B7280] font-medium">
+                                    <input
+                                        type="checkbox"
+                                        checked={addDocForm.mandatory}
+                                        onChange={e => setAddDocForm({ ...addDocForm, mandatory: e.target.checked })}
+                                        className="w-4 h-4 rounded text-[#10B981] focus:ring-[#10B981] border-[#E5E7EB]"
+                                    />
+                                    Mandatory Document (Required for Compliance Score)
+                                </label>
+                            </div>
+                        </div>
+
+                        <div className="flex items-center justify-end gap-2 px-6 py-4 border-t border-[#E5E7EB] bg-[#F9FAFB] flex-shrink-0">
+                            <button
+                                onClick={() => setShowAddDocModal(false)}
+                                className="px-4 py-2 border border-[#E5E7EB] hover:bg-gray-50 text-[#6B7280] rounded-lg text-sm transition-colors"
+                                style={{ fontWeight: 500 }}
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                onClick={handleSaveAddDoc}
+                                className="px-4 py-2 bg-[#10B981] hover:bg-[#059669] text-white rounded-lg text-sm flex items-center gap-1.5 transition-colors"
+                                style={{ fontWeight: 500 }}
+                            >
+                                <Check className="w-4 h-4" /> Add Document
                             </button>
                         </div>
                     </div>

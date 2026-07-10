@@ -121,6 +121,9 @@ export function ClientManagement({ subPage = 'directory', onViewProfile }: { sub
         themeColor: '#10B981',
     });
 
+    const [customNationality, setCustomNationality] = useState('');
+    const [customCountry, setCustomCountry] = useState('');
+
     // Fetch clients on mount
     useEffect(() => {
         const loadClients = async () => {
@@ -197,7 +200,7 @@ export function ClientManagement({ subPage = 'directory', onViewProfile }: { sub
                 fax: formData.fax || "",
                 email: formData.email || "bookings@facility.com",
                 website: formData.website || "",
-                country: formData.country || "Ireland",
+                country: formData.country === 'Other' ? customCountry : (formData.country || "Ireland"),
                 hseRegion: formData.hseRegion || "",
                 hseArea: formData.hseArea || "",
                 beds: formData.beds ? parseInt(formData.beds) : 0,
@@ -208,7 +211,7 @@ export function ClientManagement({ subPage = 'directory', onViewProfile }: { sub
                 hiqaStatus: formData.hiqaStatus || "Compliant",
                 jciAccredited: formData.jciAccredited,
                 description: formData.description || `${formData.name} is a dedicated healthcare provider offering stellar treatment and services.`,
-                nationality: formData.nationality,
+                nationality: formData.nationality === 'Other' ? customNationality : formData.nationality,
             },
             contacts: {
                 primary: {
@@ -422,7 +425,8 @@ export function ClientManagement({ subPage = 'directory', onViewProfile }: { sub
                         hiqaStatus: formData.hiqaStatus,
                         jciAccredited: formData.jciAccredited,
                         description: formData.description,
-                        nationality: formData.nationality,
+                        country: formData.country === 'Other' ? customCountry : (formData.country || 'Ireland'),
+                        nationality: formData.nationality === 'Other' ? customNationality : formData.nationality,
                     },
                     contacts: {
                         ...profile.contacts,
@@ -570,8 +574,24 @@ export function ClientManagement({ subPage = 'directory', onViewProfile }: { sub
             agencyMargin: profile?.contract?.agencyMargin || '15%',
             logo: client.logo || profile?.logo || '',
             themeColor: client.themeColor || profile?.themeColor || '#10B981',
-            nationality: profile?.overview?.nationality || 'Irish',
+            nationality: ['Irish', 'British', 'American', 'Canadian', 'Australian', 'German', 'French', 'Spanish', 'Italian'].includes(profile?.overview?.nationality || 'Irish') ? (profile?.overview?.nationality || 'Irish') : 'Other',
+            country: ['Ireland', 'United Kingdom', 'United States', 'Canada', 'Australia'].includes(profile?.overview?.country || 'Ireland') ? (profile?.overview?.country || 'Ireland') : 'Other',
         });
+
+        const n = profile?.overview?.nationality || 'Irish';
+        if (['Irish', 'British', 'American', 'Canadian', 'Australian', 'German', 'French', 'Spanish', 'Italian'].includes(n)) {
+            setCustomNationality('');
+        } else {
+            setCustomNationality(n);
+        }
+
+        const c = profile?.overview?.country || 'Ireland';
+        if (['Ireland', 'United Kingdom', 'United States', 'Canada', 'Australia'].includes(c)) {
+            setCustomCountry('');
+        } else {
+            setCustomCountry(c);
+        }
+
         setModalTab('overview');
         setShowEditModal(true);
     };
@@ -986,6 +1006,16 @@ export function ClientManagement({ subPage = 'directory', onViewProfile }: { sub
                                                     <option value="Italian">Italian</option>
                                                     <option value="Other">Other</option>
                                                 </select>
+                                                {formData.nationality === 'Other' && (
+                                                    <input 
+                                                        type="text"
+                                                        value={customNationality}
+                                                        onChange={e => setCustomNationality(e.target.value)}
+                                                        placeholder="Specify nationality"
+                                                        className="w-full mt-2 px-3 py-2 border border-[#10B981] rounded-lg text-sm bg-white text-[#1F2937] focus:outline-none focus:ring-2 focus:ring-[#10B981] animate-in slide-in-from-top-1 duration-150"
+                                                        required
+                                                    />
+                                                )}
                                             </div>
                                             <div className="flex items-center mt-6 col-span-2">
                                                 <label className="flex items-center gap-2 cursor-pointer text-xs text-[#6B7280] font-medium">
@@ -1157,6 +1187,16 @@ export function ClientManagement({ subPage = 'directory', onViewProfile }: { sub
                                                     <option value="Australia">Australia</option>
                                                     <option value="Other">Other</option>
                                                 </select>
+                                                {formData.country === 'Other' && (
+                                                    <input 
+                                                        type="text"
+                                                        value={customCountry}
+                                                        onChange={e => setCustomCountry(e.target.value)}
+                                                        placeholder="Specify country"
+                                                        className="w-full mt-2 px-3 py-2 border border-[#10B981] rounded-lg text-sm bg-white text-[#1F2937] focus:outline-none focus:ring-2 focus:ring-[#10B981] animate-in slide-in-from-top-1 duration-150"
+                                                        required
+                                                    />
+                                                )}
                                             </div>
                                             <div>
                                                 <label className="block text-xs text-[#6B7280] mb-1.5 font-medium">Health Authority Region</label>
@@ -1831,6 +1871,16 @@ export function ClientManagement({ subPage = 'directory', onViewProfile }: { sub
                                                     <option value="Italian">Italian</option>
                                                     <option value="Other">Other</option>
                                                 </select>
+                                                {formData.nationality === 'Other' && (
+                                                    <input 
+                                                        type="text"
+                                                        value={customNationality}
+                                                        onChange={e => setCustomNationality(e.target.value)}
+                                                        placeholder="Specify nationality"
+                                                        className="w-full mt-2 px-3 py-2 border border-[#10B981] rounded-lg text-sm bg-white text-[#1F2937] focus:outline-none focus:ring-2 focus:ring-[#10B981] animate-in slide-in-from-top-1 duration-150"
+                                                        required
+                                                    />
+                                                )}
                                             </div>
                                             <div className="flex items-center mt-6 col-span-2">
                                                 <label className="flex items-center gap-2 cursor-pointer text-xs text-[#6B7280] font-medium">

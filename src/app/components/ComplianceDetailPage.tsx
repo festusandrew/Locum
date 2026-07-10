@@ -220,6 +220,7 @@ export function ComplianceDetailPage({ locumId, onBack }: ComplianceDetailPagePr
     const [activeTab, setActiveTab] = useState<'documents' | 'timeline' | 'notes'>('documents');
     const [showUploadModal, setShowUploadModal] = useState(false);
     const [uploadDocType, setUploadDocType] = useState('');
+    const [customDocType, setCustomDocType] = useState('');
     const [uploadExpiryDate, setUploadExpiryDate] = useState('');
     
     const fileInputRef = useRef<HTMLInputElement>(null);
@@ -283,10 +284,12 @@ export function ComplianceDetailPage({ locumId, onBack }: ComplianceDetailPagePr
             toast.error("Please fill in all fields and select a file.");
             return;
         }
-        toast.success(`Successfully uploaded ${selectedFile.name} for locum's compliance profile!`);
+        const displayType = uploadDocType === 'other' ? customDocType : uploadDocType;
+        toast.success(`Successfully uploaded ${selectedFile.name} (${displayType}) for locum's compliance profile!`);
         setShowUploadModal(false);
         setSelectedFile(null);
         setUploadDocType('');
+        setCustomDocType('');
         setUploadExpiryDate('');
     };
 
@@ -797,6 +800,16 @@ export function ComplianceDetailPage({ locumId, onBack }: ComplianceDetailPagePr
                                     <option value="cpr">BLS/CPR Certification</option>
                                     <option value="other">Other</option>
                                 </select>
+                                {uploadDocType === 'other' && (
+                                    <input 
+                                        type="text"
+                                        value={customDocType}
+                                        onChange={e => setCustomDocType(e.target.value)}
+                                        placeholder="Specify document type"
+                                        className="w-full mt-2 px-3 py-2 border border-[#10B981] rounded-lg text-sm bg-white text-[#1F2937] focus:outline-none focus:ring-2 focus:ring-[#10B981] animate-in slide-in-from-top-1 duration-150"
+                                        required
+                                    />
+                                )}
                             </div>
                             <div>
                                 <label className="block text-sm text-[#1F2937] mb-1.5 font-medium">Expiry Date <span className="text-[#EF4444]">*</span></label>

@@ -181,6 +181,8 @@ export function ChatSupport() {
     const [messageText, setMessageText] = useState('');
     const [searchQuery, setSearchQuery] = useState('');
     const [showNewTicket, setShowNewTicket] = useState(false);
+    const [categorySelect, setCategorySelect] = useState('');
+    const [customCategory, setCustomCategory] = useState('');
 
     const handleSendMessage = () => {
         if (messageText.trim()) {
@@ -594,14 +596,28 @@ export function ChatSupport() {
                             <div className="grid grid-cols-2 gap-4">
                                 <div>
                                     <label className="block text-sm font-medium text-[#1F2937] mb-2">Category</label>
-                                    <select className="w-full px-3 py-2 border border-[#E5E7EB] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#10B981]">
-                                        <option>Select category...</option>
-                                        <option>Billing</option>
-                                        <option>Technical</option>
-                                        <option>Integration</option>
-                                        <option>Scheduling</option>
-                                        <option>Other</option>
+                                    <select 
+                                        value={categorySelect}
+                                        onChange={e => setCategorySelect(e.target.value)}
+                                        className="w-full px-3 py-2 border border-[#E5E7EB] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#10B981]"
+                                    >
+                                        <option value="">Select category...</option>
+                                        <option value="Billing">Billing</option>
+                                        <option value="Technical">Technical</option>
+                                        <option value="Integration">Integration</option>
+                                        <option value="Scheduling">Scheduling</option>
+                                        <option value="Other">Other</option>
                                     </select>
+                                    {categorySelect === 'Other' && (
+                                        <input
+                                            type="text"
+                                            value={customCategory}
+                                            onChange={e => setCustomCategory(e.target.value)}
+                                            placeholder="Specify category"
+                                            className="w-full mt-2 px-3 py-2 border border-[#10B981] rounded-lg text-sm bg-white text-[#1F2937] focus:outline-none focus:ring-2 focus:ring-[#10B981] animate-in slide-in-from-top-1 duration-150"
+                                            required
+                                        />
+                                    )}
                                 </div>
                                 <div>
                                     <label className="block text-sm font-medium text-[#1F2937] mb-2">Priority</label>
